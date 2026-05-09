@@ -1,0 +1,278 @@
+2026-05-07 14:48:20 | [32mINFO   [0m  | __main__                  | initialize_system:102  | Validando variables de entorno...
+2026-05-07 14:48:20 | [32mINFO   [0m  | __main__                  | initialize_system:105  | ✅ Variables de entorno OK.
+2026-05-07 14:48:20 | [32mINFO   [0m  | __main__                  | initialize_system:110  | Environment: testing
+2026-05-07 14:48:20 | [32mINFO   [0m  | __main__                  | initialize_system:111  | Debug: True
+2026-05-07 14:48:20 | [32mINFO   [0m  | __main__                  | initialize_system:112  | Timezone: America/Lima
+2026-05-07 14:48:20 | [32mINFO   [0m  | __main__                  | initialize_system:126  | ✅ Directorios de trabajo creados: ./images, ./output, ./logs, ./csv, ./estados
+2026-05-07 14:48:20 | [32mINFO   [0m  | __main__                  | initialize_system:132  | Inicializando base de datos...
+
+    ╔══════════════════════════════════════════════╗
+    ║          MAGIC CHATBOT v2.0 🔮               ║
+    ║  Sistema de Gestión de Suscripciones VIP     ║
+    ║  y Validación de Pagos vía Telegram          ║
+    ╚══════════════════════════════════════════════╝
+    
+2026-05-07 14:48:21,450 INFO sqlalchemy.engine.Engine SELECT DATABASE()
+2026-05-07 14:48:21 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | SELECT DATABASE()
+2026-05-07 14:48:21,451 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-05-07 14:48:21 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | [raw sql] {}
+2026-05-07 14:48:21,658 INFO sqlalchemy.engine.Engine SELECT @@sql_mode
+2026-05-07 14:48:21 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | SELECT @@sql_mode
+2026-05-07 14:48:21,658 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-05-07 14:48:21 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | [raw sql] {}
+2026-05-07 14:48:21,864 INFO sqlalchemy.engine.Engine SELECT @@lower_case_table_names
+2026-05-07 14:48:21 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | SELECT @@lower_case_table_names
+2026-05-07 14:48:21,864 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-05-07 14:48:21 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | [raw sql] {}
+2026-05-07 14:48:22,058 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _connection_begin_impl:2710 | BEGIN (implicit)
+2026-05-07 14:48:22,058 INFO sqlalchemy.engine.Engine DESCRIBE `Magic-db-qas`.`users`
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | DESCRIBE `Magic-db-qas`.`users`
+2026-05-07 14:48:22,058 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | [raw sql] {}
+2026-05-07 14:48:22,149 INFO sqlalchemy.engine.Engine DESCRIBE `Magic-db-qas`.`services`
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | DESCRIBE `Magic-db-qas`.`services`
+2026-05-07 14:48:22,150 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | [raw sql] {}
+2026-05-07 14:48:22,248 INFO sqlalchemy.engine.Engine DESCRIBE `Magic-db-qas`.`service_prices`
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | DESCRIBE `Magic-db-qas`.`service_prices`
+2026-05-07 14:48:22,248 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | [raw sql] {}
+2026-05-07 14:48:22,340 INFO sqlalchemy.engine.Engine DESCRIBE `Magic-db-qas`.`purchases`
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | DESCRIBE `Magic-db-qas`.`purchases`
+2026-05-07 14:48:22,340 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | [raw sql] {}
+2026-05-07 14:48:22,432 INFO sqlalchemy.engine.Engine DESCRIBE `Magic-db-qas`.`subscriptions`
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | DESCRIBE `Magic-db-qas`.`subscriptions`
+2026-05-07 14:48:22,433 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | [raw sql] {}
+2026-05-07 14:48:22,525 INFO sqlalchemy.engine.Engine DESCRIBE `Magic-db-qas`.`selected_services`
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | DESCRIBE `Magic-db-qas`.`selected_services`
+2026-05-07 14:48:22,525 INFO sqlalchemy.engine.Engine [raw sql] {}
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _execute_context:1846 | [raw sql] {}
+2026-05-07 14:48:22,617 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-07 14:48:22 | [32mINFO   [0m  | sqlalchemy.engine.Engine  | _connection_commit_impl:2716 | COMMIT
+2026-05-07 14:48:22 | [32mINFO   [0m  | __main__                  | initialize_system:134  | ✅ Base de datos inicializada (tablas creadas si no existían).
+2026-05-07 14:48:22 | [32mINFO   [0m  | __main__                  | initialize_system:146  | Inicializando contenedor de dependencias...
+2026-05-07 14:48:22 | [32mINFO   [0m  | __main__                  | initialize_system:149  | ✅ Contenedor IoC inicializado.
+2026-05-07 14:48:22 | [32mINFO   [0m  | __main__                  | initialize_system:151  |    Servicios registrados: 12
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • db_session: factory (lazy)
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • payment_service: factory (lazy)
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • promotion_service: factory (lazy)
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • purchase_repository: factory (lazy)
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • reminder_service: factory (lazy)
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • selected_service_repository: factory (lazy)
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • service_repository: factory (lazy)
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • settings: instance
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • subscription_repository: factory (lazy)
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • subscription_service: factory (lazy)
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • user_repository: factory (lazy)
+2026-05-07 14:48:22 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • user_service: factory (lazy)
+2026-05-07 14:48:22 | [32mINFO   [0m  | __main__                  | initialize_system:158  | 🚀 Sistema inicializado correctamente.
+2026-05-07 14:48:22 | [32mINFO   [0m  | __main__                  | main:518  | Magic Chatbot v2 starting - env=testing - pid=81668
+2026-05-07 14:48:22 | [32mINFO   [0m  | __main__                  | main:605  | 🤖 Modo: SOLO BOT (POLLING)
+2026-05-07 14:48:22 | [32mINFO   [0m  | __main__                  | build_telegram_app:189  | Construyendo aplicación de Telegram...
+2026-05-07 14:48:22 | [32mINFO   [0m  | services.google_credentials | get_google_credentials:48   | Google credentials loaded from file: ../credentials/magic-chatbottelegram-948350ae1b51.json
+2026-05-07 14:48:23 | [32mINFO   [0m  | services.google_vision    | __init__:70   | Vision client initialized from get_google_credentials().
+2026-05-07 14:48:23 | [32mINFO   [0m  | services.google_credentials | get_google_credentials:48   | Google credentials loaded from file: ../credentials/magic-chatbottelegram-948350ae1b51.json
+2026-05-07 14:48:23 | [32mINFO   [0m  | services.google_sheets    | __init__:119  | Google Sheets credentials loaded from get_google_credentials().
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | urllib3.util.retry        | from_int:306  | Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2026-05-07 14:48:23 | [32mINFO   [0m  | googleapiclient.discovery_cache | autodetect:49   | file_cache is only supported with oauth2client<4.0.0
+2026-05-07 14:48:23 | [32mINFO   [0m  | services.google_sheets    | __init__:135  | GoogleSheetsService inicializado correctamente.
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from creating-client-class.iot-data to creating-client-class.iot-data-plane
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from before-call.apigateway to before-call.api-gateway
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from request-created.machinelearning.Predict to request-created.machine-learning.Predict
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from before-parameter-build.autoscaling.CreateLaunchConfiguration to before-parameter-build.auto-scaling.CreateLaunchConfiguration
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from before-parameter-build.route53 to before-parameter-build.route-53
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from request-created.cloudsearchdomain.Search to request-created.cloudsearch-domain.Search
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from docs.*.autoscaling.CreateLaunchConfiguration.complete-section to docs.*.auto-scaling.CreateLaunchConfiguration.complete-section
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from before-parameter-build.logs.CreateExportTask to before-parameter-build.cloudwatch-logs.CreateExportTask
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from docs.*.logs.CreateExportTask.complete-section to docs.*.cloudwatch-logs.CreateExportTask.complete-section
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from before-parameter-build.cloudsearchdomain.Search to before-parameter-build.cloudsearch-domain.Search
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _alias_event_name:482  | Changing event name from docs.*.cloudsearchdomain.Search.complete-section to docs.*.cloudsearch-domain.Search.complete-section
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.loaders          | _load_file:181  | Loading JSON file: /Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/boto3/data/dynamodb/2012-08-10/resources-1.json
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.utils            | _select_base_url:456  | IMDS ENDPOINT: http://169.254.169.254/
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.credentials      | load_credentials:2238 | Looking for credentials via: env
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.credentials      | load_credentials:2238 | Looking for credentials via: assume-role
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.credentials      | load_credentials:2238 | Looking for credentials via: assume-role-with-web-identity
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.credentials      | load_credentials:2238 | Looking for credentials via: sso
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.credentials      | load_credentials:2238 | Looking for credentials via: shared-credentials-file
+2026-05-07 14:48:23 | [32mINFO   [0m  | botocore.credentials      | load:1392 | Found credentials in shared credentials file: ~/.aws/credentials
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.loaders          | _load_file:181  | Loading JSON file: /Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/botocore/data/endpoints.json
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.loaders          | _load_file:181  | Loading JSON file: /Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/botocore/data/sdk-default-configuration.json
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _emit:238  | Event choose-service-name: calling handler <function handle_service_name_alias at 0x115b50fe0>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.loaders          | _load_file:181  | Loading JSON file: /Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/botocore/data/dynamodb/2012-08-10/service-2.json.gz
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.loaders          | _load_file:181  | Loading JSON file: /Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/botocore/data/dynamodb/2012-08-10/endpoint-rule-set-1.json.gz
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.loaders          | _load_file:181  | Loading JSON file: /Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/botocore/data/partitions.json
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _emit:238  | Event creating-client-class.dynamodb: calling handler <function add_generate_presigned_url at 0x115aac360>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.configprovider   | provide:1009 | Looking for endpoint for dynamodb via: environment_service
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.configprovider   | provide:1009 | Looking for endpoint for dynamodb via: environment_global
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.configprovider   | provide:1009 | Looking for endpoint for dynamodb via: config_service
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.configprovider   | provide:1009 | Looking for endpoint for dynamodb via: config_global
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.configprovider   | provide:1025 | No configured endpoint found.
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.endpoint         | create_endpoint:414  | Setting dynamodb timeout as (60, 60)
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.loaders          | _load_file:181  | Loading JSON file: /Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/botocore/data/_retry.json
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.client           | _register_legacy_retries:290  | Registering retry handlers for service: dynamodb
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | boto3.resources.factory   | load_from_definition:65   | Loading dynamodb:dynamodb
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _emit:238  | Event creating-resource-class.dynamodb.ServiceResource: calling handler <function lazy_call.<locals>._handler at 0x12076a700>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | boto3.resources.factory   | load_from_definition:65   | Loading dynamodb:Table
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _emit:238  | Event creating-resource-class.dynamodb.Table: calling handler <function lazy_call.<locals>._handler at 0x12076a7a0>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | botocore.hooks            | _emit:238  | Event creating-resource-class.dynamodb.Table: calling handler <function lazy_call.<locals>._handler at 0x12076a700>
+2026-05-07 14:48:23 | [32mINFO   [0m  | services.promotion_service | __init__:129  | PromotionService inicializado: tabla=MAGIC-USER-SESSIONS-LOG, region=us-east-1
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | __init__:334  | Set Bot API URL: https://api.telegram.org/bot8707933346:AAHzWgiuRCL57ZmT-Ya1GO23XGvHk_2kd4A
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | __init__:335  | Set Bot API File URL: https://api.telegram.org/file/bot8707933346:AAHzWgiuRCL57ZmT-Ya1GO23XGvHk_2kd4A
+2026-05-07 14:48:23 | [32mINFO   [0m  | __main__                  | build_telegram_app:287  | ✅ Handlers de comandos registrados: /start, /vm, /wsp, /valid, /id, /help
+2026-05-07 14:48:23 | [32mINFO   [0m  | __main__                  | build_telegram_app:295  | ✅ Handler de callbacks registrado.
+2026-05-07 14:48:23 | [32mINFO   [0m  | __main__                  | build_telegram_app:308  | ✅ Handlers de mensajes registrados (texto + imágenes).
+2026-05-07 14:48:23 | [32mINFO   [0m  | handlers.errors           | register:335  | Error handler global registrado en la aplicación.
+2026-05-07 14:48:23 | [32mINFO   [0m  | __main__                  | build_telegram_app:314  | ✅ Handler global de errores registrado.
+2026-05-07 14:48:23 | [32mINFO   [0m  | __main__                  | build_telegram_app:316  | 🏗️  Aplicación de Telegram construida exitosamente.
+2026-05-07 14:48:23 | [32mINFO   [0m  | __main__                  | run_polling:336  | 🤖 Iniciando bot en modo POLLING...
+2026-05-07 14:48:23 | [32mINFO   [0m  | __main__                  | run_polling:337  |    Presiona Ctrl+C para detener.
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | asyncio                   | __init__:64   | Using selector: KqueueSelector
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext              | network_retry_loop:156  | Network Retry Loop (Bootstrap Initialize Application): Starting
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | _do_post:732  | Calling Bot API endpoint `getMe` with parameters `{}`
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | connect_tcp.started host='api.telegram.org' port=443 local_address=None timeout=5.0 socket_options=None
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x126b134d0>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | start_tls.started ssl_context=<ssl.SSLContext object at 0x126a23a40> server_hostname='api.telegram.org' timeout=5.0
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x126a8f9d0>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_headers.started request=<Request [b'POST']>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_headers.complete
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_body.started request=<Request [b'POST']>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_body.complete
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_headers.started request=<Request [b'POST']>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Server', b'nginx/1.18.0'), (b'Date', b'Thu, 07 May 2026 19:48:23 GMT'), (b'Content-Type', b'application/json'), (b'Content-Length', b'343'), (b'Connection', b'keep-alive'), (b'Strict-Transport-Security', b'max-age=31536000; includeSubDomains; preload'), (b'Access-Control-Allow-Origin', b'*'), (b'Access-Control-Allow-Methods', b'GET, POST, OPTIONS'), (b'Access-Control-Expose-Headers', b'Content-Length,Content-Type,Date,Server,Connection')])
+2026-05-07 14:48:23 | [32mINFO   [0m  | httpx                     | _send_single_request:1740 | HTTP Request: POST https://api.telegram.org/bot8707933346:AAHzWgiuRCL57ZmT-Ya1GO23XGvHk_2kd4A/getMe "HTTP/1.1 200 OK"
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_body.started request=<Request [b'POST']>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_body.complete
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | response_closed.started
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | response_closed.complete
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | _do_post:741  | Call to Bot API endpoint `getMe` finished with return value `{'id': 8707933346, 'is_bot': True, 'first_name': 'someBot', 'username': 'someincrediblebot', 'can_join_groups': True, 'can_read_all_group_messages': False, 'supports_inline_queries': False, 'can_connect_to_business': False, 'has_main_web_app': False, 'has_topics_enabled': False, 'allows_users_to_create_topics': False, 'can_manage_bots': False}`
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | initialize:845  | This Bot is already initialized.
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext              | network_retry_loop:163  | Network Retry Loop (Bootstrap Initialize Application): Action succeeded. Stopping loop.
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext.Updater      | _start_polling:324  | Updater started (polling)
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext              | network_retry_loop:156  | Network Retry Loop (Bootstrap delete Webhook): Starting
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext.Updater      | bootstrap_del_webhook:683  | Deleting webhook
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext.Updater      | bootstrap_del_webhook:685  | Dropping pending updates from Telegram server
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | _do_post:732  | Calling Bot API endpoint `deleteWebhook` with parameters `{'drop_pending_updates': True}`
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_headers.started request=<Request [b'POST']>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_headers.complete
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_body.started request=<Request [b'POST']>
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_body.complete
+2026-05-07 14:48:23 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_headers.started request=<Request [b'POST']>
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Server', b'nginx/1.18.0'), (b'Date', b'Thu, 07 May 2026 19:48:24 GMT'), (b'Content-Type', b'application/json'), (b'Content-Length', b'68'), (b'Connection', b'keep-alive'), (b'Strict-Transport-Security', b'max-age=31536000; includeSubDomains; preload'), (b'Access-Control-Allow-Origin', b'*'), (b'Access-Control-Allow-Methods', b'GET, POST, OPTIONS'), (b'Access-Control-Expose-Headers', b'Content-Length,Content-Type,Date,Server,Connection')])
+2026-05-07 14:48:24 | [32mINFO   [0m  | httpx                     | _send_single_request:1740 | HTTP Request: POST https://api.telegram.org/bot8707933346:AAHzWgiuRCL57ZmT-Ya1GO23XGvHk_2kd4A/deleteWebhook "HTTP/1.1 200 OK"
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_body.started request=<Request [b'POST']>
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_body.complete
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | response_closed.started
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | response_closed.complete
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | _do_post:741  | Call to Bot API endpoint `deleteWebhook` finished with return value `True`
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | telegram.ext              | network_retry_loop:163  | Network Retry Loop (Bootstrap delete Webhook): Action succeeded. Stopping loop.
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | telegram.ext.Updater      | _start_polling:336  | Bootstrap done
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | telegram.ext.Updater      | start_polling:306  | Waiting for polling to start
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | telegram.ext.Updater      | start_polling:308  | Polling updates from Telegram started
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | telegram.ext              | network_retry_loop:156  | Network Retry Loop (Polling Updates): Starting
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | _do_post:732  | Calling Bot API endpoint `getUpdates` with parameters `{'timeout': 30, 'offset': 0}`
+2026-05-07 14:48:24 | [32mINFO   [0m  | apscheduler.scheduler     | start:214  | Scheduler started
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | telegram.ext.Application  | start:628  | JobQueue started
+2026-05-07 14:48:24 | [32mINFO   [0m  | telegram.ext.Application  | start:633  | Application started
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | connect_tcp.started host='api.telegram.org' port=443 local_address=None timeout=5.0 socket_options=None
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | apscheduler.scheduler     | _process_jobs:1151 | Looking for jobs to run
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | apscheduler.scheduler     | _process_jobs:1252 | No jobs; waiting until a job is added
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x126b59f90>
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | start_tls.started ssl_context=<ssl.SSLContext object at 0x126a23530> server_hostname='api.telegram.org' timeout=5.0
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x126ab3950>
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_headers.started request=<Request [b'POST']>
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_headers.complete
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_body.started request=<Request [b'POST']>
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_body.complete
+2026-05-07 14:48:24 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_headers.started request=<Request [b'POST']>
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_headers.complete return_value=(b'HTTP/1.1', 409, b'Conflict', [(b'Server', b'nginx/1.18.0'), (b'Date', b'Thu, 07 May 2026 19:48:29 GMT'), (b'Content-Type', b'application/json'), (b'Content-Length', b'143'), (b'Connection', b'keep-alive'), (b'Strict-Transport-Security', b'max-age=31536000; includeSubDomains; preload'), (b'Access-Control-Allow-Origin', b'*'), (b'Access-Control-Expose-Headers', b'Content-Length,Content-Type,Date,Server,Connection')])
+2026-05-07 14:48:29 | [32mINFO   [0m  | httpx                     | _send_single_request:1740 | HTTP Request: POST https://api.telegram.org/bot8707933346:AAHzWgiuRCL57ZmT-Ya1GO23XGvHk_2kd4A/getUpdates "HTTP/1.1 409 Conflict"
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_body.started request=<Request [b'POST']>
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_body.complete
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | response_closed.started
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | response_closed.complete
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | telegram.ext              | check_max_retries_and_log:119  | Network Retry Loop (Polling Updates): Failed run number 0 of -1. Retrying.
+[31m2026-05-07 14:48:29 | ERROR    | handlers.errors           | handle:96   | Excepción no manejada mientras se procesaba un update:
+Update Info: Update is None
+Error: Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+Traceback:
+Traceback (most recent call last):
+  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/ext/_utils/networkloop.py", line 161, in network_retry_loop
+    await do_action()
+  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/ext/_utils/networkloop.py", line 154, in do_action
+    action_cb_task.result()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/ext/_updater.py", line 340, in polling_action_cb
+    updates = await self.bot.get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/ext/_extbot.py", line 672, in get_updates
+    updates = await super().get_updates(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+    )
+    ^
+  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/_bot.py", line 4865, in get_updates
+    await self._post(
+    ^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    ),
+    ^
+  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/_bot.py", line 704, in _post
+    return await self._do_post(
+           ^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/ext/_extbot.py", line 370, in _do_post
+    return await super()._do_post(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/_bot.py", line 733, in _do_post
+    result = await request.post(
+             ^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/request/_baserequest.py", line 198, in post
+    result = await self._request_wrapper(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/request/_baserequest.py", line 375, in _request_wrapper
+    raise exception
+telegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[0m
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | _do_post:732  | Calling Bot API endpoint `sendMessage` with parameters `{'chat_id': 6475885611, 'text': '<b>🚨 ERROR CRÍTICO EN EL BOT</b>\n\n<b>Error:</b> <code>Conflict: terminated by other getUpdates request; make sure that only one bot instance is running</code>\n<b>Tipo:</b> <code>Conflict</code>\n<b>Update:</b> Update is None\n\n<b>Traceback (últimas líneas):</b>\n<pre>...\n    ^\n  File &quot;/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/request/_baserequest.py&quot;, line 198, in post\n    result = await self._request_wrapper(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...&lt;7 lines&gt;...\n    )\n    ^\n  File &quot;/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/request/_baserequest.py&quot;, line 375, in _request_wrapper\n    raise exception\ntelegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running</pre>\n\n<i>Revisa los logs del servidor para el traceback completo.</i>', 'parse_mode': <ParseMode.HTML>}`
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | close.started
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | close.complete
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | connect_tcp.started host='api.telegram.org' port=443 local_address=None timeout=5.0 socket_options=None
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x126b80fc0>
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | start_tls.started ssl_context=<ssl.SSLContext object at 0x126a23a40> server_hostname='api.telegram.org' timeout=5.0
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.connection       | atrace:87   | start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x126b39a30>
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_headers.started request=<Request [b'POST']>
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_headers.complete
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_body.started request=<Request [b'POST']>
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_body.complete
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_headers.started request=<Request [b'POST']>
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Server', b'nginx/1.18.0'), (b'Date', b'Thu, 07 May 2026 19:48:30 GMT'), (b'Content-Type', b'application/json'), (b'Content-Length', b'1499'), (b'Connection', b'keep-alive'), (b'Strict-Transport-Security', b'max-age=31536000; includeSubDomains; preload'), (b'Access-Control-Allow-Origin', b'*'), (b'Access-Control-Allow-Methods', b'GET, POST, OPTIONS'), (b'Access-Control-Expose-Headers', b'Content-Length,Content-Type,Date,Server,Connection')])
+2026-05-07 14:48:29 | [32mINFO   [0m  | httpx                     | _send_single_request:1740 | HTTP Request: POST https://api.telegram.org/bot8707933346:AAHzWgiuRCL57ZmT-Ya1GO23XGvHk_2kd4A/sendMessage "HTTP/1.1 200 OK"
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_body.started request=<Request [b'POST']>
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_body.complete
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | response_closed.started
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | response_closed.complete
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | _do_post:741  | Call to Bot API endpoint `sendMessage` finished with return value `{'message_id': 19, 'from': {'id': 8707933346, 'is_bot': True, 'first_name': 'someBot', 'username': 'someincrediblebot'}, 'chat': {'id': 6475885611, 'first_name': 'Martin', 'type': 'private'}, 'date': 1778183309, 'text': '🚨 ERROR CRÍTICO EN EL BOT\n\nError: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running\nTipo: Conflict\nUpdate: Update is None\n\nTraceback (últimas líneas):\n...\n    ^\n  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/request/_baserequest.py", line 198, in post\n    result = await self._request_wrapper(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<7 lines>...\n    )\n    ^\n  File "/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/.venv/lib/python3.13/site-packages/telegram/request/_baserequest.py", line 375, in _request_wrapper\n    raise exception\ntelegram.error.Conflict: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running\n\nRevisa los logs del servidor para el traceback completo.', 'entities': [{'offset': 0, 'length': 26, 'type': 'bold'}, {'offset': 28, 'length': 6, 'type': 'bold'}, {'offset': 35, 'length': 97, 'type': 'code'}, {'offset': 133, 'length': 5, 'type': 'bold'}, {'offset': 139, 'length': 8, 'type': 'code'}, {'offset': 148, 'length': 7, 'type': 'bold'}, {'offset': 172, 'length': 27, 'type': 'bold'}, {'offset': 200, 'length': 574, 'type': 'pre', 'language': 'python'}, {'offset': 776, 'length': 56, 'type': 'italic'}]}`
+2026-05-07 14:48:29 | [36mDEBUG  [0m  | handlers.errors           | _notify_admins:248  | Notificación de error enviada a admin 6475885611
+2026-05-07 14:48:30 | [36mDEBUG  [0m  | telegram.ext.ExtBot       | _do_post:732  | Calling Bot API endpoint `getUpdates` with parameters `{'timeout': 30, 'offset': 0}`
+2026-05-07 14:48:30 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_headers.started request=<Request [b'POST']>
+2026-05-07 14:48:30 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_headers.complete
+2026-05-07 14:48:30 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_body.started request=<Request [b'POST']>
+2026-05-07 14:48:30 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | send_request_body.complete
+2026-05-07 14:48:30 | [36mDEBUG  [0m  | httpcore.http11           | atrace:87   | receive_response_headers.started request=<Request [b'POST']>

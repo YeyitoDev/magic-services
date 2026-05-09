@@ -1,0 +1,138 @@
+2026-05-07 14:18:19 | [32mINFO   [0m  | __main__                  | <module>:6    | ✅ New logging system works!
+2026-05-07 14:18:19 | [33mWARNING[0m  | __main__                  | <module>:7    | This is a test warning
+2026-05-07 14:35:09 | [32mINFO   [0m  | __main__                  | initialize_system:102  | Validando variables de entorno...
+2026-05-07 14:35:09 | [32mINFO   [0m  | __main__                  | initialize_system:105  | ✅ Variables de entorno OK.
+2026-05-07 14:35:09 | [32mINFO   [0m  | __main__                  | initialize_system:110  | Environment: testing
+2026-05-07 14:35:09 | [32mINFO   [0m  | __main__                  | initialize_system:111  | Debug: True
+2026-05-07 14:35:09 | [32mINFO   [0m  | __main__                  | initialize_system:112  | Timezone: America/Lima
+2026-05-07 14:35:09 | [32mINFO   [0m  | __main__                  | initialize_system:126  | ✅ Directorios de trabajo creados: ./images, ./output, ./logs, ./csv, ./estados
+2026-05-07 14:35:09 | [32mINFO   [0m  | __main__                  | initialize_system:132  | Inicializando base de datos...
+2026-05-07 14:35:11 | [32mINFO   [0m  | __main__                  | initialize_system:134  | ✅ Base de datos inicializada (tablas creadas si no existían).
+2026-05-07 14:35:11 | [32mINFO   [0m  | __main__                  | initialize_system:146  | Inicializando contenedor de dependencias...
+2026-05-07 14:35:11 | [32mINFO   [0m  | __main__                  | initialize_system:149  | ✅ Contenedor IoC inicializado.
+2026-05-07 14:35:11 | [32mINFO   [0m  | __main__                  | initialize_system:151  |    Servicios registrados: 12
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • db_session: factory (lazy)
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • payment_service: factory (lazy)
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • promotion_service: factory (lazy)
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • purchase_repository: factory (lazy)
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • reminder_service: factory (lazy)
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • selected_service_repository: factory (lazy)
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • service_repository: factory (lazy)
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • settings: instance
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • subscription_repository: factory (lazy)
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • subscription_service: factory (lazy)
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • user_repository: factory (lazy)
+2026-05-07 14:35:11 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • user_service: factory (lazy)
+2026-05-07 14:35:11 | [32mINFO   [0m  | __main__                  | initialize_system:158  | 🚀 Sistema inicializado correctamente.
+2026-05-07 14:35:11 | [32mINFO   [0m  | __main__                  | main:518  | Magic Chatbot v2 starting - env=testing - pid=80643
+2026-05-07 14:35:11 | [32mINFO   [0m  | __main__                  | main:605  | 🤖 Modo: SOLO BOT (POLLING)
+2026-05-07 14:35:11 | [32mINFO   [0m  | __main__                  | build_telegram_app:189  | Construyendo aplicación de Telegram...
+2026-05-07 14:35:12 | [32mINFO   [0m  | __main__                  | build_telegram_app:287  | ✅ Handlers de comandos registrados: /start, /vm, /wsp, /valid, /id, /help
+2026-05-07 14:35:12 | [32mINFO   [0m  | __main__                  | build_telegram_app:295  | ✅ Handler de callbacks registrado.
+2026-05-07 14:35:12 | [32mINFO   [0m  | __main__                  | build_telegram_app:308  | ✅ Handlers de mensajes registrados (texto + imágenes).
+2026-05-07 14:35:12 | [32mINFO   [0m  | __main__                  | build_telegram_app:314  | ✅ Handler global de errores registrado.
+2026-05-07 14:35:12 | [32mINFO   [0m  | __main__                  | build_telegram_app:316  | 🏗️  Aplicación de Telegram construida exitosamente.
+2026-05-07 14:35:12 | [32mINFO   [0m  | __main__                  | run_polling:336  | 🤖 Iniciando bot en modo POLLING...
+2026-05-07 14:35:12 | [32mINFO   [0m  | __main__                  | run_polling:337  |    Presiona Ctrl+C para detener.
+2026-05-07 14:36:51 | [32mINFO   [0m  | __main__                  | initialize_system:102  | Validando variables de entorno...
+2026-05-07 14:36:51 | [32mINFO   [0m  | __main__                  | initialize_system:105  | ✅ Variables de entorno OK.
+2026-05-07 14:36:51 | [32mINFO   [0m  | __main__                  | initialize_system:110  | Environment: testing
+2026-05-07 14:36:51 | [32mINFO   [0m  | __main__                  | initialize_system:111  | Debug: True
+2026-05-07 14:36:51 | [32mINFO   [0m  | __main__                  | initialize_system:112  | Timezone: America/Lima
+2026-05-07 14:36:51 | [32mINFO   [0m  | __main__                  | initialize_system:126  | ✅ Directorios de trabajo creados: ./images, ./output, ./logs, ./csv, ./estados
+2026-05-07 14:36:51 | [32mINFO   [0m  | __main__                  | initialize_system:132  | Inicializando base de datos...
+2026-05-07 14:36:53 | [32mINFO   [0m  | __main__                  | initialize_system:134  | ✅ Base de datos inicializada (tablas creadas si no existían).
+2026-05-07 14:36:53 | [32mINFO   [0m  | __main__                  | initialize_system:146  | Inicializando contenedor de dependencias...
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | initialize_system:149  | ✅ Contenedor IoC inicializado.
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | initialize_system:151  |    Servicios registrados: 12
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • db_session: factory (lazy)
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • payment_service: factory (lazy)
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • promotion_service: factory (lazy)
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • purchase_repository: factory (lazy)
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • reminder_service: factory (lazy)
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • selected_service_repository: factory (lazy)
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • service_repository: factory (lazy)
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • settings: instance
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • subscription_repository: factory (lazy)
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • subscription_service: factory (lazy)
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • user_repository: factory (lazy)
+2026-05-07 14:36:54 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • user_service: factory (lazy)
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | initialize_system:158  | 🚀 Sistema inicializado correctamente.
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | main:518  | Magic Chatbot v2 starting - env=testing - pid=80741
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | main:605  | 🤖 Modo: SOLO BOT (POLLING)
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | build_telegram_app:189  | Construyendo aplicación de Telegram...
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | build_telegram_app:287  | ✅ Handlers de comandos registrados: /start, /vm, /wsp, /valid, /id, /help
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | build_telegram_app:295  | ✅ Handler de callbacks registrado.
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | build_telegram_app:308  | ✅ Handlers de mensajes registrados (texto + imágenes).
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | build_telegram_app:314  | ✅ Handler global de errores registrado.
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | build_telegram_app:316  | 🏗️  Aplicación de Telegram construida exitosamente.
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | run_polling:336  | 🤖 Iniciando bot en modo POLLING...
+2026-05-07 14:36:54 | [32mINFO   [0m  | __main__                  | run_polling:337  |    Presiona Ctrl+C para detener.
+2026-05-07 14:36:59 | [32mINFO   [0m  | __main__                  | initialize_system:102  | Validando variables de entorno...
+2026-05-07 14:36:59 | [32mINFO   [0m  | __main__                  | initialize_system:105  | ✅ Variables de entorno OK.
+2026-05-07 14:36:59 | [32mINFO   [0m  | __main__                  | initialize_system:110  | Environment: testing
+2026-05-07 14:36:59 | [32mINFO   [0m  | __main__                  | initialize_system:111  | Debug: True
+2026-05-07 14:36:59 | [32mINFO   [0m  | __main__                  | initialize_system:112  | Timezone: America/Lima
+2026-05-07 14:36:59 | [32mINFO   [0m  | __main__                  | initialize_system:126  | ✅ Directorios de trabajo creados: ./images, ./output, ./logs, ./csv, ./estados
+2026-05-07 14:36:59 | [32mINFO   [0m  | __main__                  | initialize_system:132  | Inicializando base de datos...
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | initialize_system:134  | ✅ Base de datos inicializada (tablas creadas si no existían).
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | initialize_system:146  | Inicializando contenedor de dependencias...
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | initialize_system:149  | ✅ Contenedor IoC inicializado.
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | initialize_system:151  |    Servicios registrados: 12
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • db_session: factory (lazy)
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • payment_service: factory (lazy)
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • promotion_service: factory (lazy)
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • purchase_repository: factory (lazy)
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • reminder_service: factory (lazy)
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • selected_service_repository: factory (lazy)
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • service_repository: factory (lazy)
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • settings: instance
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • subscription_repository: factory (lazy)
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • subscription_service: factory (lazy)
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • user_repository: factory (lazy)
+2026-05-07 14:37:01 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • user_service: factory (lazy)
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | initialize_system:158  | 🚀 Sistema inicializado correctamente.
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | main:518  | Magic Chatbot v2 starting - env=testing - pid=80791
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | main:605  | 🤖 Modo: SOLO BOT (POLLING)
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | build_telegram_app:189  | Construyendo aplicación de Telegram...
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | build_telegram_app:287  | ✅ Handlers de comandos registrados: /start, /vm, /wsp, /valid, /id, /help
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | build_telegram_app:295  | ✅ Handler de callbacks registrado.
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | build_telegram_app:308  | ✅ Handlers de mensajes registrados (texto + imágenes).
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | build_telegram_app:314  | ✅ Handler global de errores registrado.
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | build_telegram_app:316  | 🏗️  Aplicación de Telegram construida exitosamente.
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | run_polling:336  | 🤖 Iniciando bot en modo POLLING...
+2026-05-07 14:37:01 | [32mINFO   [0m  | __main__                  | run_polling:337  |    Presiona Ctrl+C para detener.
+2026-05-07 14:38:23 | [32mINFO   [0m  | __main__                  | initialize_system:102  | Validando variables de entorno...
+2026-05-07 14:38:23 | [32mINFO   [0m  | __main__                  | initialize_system:105  | ✅ Variables de entorno OK.
+2026-05-07 14:38:23 | [32mINFO   [0m  | __main__                  | initialize_system:110  | Environment: testing
+2026-05-07 14:38:23 | [32mINFO   [0m  | __main__                  | initialize_system:111  | Debug: True
+2026-05-07 14:38:23 | [32mINFO   [0m  | __main__                  | initialize_system:112  | Timezone: America/Lima
+2026-05-07 14:38:23 | [32mINFO   [0m  | __main__                  | initialize_system:126  | ✅ Directorios de trabajo creados: ./images, ./output, ./logs, ./csv, ./estados
+2026-05-07 14:38:23 | [32mINFO   [0m  | __main__                  | initialize_system:132  | Inicializando base de datos...
+2026-05-07 14:38:25 | [32mINFO   [0m  | __main__                  | initialize_system:134  | ✅ Base de datos inicializada (tablas creadas si no existían).
+2026-05-07 14:38:25 | [32mINFO   [0m  | __main__                  | initialize_system:146  | Inicializando contenedor de dependencias...
+2026-05-07 14:38:25 | [32mINFO   [0m  | __main__                  | initialize_system:149  | ✅ Contenedor IoC inicializado.
+2026-05-07 14:38:25 | [32mINFO   [0m  | __main__                  | initialize_system:151  |    Servicios registrados: 12
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • db_session: factory (lazy)
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • payment_service: factory (lazy)
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • promotion_service: factory (lazy)
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • purchase_repository: factory (lazy)
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • reminder_service: factory (lazy)
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • selected_service_repository: factory (lazy)
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • service_repository: factory (lazy)
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • settings: instance
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • subscription_repository: factory (lazy)
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • subscription_service: factory (lazy)
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • user_repository: factory (lazy)
+2026-05-07 14:38:25 | [36mDEBUG  [0m  | __main__                  | initialize_system:153  |      • user_service: factory (lazy)
+2026-05-07 14:38:25 | [32mINFO   [0m  | __main__                  | initialize_system:158  | 🚀 Sistema inicializado correctamente.
+2026-05-07 14:38:25 | [32mINFO   [0m  | __main__                  | main:518  | Magic Chatbot v2 starting - env=testing - pid=81000
+2026-05-07 14:38:25 | [32mINFO   [0m  | __main__                  | main:605  | 🤖 Modo: SOLO BOT (POLLING)
+2026-05-07 14:38:25 | [32mINFO   [0m  | __main__                  | build_telegram_app:189  | Construyendo aplicación de Telegram...
+2026-05-07 14:38:26 | [32mINFO   [0m  | __main__                  | build_telegram_app:287  | ✅ Handlers de comandos registrados: /start, /vm, /wsp, /valid, /id, /help
+2026-05-07 14:38:26 | [32mINFO   [0m  | __main__                  | build_telegram_app:295  | ✅ Handler de callbacks registrado.
+2026-05-07 14:38:26 | [32mINFO   [0m  | __main__                  | build_telegram_app:308  | ✅ Handlers de mensajes registrados (texto + imágenes).
+2026-05-07 14:38:26 | [32mINFO   [0m  | __main__                  | build_telegram_app:314  | ✅ Handler global de errores registrado.
+2026-05-07 14:38:26 | [32mINFO   [0m  | __main__                  | build_telegram_app:316  | 🏗️  Aplicación de Telegram construida exitosamente.
+2026-05-07 14:38:26 | [32mINFO   [0m  | __main__                  | run_polling:336  | 🤖 Iniciando bot en modo POLLING...
+2026-05-07 14:38:26 | [32mINFO   [0m  | __main__                  | run_polling:337  |    Presiona Ctrl+C para detener.

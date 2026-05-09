@@ -1,0 +1,33 @@
+{
+  "updated_at": "2026-05-08T12:49:02.764318",
+  "prices": [
+    {
+      "service_price_id": 1,
+      "service_id": 2,
+      "price": 100.0,
+      "discount": 0.0,
+      "duration_months": 1
+    },
+    {
+      "service_price_id": 2,
+      "service_id": 2,
+      "price": 150.0,
+      "discount": 0.0,
+      "duration_months": 2
+    },
+    {
+      "service_price_id": 3,
+      "service_id": 2,
+      "price": 200.0,
+      "discount": 0.0,
+      "duration_months": 3
+    },
+    {
+      "service_price_id": 4,
+      "service_id": 1,
+      "price": 50.0,
+      "discount": 0.0,
+      "duration_months": 0
+    }
+  ]
+}
