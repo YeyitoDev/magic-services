@@ -1,0 +1,4 @@
+videos_promocionales/*.MP4 filter=lfs diff=lfs merge=lfs -text
+imagenes_promocionales/*.jpg filter=lfs diff=lfs merge=lfs -text
+imagenes_promocionales/*.jpeg filter=lfs diff=lfs merge=lfs -text
+imagenes_promocionales/*.png filter=lfs diff=lfs merge=lfs -text
