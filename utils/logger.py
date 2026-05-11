@@ -27,7 +27,7 @@ import shutil
 import threading
 import time
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -65,7 +65,7 @@ class JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         log_entry: dict[str, Any] = {
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -296,7 +296,7 @@ class TelegramAlertHandler(logging.Handler):
             f"*Function:* `{record.funcName}:{record.lineno}`\n"
             f"*Module:* `{record.module}`\n"
             f"*PID:* `{os.getpid()}`\n"
-            f"*Time (UTC):* `{datetime.now(UTC).isoformat()}`\n\n"
+            f"*Time (UTC):* `{datetime.now(timezone.utc).isoformat()}`\n\n"
             f"*Message:* {msg}{exc_info}"
         )
 
