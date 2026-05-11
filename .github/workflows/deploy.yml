@@ -27,8 +27,9 @@ jobs:
         uses: appleboy/ssh-action@v1
         with:
           host: ssh.pythonanywhere.com
+          port: 22
           username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
-          password: ${{ secrets.PYTHONANYWHERE_PASSWORD }}
+          key: ${{ secrets.PYTHONANYWHERE_SSH_KEY }}
           script: |
             cd ~/magic-services
             git pull origin develop
@@ -59,8 +60,9 @@ jobs:
         uses: appleboy/ssh-action@v1
         with:
           host: ssh.pythonanywhere.com
+          port: 22
           username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
-          password: ${{ secrets.PYTHONANYWHERE_PASSWORD }}
+          key: ${{ secrets.PYTHONANYWHERE_SSH_KEY }}
           script: |
             cd ~/magic-services
             git pull origin main
