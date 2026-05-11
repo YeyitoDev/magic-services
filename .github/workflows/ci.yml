@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install ruff
-      - run: cd v2_refactor && ruff check .
+      - run: ruff check .
 
   test:
     needs: lint
@@ -28,21 +28,19 @@ jobs:
         with: { python-version: "${{ matrix.python-version }}" }
       - name: Install dependencies
         run: |
-          cd v2_refactor
           pip install -r requirements.txt
           pip install pytest pytest-cov pytest-asyncio
       - name: Create test .env
         run: |
-          cd v2_refactor
           cp .env.example .env
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
       - name: Run tests
-        run: cd v2_refactor && python -m pytest tests/ -v --tb=short
+        run: python -m pytest tests/ -v --tb=short
       - name: Upload coverage
         if: success()
         uses: codecov/codecov-action@v4
         with:
-          files: v2_refactor/coverage.xml
+          files: coverage.xml
           flags: unittests
