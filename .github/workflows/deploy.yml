@@ -31,7 +31,10 @@ jobs:
           username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
           key: ${{ secrets.PYTHONANYWHERE_SSH_KEY }}
           script: |
+            mkdir -p ~/magic-services/credentials
+            echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > ~/magic-services/credentials/google.json
             cd ~/magic-services
+            git checkout develop
             git pull origin develop
             source .venv/bin/activate
             echo "GOOGLE_CREDENTIALS_JSON=${{ secrets.GOOGLE_CREDENTIALS_JSON }}" >> .env.testing
@@ -64,7 +67,10 @@ jobs:
           username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
           key: ${{ secrets.PYTHONANYWHERE_SSH_KEY }}
           script: |
+            mkdir -p ~/magic-services/credentials
+            echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > ~/magic-services/credentials/google.json
             cd ~/magic-services
+            git checkout main
             git pull origin main
             source .venv/bin/activate
             echo "GOOGLE_CREDENTIALS_JSON=${{ secrets.GOOGLE_CREDENTIALS_JSON }}" >> .env.production

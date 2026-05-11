@@ -26,6 +26,7 @@ def get_google_credentials() -> dict[str, Any]:
     Obtiene las credenciales de Google Cloud desde:
     1. Variable de entorno GOOGLE_CREDENTIALS_JSON (prod/CI)
     2. Archivo JSON en GOOGLE_CREDENTIALS_PATH (dev local)
+    3. Archivo por defecto: credentials/google.json (PythonAnywhere)
 
     Returns:
         Diccionario con las credenciales de la service account.
@@ -36,17 +37,24 @@ def get_google_credentials() -> dict[str, Any]:
     """
     from config.settings import settings
 
-    # Opción 1: Variable de entorno con el JSON completo (producción)
+    # 1. Variable de entorno GOOGLE_CREDENTIALS_JSON (prod/CI)
     creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
     if creds_json:
         logger.info("Google credentials loaded from GOOGLE_CREDENTIALS_JSON env var")
         return json.loads(creds_json)
 
-    # Opción 2: Archivo JSON local (desarrollo)
+    # 2. Archivo JSON en GOOGLE_CREDENTIALS_PATH (dev/PythonAnywhere)
     creds_path = settings.GOOGLE_CREDENTIALS_PATH
     if creds_path and os.path.exists(creds_path):
         logger.info(f"Google credentials loaded from file: {creds_path}")
-        with open(creds_path) as f:
+        with open(creds_path, 'r') as f:
+            return json.load(f)
+
+    # 3. Archivo por defecto: credentials/google.json
+    default_path = "./credentials/google.json"
+    if os.path.exists(default_path):
+        logger.info(f"Google credentials loaded from default file: {default_path}")
+        with open(default_path, 'r') as f:
             return json.load(f)
 
     raise FileNotFoundError(
