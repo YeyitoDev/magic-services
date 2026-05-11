@@ -1,12 +1,3 @@
-```yaml name=deploy.yml
-# ==========================================
-# Magic Chatbot v2 - Deploy Workflow
-# ==========================================
-# Despliegue específico por ambiente (testing/production).
-# - develop → testing (manual o automático)
-# - main    → production (solo automático)
-# ==========================================
-
 name: Deploy
 
 on:
@@ -15,68 +6,73 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Ambiente'
+        description: "Ambiente"
         required: true
-        default: 'testing'
+        default: "testing"
         type: choice
-        options: ['testing', 'production']
+        options: ["testing", "production"]
 
 jobs:
-  # ------------------------------------------------------------------
-  # TESTING
-  # ------------------------------------------------------------------
   deploy-testing:
     if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'testing')
     runs-on: ubuntu-latest
     environment: testing
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: |
+          pip install -r requirements.txt pytest
+          python -m pytest tests/ -x --tb=short
+      - name: Deploy to PythonAnywhere via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ssh.pythonanywhere.com
+          username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
+          password: ${{ secrets.PYTHONANYWHERE_PASSWORD }}
+          script: |
+            cd ~/magic-services
+            git pull origin develop
+            source .venv/bin/activate
+            echo "GOOGLE_CREDENTIALS_JSON=${{ secrets.GOOGLE_CREDENTIALS_JSON }}" >> .env.testing
+            cp .env.testing .env
+      - name: Restart always-on task
+        run: |
+          curl -X POST "https://www.pythonanywhere.com/api/v0/user/${{ secrets.PYTHONANYWHERE_USERNAME }}/always_on/" \
+            -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_API_TOKEN }}"
+      - name: Notify
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=6475885611" \
+            -d "text=🧪 Deploy TESTING completado - $(date +'%H:%M')"
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with: { python-version: '3.12' }
-
-    - name: Run tests
-      run: |
-        cd v2_refactor
-        pip install -r requirements.txt
-        pip install pytest
-        python -m pytest tests/ -x --tb=short
-
-    - name: Notify Telegram
-      run: |
-        curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-          -d "chat_id=6475885611" \
-          -d "text=🧪 Deploy TESTING - Magic Chatbot v2 - $(date +'%Y-%m-%d %H:%M')"
-
-  # ------------------------------------------------------------------
-  # PRODUCTION
-  # ------------------------------------------------------------------
   deploy-production:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with: { python-version: '3.12' }
-
-    - name: Run tests
-      run: |
-        cd v2_refactor
-        pip install -r requirements.txt
-        pip install pytest
-        python -m pytest tests/ -x --tb=short
-
-    - name: Deploy to PythonAnywhere
-      run: |
-        curl -X POST "https://www.pythonanywhere.com/api/v0/user/${{ secrets.PYTHONANYWHERE_USERNAME }}/webapps/${{ secrets.PYTHONANYWHERE_DOMAIN }}/reload/" \
-          -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_API_TOKEN }}"
-
-    - name: Notify Telegram
-      run: |
-        curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-          -d "chat_id=6475885611" \
-          -d "text=🚀 Deploy PRODUCCIÓN - Magic Chatbot v2 - $(date +'%Y-%m-%d %H:%M')"
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: |
+          pip install -r requirements.txt pytest
+          python -m pytest tests/ -x --tb=short
+      - name: Deploy to PythonAnywhere via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ssh.pythonanywhere.com
+          username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
+          password: ${{ secrets.PYTHONANYWHERE_PASSWORD }}
+          script: |
+            cd ~/magic-services
+            git pull origin main
+            source .venv/bin/activate
+            echo "GOOGLE_CREDENTIALS_JSON=${{ secrets.GOOGLE_CREDENTIALS_JSON }}" >> .env.production
+            cp .env.production .env
+      - name: Restart always-on task
+        run: |
+          curl -X POST "https://www.pythonanywhere.com/api/v0/user/${{ secrets.PYTHONANYWHERE_USERNAME }}/always_on/" \
+            -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_API_TOKEN }}"
+      - name: Notify
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=6475885611" \
+            -d "text=🚀 Deploy PRODUCCIÓN completado - $(date +'%H:%M')"
