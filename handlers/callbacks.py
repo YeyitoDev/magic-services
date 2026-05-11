@@ -94,6 +94,10 @@ class CallbackHandlers:
             else:
                 await query.edit_message_text(text=text, reply_markup=reply_markup)
         except Exception as e:
+            error_msg = str(e)
+            if "not modified" in error_msg.lower() or "message is not modified" in error_msg.lower():
+                logger.debug(f"Mensaje no modificado (ignorado): {e}")
+                return  # Not an error, content is the same
             logger.warning(f"No se pudo editar mensaje: {e}")
 
     # ------------------------------------------------------------------
@@ -175,6 +179,10 @@ class CallbackHandlers:
                 )
 
         except Exception as e:
+            error_msg = str(e)
+            if "not modified" in error_msg.lower() or "message is not modified" in error_msg.lower():
+                logger.debug(f"Mensaje no modificado: {e}")
+                return  # Ignore, content didn't change
             logger.error(f"Error en callback '{context_button}': {e}", exc_info=True)
             await self._safe_edit_message(
                 query,
