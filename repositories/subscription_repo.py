@@ -16,9 +16,8 @@ Uso:
 """
 
 from datetime import date, timedelta
-from typing import List, Optional
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_
 
 from models.purchase import Purchase
 from models.subscription import Subscription
@@ -37,7 +36,7 @@ class SubscriptionRepository(BaseRepository):
     # Consultas de suscripciones activas
     # ------------------------------------------------------------------
 
-    def get_active_subs(self) -> List[Subscription]:
+    def get_active_subs(self) -> list[Subscription]:
         """
         Obtiene todas las suscripciones actualmente activas.
 
@@ -55,7 +54,7 @@ class SubscriptionRepository(BaseRepository):
 
     def get_active_sub(
         self, user_telegram_id: int
-    ) -> List[Subscription]:
+    ) -> list[Subscription]:
         """
         Obtiene las suscripciones activas de un usuario específico.
 
@@ -79,7 +78,7 @@ class SubscriptionRepository(BaseRepository):
 
     def get_sub_by_user_and_service(
         self, user_telegram_id: int, service_id: int
-    ) -> Optional[Subscription]:
+    ) -> Subscription | None:
         """
         Busca la suscripción de un usuario a un servicio específico.
 
@@ -108,7 +107,7 @@ class SubscriptionRepository(BaseRepository):
     # Consultas de suscripciones vencidas / próximas a vencer
     # ------------------------------------------------------------------
 
-    def get_expired_subs(self) -> List[Subscription]:
+    def get_expired_subs(self) -> list[Subscription]:
         """
         Obtiene suscripciones vencidas (end_date < hoy).
 
@@ -124,7 +123,7 @@ class SubscriptionRepository(BaseRepository):
             .all()
         )
 
-    def get_expiring_soon(self, days: int = 3) -> List[Subscription]:
+    def get_expiring_soon(self, days: int = 3) -> list[Subscription]:
         """
         Obtiene suscripciones que vencerán en los próximos N días.
 

@@ -43,16 +43,14 @@ import argparse
 import asyncio
 import logging
 import os
-import signal
 import sys
 import threading
-from typing import Optional
 
 # ---------------------------------------------------------------------------
 # Configuración temprana de logging
 # ---------------------------------------------------------------------------
-
 from utils.logger import configure_root_logger, init_logging
+
 init_logging()
 configure_root_logger()
 logger = logging.getLogger(__name__)
@@ -93,8 +91,8 @@ def initialize_system():
         SystemExit: Si faltan variables de entorno críticas.
     """
     from config.settings import settings
-    from core.database import init_db
     from core.container import container
+    from core.database import init_db
 
     # ------------------------------------------------------------------
     # Paso 1: Validar variables de entorno
@@ -178,9 +176,9 @@ def build_telegram_app(container):
     """
     from telegram.ext import (
         ApplicationBuilder,
+        CallbackQueryHandler,
         CommandHandler,
         MessageHandler,
-        CallbackQueryHandler,
         filters,
     )
 
@@ -229,10 +227,10 @@ def build_telegram_app(container):
     # ------------------------------------------------------------------
     # Crear handlers
     # ------------------------------------------------------------------
-    from handlers.commands import CommandHandlers
-    from handlers.messages import MessageHandlers
     from handlers.callbacks import CallbackHandlers
+    from handlers.commands import CommandHandlers
     from handlers.errors import ErrorHandler
+    from handlers.messages import MessageHandlers
 
     command_handlers = CommandHandlers(
         user_service=user_service,
@@ -331,7 +329,6 @@ def run_polling(app) -> None:
     Args:
         app: Application de python-telegram-bot.
     """
-    from config.settings import settings
 
     logger.info("🤖 Iniciando bot en modo POLLING...")
     logger.info("   Presiona Ctrl+C para detener.")

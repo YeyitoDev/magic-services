@@ -26,9 +26,8 @@ Uso:
 import logging
 import os
 from datetime import datetime
-from typing import Optional
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update
 from telegram.ext import ContextTypes
 
 logger = logging.getLogger(__name__)
@@ -127,7 +126,6 @@ class CallbackHandlers:
         context_button = data[0]
         user_id = int(query.from_user.id)
         nombre_usuario = query.from_user.first_name or "Usuario"
-        message_id = query.message.message_id
 
         logger.debug(
             f"Callback recibido: button={context_button}, user={user_id}, "
@@ -290,8 +288,8 @@ class CallbackHandlers:
 
         # Guardar la selección del usuario
         service_name = "Grupo VIP" if tipo_servicio in ("Grupo VIP", "grupo_vip") else tipo_servicio
-        from repositories.selected_service_repo import SelectedServiceRepository
         from core.database import SessionLocal
+        from repositories.selected_service_repo import SelectedServiceRepository
 
         session = SessionLocal()
         try:
@@ -466,8 +464,8 @@ class CallbackHandlers:
                 )
 
                 # Guardar selección
-                from repositories.selected_service_repo import SelectedServiceRepository
                 from core.database import SessionLocal
+                from repositories.selected_service_repo import SelectedServiceRepository
 
                 session = SessionLocal()
                 try:
@@ -499,7 +497,6 @@ class CallbackHandlers:
         self, update, context, user_id, nombre_usuario, tipo_servicio, image_path
     ):
         """Procesa una imagen de comprobante ya existente."""
-        query = update.callback_query
 
         await context.bot.send_message(
             chat_id=user_id,
@@ -582,7 +579,6 @@ class CallbackHandlers:
         """
         query = update.callback_query
         validator_id = query.from_user.id
-        validator_name = query.from_user.first_name or "Validador"
         message_id = query.message.message_id
 
         # Parsear datos del callback
@@ -668,7 +664,7 @@ class CallbackHandlers:
         invite_link = await self._get_invite_link(context, tipo_servicio)
 
         # Enviar confirmación al comprador
-        from utils.keyboards import post_purchase_keyboard, betsafe_promo_keyboard
+        from utils.keyboards import betsafe_promo_keyboard
 
         await context.bot.send_message(
             chat_id=user_id,
@@ -708,8 +704,8 @@ class CallbackHandlers:
         )
 
         # Limpiar
-        from repositories.selected_service_repo import SelectedServiceRepository
         from core.database import SessionLocal
+        from repositories.selected_service_repo import SelectedServiceRepository
 
         session = SessionLocal()
         try:
@@ -929,7 +925,7 @@ class CallbackHandlers:
 
     async def _get_invite_link(
         self, context: ContextTypes.DEFAULT_TYPE, tipo_servicio: str
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Obtiene el link de invitación para un tipo de servicio.
         Usa python-telegram-bot para crear un link de un solo uso.

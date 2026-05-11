@@ -32,7 +32,6 @@ Uso:
 import logging
 import os
 from datetime import datetime
-from typing import Optional
 
 import pandas as pd
 from telegram import Update
@@ -286,19 +285,19 @@ class CommandHandlers:
                 await context.bot.send_message(
                     chat_id=user_id,
                     text=(
-                        f"✅ ¡Pago validado exitosamente!\n\n"
-                        f"🎁 No olvides reclamar tu bono de S/ 70 gratis "
-                        f"en Betsafe:"
+                        "✅ ¡Pago validado exitosamente!\n\n"
+                        "🎁 No olvides reclamar tu bono de S/ 70 gratis "
+                        "en Betsafe:"
                     ),
                     reply_markup=post_purchase_keyboard(invite_link),
                 )
 
                 # Limpiar selección de servicio pendiente
                 try:
+                    from core.database import SessionLocal
                     from repositories.selected_service_repo import (
                         SelectedServiceRepository,
                     )
-                    from core.database import SessionLocal
 
                     session = SessionLocal()
                     selected_repo = SelectedServiceRepository(session)
@@ -516,7 +515,6 @@ class CommandHandlers:
         logger.info(f"/valid recibido: {update.message.text}")
 
         telegram_id = int(update.message.chat.id)
-        nombre_usuario = update.message.chat.first_name or "Usuario"
         message_text = update.message.text
         args = message_text.split(" ")
 
@@ -547,7 +545,7 @@ class CommandHandlers:
                 )
                 return
 
-            if row["claimed"].values[0] == True:
+            if row["claimed"].values[0]:
                 await update.message.reply_text(
                     "Error: El ID ya ha sido registrado. Muchas gracias."
                 )
@@ -818,7 +816,7 @@ class CommandHandlers:
 
         from config.settings import settings
 
-        LINK_DEFECTO_VIP = settings.TELEGRAM_DEFAULT_VIP_LINK
+        link_defecto_vip = settings.TELEGRAM_DEFAULT_VIP_LINK
 
         if tipo_servicio in ("grupo_vip", "Grupo VIP"):
             try:
@@ -838,7 +836,7 @@ class CommandHandlers:
                 logger.error(
                     f"No se pudo generar link VIP, usando por defecto: {e}"
                 )
-                return LINK_DEFECTO_VIP
+                return link_defecto_vip
         else:
             # Para Stake, obtener el ID del grupo desde Sheets
             if self._sheets_service:
@@ -858,4 +856,4 @@ class CommandHandlers:
                 f"No se pudo obtener link para {tipo_servicio}. "
                 f"Usando link por defecto."
             )
-            return LINK_DEFECTO_VIP
+            return link_defecto_vip

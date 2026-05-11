@@ -30,11 +30,9 @@ Uso:
     results = promo_service.process_promotion_pipeline()
 """
 
-import json
 import logging
 import time
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import boto3
 from boto3.dynamodb.conditions import Attr
@@ -106,8 +104,8 @@ class PromotionService:
 
     def __init__(
         self,
-        region_name: Optional[str] = None,
-        table_name: Optional[str] = None,
+        region_name: str | None = None,
+        table_name: str | None = None,
     ) -> None:
         """
         Inicializa el servicio de promociones con conexión a DynamoDB.
@@ -240,7 +238,7 @@ class PromotionService:
     # Búsqueda de usuarios
     # ------------------------------------------------------------------
 
-    def get_user_status(self, user_id: str) -> Optional[str]:
+    def get_user_status(self, user_id: str) -> str | None:
         """
         Obtiene el estado actual de un usuario en la tabla DynamoDB.
 
@@ -281,7 +279,7 @@ class PromotionService:
     # Pipeline de promociones (método principal)
     # ------------------------------------------------------------------
 
-    def process_promotion_pipeline(self) -> List[Dict[str, Any]]:
+    def process_promotion_pipeline(self) -> list[dict[str, Any]]:
         """
         Ejecuta una iteración del pipeline de promociones.
 
@@ -400,7 +398,7 @@ class PromotionService:
     # Métodos auxiliares internos
     # ------------------------------------------------------------------
 
-    def _scan_users_not_finalized(self) -> List[Dict[str, Any]]:
+    def _scan_users_not_finalized(self) -> list[dict[str, Any]]:
         """
         Escanea la tabla DynamoDB y retorna todos los items con
         estado != 'FINALIZADO'.
@@ -459,7 +457,7 @@ class PromotionService:
                 return promo['orden']
         return 0  # Por defecto, tratar como pendiente
 
-    def _get_siguiente_promo(self, orden_actual: int) -> Optional[Dict]:
+    def _get_siguiente_promo(self, orden_actual: int) -> dict | None:
         """
         Obtiene la siguiente promoción en el pipeline según el orden actual.
 
@@ -474,7 +472,7 @@ class PromotionService:
                 return promo
         return None
 
-    def _enviar_promocion(self, user_id: str, promo: Dict) -> None:
+    def _enviar_promocion(self, user_id: str, promo: dict) -> None:
         """
         Envía una promoción (video + mensaje) a un usuario por Telegram.
 
@@ -585,7 +583,7 @@ class PromotionService:
     # Métodos de utilidad
     # ------------------------------------------------------------------
 
-    def get_pipeline_stats(self) -> Dict[str, int]:
+    def get_pipeline_stats(self) -> dict[str, int]:
         """
         Obtiene estadísticas del pipeline de promociones.
 

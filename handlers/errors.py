@@ -25,14 +25,12 @@ Uso:
 """
 
 import html
-import json
 import logging
 import traceback
-from typing import Optional
 
 from telegram import Update
-from telegram.ext import ContextTypes, CallbackContext
 from telegram.constants import ParseMode
+from telegram.ext import ContextTypes
 
 from config.settings import settings
 
@@ -64,7 +62,7 @@ class ErrorHandler:
     # ------------------------------------------------------------------
 
     async def handle(
-        self, update: Optional[object], context: ContextTypes.DEFAULT_TYPE
+        self, update: object | None, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """
         Callback principal de manejo de errores.
@@ -110,7 +108,7 @@ class ErrorHandler:
     # Extracción de información del update
     # ------------------------------------------------------------------
 
-    def _extract_update_info(self, update: Optional[object]) -> str:
+    def _extract_update_info(self, update: object | None) -> str:
         """
         Extrae información relevante del update para el log de errores.
 
@@ -160,7 +158,7 @@ class ErrorHandler:
 
     async def _notify_user(
         self,
-        update: Optional[object],
+        update: object | None,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
@@ -204,7 +202,7 @@ class ErrorHandler:
 
     async def _notify_admins(
         self,
-        update: Optional[object],
+        update: object | None,
         error: Exception,
         tb_string: str,
         context: ContextTypes.DEFAULT_TYPE,

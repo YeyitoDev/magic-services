@@ -25,16 +25,14 @@ Autor: Magic Chatbot v2 Team
 """
 
 import argparse
-import logging
 import sys
 import time
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Configuración de logging
 # ---------------------------------------------------------------------------
-
 from utils.logger import setup_logger
 
 logger = setup_logger(
@@ -48,7 +46,7 @@ logger = setup_logger(
 # Funciones principales del job
 # ---------------------------------------------------------------------------
 
-def run_promotion_pipeline(container) -> Dict[str, Any]:
+def run_promotion_pipeline(container) -> dict[str, Any]:
     """
     Ejecuta una iteración del pipeline de promociones de BetSafe.
 
@@ -138,7 +136,7 @@ def run_promotion_pipeline(container) -> Dict[str, Any]:
     return stats
 
 
-def run_reminder_job(container) -> Dict[str, Any]:
+def run_reminder_job(container) -> dict[str, Any]:
     """
     Ejecuta una iteración del job de recordatorios de compra pendiente.
 
@@ -210,7 +208,7 @@ def run_reminder_job(container) -> Dict[str, Any]:
     return stats
 
 
-def run_all_jobs(container) -> Dict[str, Any]:
+def run_all_jobs(container) -> dict[str, Any]:
     """
     Ejecuta todos los jobs batch en secuencia.
 

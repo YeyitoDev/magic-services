@@ -18,7 +18,7 @@ Uso:
             return self._session.query(User).filter_by(id=user_id).first()
 """
 
-from typing import Any, List
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -59,7 +59,7 @@ class BaseRepository:
         """
         self._session.add(entity)
 
-    def add_all(self, entities: List[Any]) -> None:
+    def add_all(self, entities: list[Any]) -> None:
         """
         Agrega múltiples entidades a la sesión en una sola operación.
 

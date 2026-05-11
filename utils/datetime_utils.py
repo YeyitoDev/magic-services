@@ -19,7 +19,6 @@ Uso:
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, Optional
 
 import pytz
 
@@ -29,13 +28,13 @@ import pytz
 
 LIMA_TZ = pytz.timezone("America/Lima")
 
-MONTHS_SPANISH: Dict[int, str] = {
+MONTHS_SPANISH: dict[int, str] = {
     1: "enero", 2: "febrero", 3: "marzo", 4: "abril",
     5: "mayo", 6: "junio", 7: "julio", 8: "agosto",
     9: "septiembre", 10: "octubre", 11: "noviembre", 12: "diciembre",
 }
 
-DAYS_SPANISH: Dict[int, str] = {
+DAYS_SPANISH: dict[int, str] = {
     0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves",
     4: "Viernes", 5: "Sábado", 6: "Domingo",
 }
@@ -61,7 +60,7 @@ def get_lima_time() -> datetime:
     return utc_now.astimezone(LIMA_TZ)
 
 
-def get_lima_time_formatted() -> Dict[str, object]:
+def get_lima_time_formatted() -> dict[str, object]:
     """
     Retorna la fecha/hora actual de Perú en múltiples formatos.
 
@@ -152,7 +151,7 @@ def format_date_short_spanish(dt: datetime) -> str:
 # Parsing de fechas
 # ---------------------------------------------------------------------------
 
-def parse_purchase_date(date_str: str) -> Optional[datetime]:
+def parse_purchase_date(date_str: str) -> datetime | None:
     """
     Parsea una fecha en formato ddmmyyyy a un objeto datetime con timezone Lima.
 
@@ -180,7 +179,7 @@ def parse_purchase_date(date_str: str) -> Optional[datetime]:
         return None
 
 
-def parse_date_flexible(date_str: str) -> Optional[datetime]:
+def parse_date_flexible(date_str: str) -> datetime | None:
     """
     Parsea una fecha en múltiples formatos comunes y retorna datetime con
     timezone Lima.
@@ -224,7 +223,7 @@ def parse_date_flexible(date_str: str) -> Optional[datetime]:
     return None
 
 
-def parse_date_from_text(text: str) -> Optional[datetime]:
+def parse_date_from_text(text: str) -> datetime | None:
     """
     Extrae y parsea una fecha desde texto usando los patrones comunes
     en comprobantes de pago peruanos.

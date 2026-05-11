@@ -29,7 +29,7 @@ Uso:
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import requests
 
@@ -84,10 +84,10 @@ class TelegramAPIService:
         self,
         method: str,
         endpoint: str,
-        data: Optional[Dict[str, Any]] = None,
-        files: Optional[Dict[str, Any]] = None,
-        timeout: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        data: dict[str, Any] | None = None,
+        files: dict[str, Any] | None = None,
+        timeout: int | None = None,
+    ) -> dict[str, Any]:
         """
         Realiza una petición HTTP a la API de Telegram.
 
@@ -147,9 +147,9 @@ class TelegramAPIService:
         chat_id: int,
         text: str,
         parse_mode: str = "HTML",
-        reply_markup: Optional[Any] = None,
+        reply_markup: Any | None = None,
         disable_notification: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Envía un mensaje de texto a un chat.
 
@@ -163,7 +163,7 @@ class TelegramAPIService:
         Returns:
             Respuesta de la API con el mensaje enviado.
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "chat_id": chat_id,
             "text": text,
             "disable_notification": disable_notification,
@@ -190,8 +190,8 @@ class TelegramAPIService:
         photo: str,
         caption: str = "",
         parse_mode: str = "HTML",
-        reply_markup: Optional[Any] = None,
-    ) -> Dict[str, Any]:
+        reply_markup: Any | None = None,
+    ) -> dict[str, Any]:
         """
         Envía una foto a un chat.
 
@@ -205,7 +205,7 @@ class TelegramAPIService:
         Returns:
             Respuesta de la API.
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "chat_id": chat_id,
             "caption": caption,
         }
@@ -240,9 +240,9 @@ class TelegramAPIService:
         video: str,
         caption: str = "",
         parse_mode: str = "HTML",
-        reply_markup: Optional[Any] = None,
+        reply_markup: Any | None = None,
         supports_streaming: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Envía un video a un chat.
 
@@ -257,7 +257,7 @@ class TelegramAPIService:
         Returns:
             Respuesta de la API.
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "chat_id": chat_id,
             "caption": caption,
             "supports_streaming": supports_streaming,
@@ -290,7 +290,7 @@ class TelegramAPIService:
     # Gestión de miembros del chat
     # ------------------------------------------------------------------
 
-    def kick_user(self, chat_id: int, user_id: int) -> Dict[str, Any]:
+    def kick_user(self, chat_id: int, user_id: int) -> dict[str, Any]:
         """
         Expulsa (kick) a un usuario del chat/grupo.
 
@@ -316,8 +316,8 @@ class TelegramAPIService:
         self,
         chat_id: int,
         user_id: int,
-        until_date: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        until_date: int | None = None,
+    ) -> dict[str, Any]:
         """
         Banea a un usuario del chat.
 
@@ -330,7 +330,7 @@ class TelegramAPIService:
         Returns:
             Respuesta de la API.
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "chat_id": chat_id,
             "user_id": user_id,
         }
@@ -349,7 +349,7 @@ class TelegramAPIService:
         chat_id: int,
         user_id: int,
         only_if_banned: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Desbanea a un usuario del chat, permitiéndole re-unirse.
 
@@ -361,7 +361,7 @@ class TelegramAPIService:
         Returns:
             Respuesta de la API.
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "chat_id": chat_id,
             "user_id": user_id,
             "only_if_banned": only_if_banned,
@@ -372,7 +372,7 @@ class TelegramAPIService:
 
     def remove_user_allow_rejoin(
         self, chat_id: int, user_id: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Expulsa a un usuario y lo desbanea inmediatamente para permitir
         que pueda re-unirse al grupo con un enlace de invitación.
@@ -430,10 +430,10 @@ class TelegramAPIService:
     def create_invite_link(
         self,
         chat_id: int,
-        expire_date: Optional[int] = None,
+        expire_date: int | None = None,
         member_limit: int = 1,
-        name: Optional[str] = None,
-    ) -> Optional[str]:
+        name: str | None = None,
+    ) -> str | None:
         """
         Crea un enlace de invitación de un solo uso para un chat/grupo.
 
@@ -452,7 +452,7 @@ class TelegramAPIService:
         if expire_date is None:
             expire_date = int(time.time()) + 86400  # 24 horas
 
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "chat_id": chat_id,
             "member_limit": member_limit,
             "expire_date": expire_date,
@@ -475,7 +475,7 @@ class TelegramAPIService:
             )
             return None
 
-    def export_chat_invite_link(self, chat_id: int) -> Optional[str]:
+    def export_chat_invite_link(self, chat_id: int) -> str | None:
         """
         Obtiene el enlace de invitación principal del chat.
 
@@ -508,7 +508,7 @@ class TelegramAPIService:
 
     def get_chat_administrators(
         self, chat_id: int
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Obtiene la lista de administradores de un chat/grupo.
 
@@ -537,7 +537,7 @@ class TelegramAPIService:
             )
             return []
 
-    def get_admin_user_ids(self, chat_id: int) -> List[int]:
+    def get_admin_user_ids(self, chat_id: int) -> list[int]:
         """
         Obtiene solo los IDs de los administradores del chat.
 
@@ -560,7 +560,7 @@ class TelegramAPIService:
 
     def get_chat_member(
         self, chat_id: int, user_id: int
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Obtiene información sobre un miembro específico del chat.
 

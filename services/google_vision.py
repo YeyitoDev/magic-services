@@ -19,14 +19,11 @@ Uso:
     # texto: "¡Yapeaste! S/ 150.00 a Jose Gonzalez"
 """
 
-import io
 import logging
-from typing import Optional
 
 from google.cloud import vision
 
 from services.google_credentials import get_google_credentials
-from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +40,7 @@ class GoogleVisionService:
         _client (vision.ImageAnnotatorClient): Cliente autenticado de Vision API.
     """
 
-    def __init__(self, credentials_path: Optional[str] = None) -> None:
+    def __init__(self, credentials_path: str | None = None) -> None:
         """
         Inicializa el cliente de Google Cloud Vision.
 
@@ -106,7 +103,7 @@ class GoogleVisionService:
 
         # Leer la imagen desde el sistema de archivos
         try:
-            with io.open(image_path, 'rb') as image_file:
+            with open(image_path, 'rb') as image_file:
                 content = image_file.read()
         except FileNotFoundError:
             logger.error(f"Archivo de imagen no encontrado: {image_path}")
@@ -219,7 +216,7 @@ class GoogleVisionService:
 # Instancia por defecto (singleton a nivel módulo, lazy)
 # ---------------------------------------------------------------------------
 
-_vision_service_instance: Optional[GoogleVisionService] = None
+_vision_service_instance: GoogleVisionService | None = None
 
 
 def get_vision_service() -> GoogleVisionService:

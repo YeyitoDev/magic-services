@@ -30,14 +30,14 @@ Uso:
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
+import gspread
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-import gspread
 
-from services.google_credentials import get_google_credentials
 from config.settings import settings
+from services.google_credentials import get_google_credentials
 
 logger = logging.getLogger(__name__)
 
@@ -77,9 +77,9 @@ class GoogleSheetsService:
 
     def __init__(
         self,
-        credentials_path: Optional[str] = None,
-        spreadsheet_id: Optional[str] = None,
-        wsp_spreadsheet_id: Optional[str] = None,
+        credentials_path: str | None = None,
+        spreadsheet_id: str | None = None,
+        wsp_spreadsheet_id: str | None = None,
     ) -> None:
         """
         Inicializa el cliente de Google Sheets.
@@ -141,9 +141,9 @@ class GoogleSheetsService:
     def fetch_data(
         self,
         sheet_name: str,
-        spreadsheet_id: Optional[str] = None,
+        spreadsheet_id: str | None = None,
         range_spec: str = "A:F",
-    ) -> List[List[str]]:
+    ) -> list[list[str]]:
         """
         Obtiene los valores de una hoja de cálculo.
 
@@ -187,8 +187,8 @@ class GoogleSheetsService:
     def insert_data(
         self,
         sheet_name: str,
-        row_data: List[Any],
-        spreadsheet_id: Optional[str] = None,
+        row_data: list[Any],
+        spreadsheet_id: str | None = None,
     ) -> bool:
         """
         Inserta una nueva fila al final de una hoja de cálculo.
@@ -244,7 +244,7 @@ class GoogleSheetsService:
         row: int,
         col: int,
         value: Any,
-        spreadsheet_id: Optional[str] = None,
+        spreadsheet_id: str | None = None,
     ) -> bool:
         """
         Actualiza una celda específica en una hoja de cálculo.
@@ -275,8 +275,8 @@ class GoogleSheetsService:
     def get_all_records(
         self,
         sheet_name: str,
-        spreadsheet_id: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        spreadsheet_id: str | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Obtiene todos los registros de una hoja como lista de diccionarios.
 
@@ -312,7 +312,7 @@ class GoogleSheetsService:
     # ------------------------------------------------------------------
 
     def register_new_user(
-        self, user_data: List[Any]
+        self, user_data: list[Any]
     ) -> bool:
         """
         Registra un nuevo usuario en la hoja de usuarios registrados.
@@ -327,7 +327,7 @@ class GoogleSheetsService:
         return self.insert_data(SHEET_USUARIOS_REGISTRADOS, user_data)
 
     def register_vip_subscription(
-        self, subscription_data: List[Any]
+        self, subscription_data: list[Any]
     ) -> bool:
         """
         Registra una suscripción VIP en la hoja de histórico.
@@ -416,7 +416,7 @@ class GoogleSheetsService:
 
     def get_wsp_transfer_url(
         self, wsp_id: int, telegram_id: int
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Versión simplificada: solo retorna la URL de la transferencia.
         (Compatible con la función original wsp_obtener_url_yapeo_por_id)
@@ -483,7 +483,7 @@ class GoogleSheetsService:
     # Links de grupos de Telegram
     # ------------------------------------------------------------------
 
-    def get_service_group_id(self, tipo_servicio: str) -> Optional[str]:
+    def get_service_group_id(self, tipo_servicio: str) -> str | None:
         """
         Obtiene el ID del grupo de Telegram correspondiente a un tipo de servicio.
 
@@ -527,7 +527,7 @@ class GoogleSheetsService:
     def get_next_available_row(
         self,
         sheet_name: str,
-        spreadsheet_id: Optional[str] = None,
+        spreadsheet_id: str | None = None,
     ) -> int:
         """
         Obtiene el número de la siguiente fila disponible en una hoja.
@@ -547,8 +547,8 @@ class GoogleSheetsService:
         sheet_name: str,
         column_index: int,
         query_value: Any,
-        spreadsheet_id: Optional[str] = None,
-    ) -> List[List[str]]:
+        spreadsheet_id: str | None = None,
+    ) -> list[list[str]]:
         """
         Busca filas donde una columna específica coincida con un valor.
 
@@ -595,7 +595,7 @@ class GoogleSheetsService:
 # Instancia por defecto
 # ---------------------------------------------------------------------------
 
-_sheets_service_instance: Optional[GoogleSheetsService] = None
+_sheets_service_instance: GoogleSheetsService | None = None
 
 
 def get_sheets_service() -> GoogleSheetsService:

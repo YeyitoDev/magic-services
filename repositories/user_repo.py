@@ -13,9 +13,7 @@ Uso:
     user = repo.get_or_create(telegram_id=12345, telegram_name="Juan")
 """
 
-from typing import Optional
 
-from sqlalchemy.orm import Session
 
 from models.user import User
 from repositories.base import BaseRepository
@@ -33,7 +31,7 @@ class UserRepository(BaseRepository):
     # Búsqueda
     # ------------------------------------------------------------------
 
-    def get_by_telegram_id(self, telegram_id: int) -> Optional[User]:
+    def get_by_telegram_id(self, telegram_id: int) -> User | None:
         """
         Busca un usuario por su ID de Telegram.
 

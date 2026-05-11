@@ -19,10 +19,8 @@ Uso:
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 from sqlalchemy import desc, func
-from sqlalchemy.orm import Session
 
 from models.purchase import Purchase
 from repositories.base import BaseRepository
@@ -45,7 +43,7 @@ class PurchaseRepository(BaseRepository):
         service_id: int,
         price: float,
         from_channel: str,
-        purchase_date: Optional[datetime] = None,
+        purchase_date: datetime | None = None,
     ) -> Purchase:
         """
         Crea y persiste un nuevo registro de compra.
@@ -80,7 +78,7 @@ class PurchaseRepository(BaseRepository):
         user_id: int,
         amount: float,
         hours: int = 24,
-    ) -> List[Purchase]:
+    ) -> list[Purchase]:
         """
         Busca compras recientes de un usuario que coincidan con un monto.
 
@@ -136,7 +134,7 @@ class PurchaseRepository(BaseRepository):
 
     def get_all_last_purchases_for_service(
         self, service_id: int
-    ) -> List[Purchase]:
+    ) -> list[Purchase]:
         """
         Obtiene la última compra de cada usuario para un servicio dado.
 
@@ -177,7 +175,7 @@ class PurchaseRepository(BaseRepository):
     # Consultas por usuario
     # ------------------------------------------------------------------
 
-    def get_by_user_id(self, user_telegram_id: int) -> List[Purchase]:
+    def get_by_user_id(self, user_telegram_id: int) -> list[Purchase]:
         """
         Obtiene todas las compras de un usuario, ordenadas por fecha descendente.
 
@@ -196,7 +194,7 @@ class PurchaseRepository(BaseRepository):
 
     def get_last_purchase_by_user(
         self, user_telegram_id: int
-    ) -> Optional[Purchase]:
+    ) -> Purchase | None:
         """
         Obtiene la compra más reciente de un usuario.
 

@@ -30,8 +30,8 @@ Uso:
 import json
 import logging
 import os
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any
 
 import pandas as pd
 
@@ -100,7 +100,7 @@ class SubscriptionCleanupJob:
         self,
         mode: str = DEFAULT_MODE,
         validate_special_clients: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Ejecuta el proceso completo de limpieza de suscripciones.
 
@@ -222,7 +222,7 @@ class SubscriptionCleanupJob:
     # Paso 1: Obtener administradores
     # ------------------------------------------------------------------
 
-    async def _get_group_admins(self) -> List[Dict[str, Any]]:
+    async def _get_group_admins(self) -> list[dict[str, Any]]:
         """
         Obtiene la lista de administradores del grupo VIP de Telegram.
 
@@ -326,8 +326,8 @@ class SubscriptionCleanupJob:
     def _build_comparison(
         self,
         telegram_members: pd.DataFrame,
-        active_subs: List[Any],
-        admin_ids: List[str],
+        active_subs: list[Any],
+        admin_ids: list[str],
     ) -> pd.DataFrame:
         """
         Cruza los miembros de Telegram con las suscripciones activas
@@ -409,7 +409,7 @@ class SubscriptionCleanupJob:
         self,
         comparison_df: pd.DataFrame,
         validate_special_clients: bool,
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Clasifica los usuarios en:
         - Clientes especiales (no registrados en BD).
@@ -430,13 +430,13 @@ class SubscriptionCleanupJob:
         if validate_special_clients:
             # Excluir clientes especiales de la eliminación
             to_remove = comparison_df[
-                (comparison_df["eliminar_suscripcion"] == True) &
+                (comparison_df["eliminar_suscripcion"]) &
                 (comparison_df["mensaje"] != "Usuario no registrado en BD")
             ].copy()
         else:
             # Eliminar todos (incluyendo clientes especiales)
             to_remove = comparison_df[
-                comparison_df["eliminar_suscripcion"] == True
+                comparison_df["eliminar_suscripcion"]
             ].copy()
 
         return special_clients, to_remove
@@ -481,7 +481,6 @@ class SubscriptionCleanupJob:
             try:
                 # 1. Enviar mensaje de suscripción vencida
                 try:
-                    from services.reminder_service import ReminderService
 
                     # Usar el reminder_service si está disponible
                     logger.info(f"Enviando mensaje de vencimiento a user={user_id}...")
@@ -630,7 +629,7 @@ class SubscriptionCleanupJob:
 
     def _save_summary_report(
         self,
-        stats: Dict[str, Any],
+        stats: dict[str, Any],
         comparison_df: pd.DataFrame,
         output_dir: str,
         hora_archivo: str,
@@ -665,7 +664,7 @@ class SubscriptionCleanupJob:
 
     def _save_removed_user_inline(
         self,
-        user_data: Dict[str, Any],
+        user_data: dict[str, Any],
         output_dir: str,
         hora_archivo: str,
     ) -> None:
@@ -676,7 +675,7 @@ class SubscriptionCleanupJob:
         filepath = os.path.join(output_dir, f"usuarios_eliminados_{hora_archivo}.json")
 
         if os.path.exists(filepath):
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
         else:
             data = {

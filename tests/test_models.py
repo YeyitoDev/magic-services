@@ -1,7 +1,6 @@
 """Tests for SQLAlchemy models."""
 
-import pytest
-from datetime import date, datetime
+from datetime import date
 
 
 class TestUserModel:
@@ -50,15 +49,25 @@ class TestServiceModel:
 
 
 class TestSubscriptionModel:
-    def test_subscription_is_active(self, db_session, sample_user, sample_service):
+    def test_subscription_is_active(self, db_session):
+        from datetime import timedelta
+
+        from models.service import Service
         from models.subscription import Subscription
+        from models.user import User
+
+        user = User(telegram_id=888888, telegram_name="Sub Test")
+        service = Service(name="VIP Test", description="Test", is_subscription=True)
+        db_session.add_all([user, service])
+        db_session.flush()
+
         today = date.today()
-        import datetime
         sub = Subscription(
-            user_telegram_id=sample_user.telegram_id,
-            service_id=sample_service["vip"].service_id,
+            subscription_id=1,
+            user_telegram_id=888888,
+            service_id=service.service_id,
             start_date=today,
-            end_date=today + datetime.timedelta(days=30),
+            end_date=today + timedelta(days=30),
         )
         db_session.add(sub)
         db_session.commit()
@@ -66,15 +75,25 @@ class TestSubscriptionModel:
         assert sub.is_active is True
         assert sub.days_remaining >= 29
 
-    def test_subscription_expired(self, db_session, sample_user, sample_service):
+    def test_subscription_expired(self, db_session):
+        from datetime import timedelta
+
+        from models.service import Service
         from models.subscription import Subscription
+        from models.user import User
+
+        user = User(telegram_id=999888, telegram_name="Expired Test")
+        service = Service(name="VIP Expired", description="Test", is_subscription=True)
+        db_session.add_all([user, service])
+        db_session.flush()
+
         today = date.today()
-        import datetime
         sub = Subscription(
-            user_telegram_id=sample_user.telegram_id,
-            service_id=sample_service["vip"].service_id,
-            start_date=today - datetime.timedelta(days=60),
-            end_date=today - datetime.timedelta(days=30),
+            subscription_id=2,
+            user_telegram_id=999888,
+            service_id=service.service_id,
+            start_date=today - timedelta(days=60),
+            end_date=today - timedelta(days=30),
         )
         db_session.add(sub)
         db_session.commit()

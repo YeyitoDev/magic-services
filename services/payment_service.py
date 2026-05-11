@@ -26,8 +26,7 @@ Uso:
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +56,8 @@ class ValidationResult:
     service_type: str = ""
     is_duplicate: bool = False
     purchase_result: Any = None
-    invite_link: Optional[str] = None
-    errors: List[str] = field(default_factory=list)
+    invite_link: str | None = None
+    errors: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -80,8 +79,8 @@ class ValidationAction:
     target_user_id: int
     amount: float
     source: str = "telegram"
-    message_id: Optional[int] = None
-    extra_data: Optional[str] = None
+    message_id: int | None = None
+    extra_data: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -125,7 +124,7 @@ class PaymentService:
         telegram_id: int,
         amount: float,
         from_channel: str = "telegram",
-        purchase_date: Optional[str] = None,
+        purchase_date: str | None = None,
     ) -> ValidationResult:
         """
         Valida un pago antes de procesarlo.
@@ -145,7 +144,6 @@ class PaymentService:
         Returns:
             ValidationResult con el resultado de la validación.
         """
-        errors: List[str] = []
 
         # Validación 1: Monto positivo
         if amount <= 0:
@@ -252,7 +250,7 @@ class PaymentService:
         self,
         telegram_id: int,
         amount: float,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Obtiene información de la compra duplicada más reciente.
 
@@ -361,7 +359,7 @@ class PaymentService:
         telegram_id: int,
         telegram_name: str,
         amount: float,
-        extracted_date: Optional[str] = None,
+        extracted_date: str | None = None,
     ) -> str:
         """
         Construye el mensaje HTML que se envía al validador con los
@@ -459,7 +457,7 @@ class PaymentService:
         telegram_id: int,
         corrected_amount: float,
         from_channel: str = "telegram",
-        purchase_date: Optional[str] = None,
+        purchase_date: str | None = None,
     ) -> ValidationResult:
         """
         Procesa un pago con monto corregido manualmente por el validador.
@@ -507,7 +505,7 @@ class PaymentService:
             logger.warning("No se pudo verificar validador: settings no disponible")
             return False
 
-    def get_validator_ids(self) -> List[str]:
+    def get_validator_ids(self) -> list[str]:
         """
         Obtiene la lista de IDs de validadores autorizados.
 

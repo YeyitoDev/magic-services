@@ -19,7 +19,7 @@ Uso:
 """
 
 import os
-from typing import List, Optional
+
 from dotenv import load_dotenv
 
 # Cargar .env al importar el módulo (busca en el directorio de trabajo)
@@ -50,11 +50,11 @@ class Settings:
     # ============================================================
     # TELEGRAM
     # ============================================================
-    TELEGRAM_BOT_TOKEN: Optional[str] = os.getenv("TELEGRAM_BOT_TOKEN")
+    TELEGRAM_BOT_TOKEN: str | None = os.getenv("TELEGRAM_BOT_TOKEN")
     TELEGRAM_BOT_USERNAME: str = os.getenv("TELEGRAM_BOT_USERNAME", "magopagos_bot")
 
     @property
-    def TELEGRAM_VALIDATOR_IDS(self) -> List[str]:
+    def TELEGRAM_VALIDATOR_IDS(self) -> list[str]:  # noqa: N802
         """
         IDs de Telegram de los validadores autorizados (separados por coma).
 
@@ -67,10 +67,10 @@ class Settings:
     TELEGRAM_VIP_GROUP_ID: str = os.getenv(
         "TELEGRAM_VIP_GROUP_ID", "-1002451833719"
     )
-    TELEGRAM_WEBHOOK_URL: Optional[str] = os.getenv("TELEGRAM_WEBHOOK_URL")
+    TELEGRAM_WEBHOOK_URL: str | None = os.getenv("TELEGRAM_WEBHOOK_URL")
 
     @property
-    def TELEGRAM_DEFAULT_VIP_LINK(self) -> str:
+    def TELEGRAM_DEFAULT_VIP_LINK(self) -> str:  # noqa: N802
         """Link de invitación por defecto cuando no se puede generar uno nuevo."""
         return os.getenv("TELEGRAM_DEFAULT_VIP_LINK", "https://t.me/+VllSzEZ2smk2MTk5")
 
@@ -78,18 +78,18 @@ class Settings:
     # DATABASE (MySQL via SQLAlchemy)
     # ============================================================
     DB_ENGINE: str = os.getenv("DB_ENGINE", "mysql+pymysql")
-    DB_USER: Optional[str] = os.getenv("DB_USER")
-    DB_PASSWORD: Optional[str] = os.getenv("DB_PASSWORD")
-    DB_HOST: Optional[str] = os.getenv("DB_HOST")
+    DB_USER: str | None = os.getenv("DB_USER")
+    DB_PASSWORD: str | None = os.getenv("DB_PASSWORD")
+    DB_HOST: str | None = os.getenv("DB_HOST")
     DB_PORT: int = int(os.getenv("DB_PORT", "3306"))
-    DB_NAME: Optional[str] = os.getenv("DB_NAME")
+    DB_NAME: str | None = os.getenv("DB_NAME")
 
     DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE", "5"))
     DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW", "10"))
     DB_POOL_TIMEOUT: int = int(os.getenv("DB_POOL_TIMEOUT", "30"))
 
     @property
-    def DATABASE_URL(self) -> str:
+    def DATABASE_URL(self) -> str:  # noqa: N802
         """URL de conexión computada a partir de componentes individuales."""
         if not all([self.DB_USER, self.DB_PASSWORD, self.DB_HOST, self.DB_NAME]):
             return ""
@@ -105,8 +105,8 @@ class Settings:
         "GOOGLE_CREDENTIALS_PATH",
         "./credentials/magic-chatbottelegram-948350ae1b51.json",
     )
-    GOOGLE_SHEETS_ID: Optional[str] = os.getenv("GOOGLE_SHEETS_ID")
-    GOOGLE_WSP_SPREADSHEET_ID: Optional[str] = os.getenv("GOOGLE_WSP_SPREADSHEET_ID")
+    GOOGLE_SHEETS_ID: str | None = os.getenv("GOOGLE_SHEETS_ID")
+    GOOGLE_WSP_SPREADSHEET_ID: str | None = os.getenv("GOOGLE_WSP_SPREADSHEET_ID")
     GOOGLE_SHEETS_WORKSHEET_NAME: str = os.getenv(
         "GOOGLE_SHEETS_WORKSHEET_NAME", "datos_usuarios"
     )
@@ -114,8 +114,8 @@ class Settings:
     # ============================================================
     # AWS
     # ============================================================
-    AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_ACCESS_KEY_ID: str | None = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY: str | None = os.getenv("AWS_SECRET_ACCESS_KEY")
     AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
     AWS_DYNAMODB_TABLE: str = os.getenv("AWS_DYNAMODB_TABLE", "MAGIC-USER-SESSIONS-LOG")
 
@@ -138,7 +138,7 @@ class Settings:
     FLASK_SECRET_KEY: str = os.getenv(
         "FLASK_SECRET_KEY", "change-me-in-production"
     )
-    API_KEY: Optional[str] = os.getenv("API_KEY")
+    API_KEY: str | None = os.getenv("API_KEY")
 
     # ============================================================
     # JOBS / SCHEDULER
@@ -164,25 +164,25 @@ class Settings:
     # ============================================================
     # PYTHONANYWHERE (Deployment)
     # ============================================================
-    PYTHONANYWHERE_DOMAIN: Optional[str] = os.getenv("PYTHONANYWHERE_DOMAIN")
-    PYTHONANYWHERE_USERNAME: Optional[str] = os.getenv("PYTHONANYWHERE_USERNAME")
+    PYTHONANYWHERE_DOMAIN: str | None = os.getenv("PYTHONANYWHERE_DOMAIN")
+    PYTHONANYWHERE_USERNAME: str | None = os.getenv("PYTHONANYWHERE_USERNAME")
 
     # ============================================================
     # CORS / SECURITY
     # ============================================================
-    ALLOWED_HOSTS: List[str] = os.getenv(
+    ALLOWED_HOSTS: list[str] = os.getenv(
         "ALLOWED_HOSTS", "localhost,127.0.0.1"
     ).split(",")
-    CORS_ORIGINS: List[str] = os.getenv(
+    CORS_ORIGINS: list[str] = os.getenv(
         "CORS_ORIGINS", "http://localhost:3000"
     ).split(",")
-    SESSION_SECRET: Optional[str] = os.getenv("SESSION_SECRET")
+    SESSION_SECRET: str | None = os.getenv("SESSION_SECRET")
 
     # ============================================================
     # MÉTODOS DE VALIDACIÓN Y UTILIDAD
     # ============================================================
 
-    def validate(self, raise_exception: bool = True) -> List[str]:
+    def validate(self, raise_exception: bool = True) -> list[str]:
         """
         Valida que todas las variables de entorno requeridas estén definidas.
 
@@ -203,7 +203,7 @@ class Settings:
             "DB_NAME": self.DB_NAME,
         }
 
-        missing: List[str] = [
+        missing: list[str] = [
             name for name, value in required_vars.items() if not value
         ]
 
@@ -248,7 +248,7 @@ class Settings:
         """Retorna la URL de conexión a la base de datos."""
         return self.DATABASE_URL
 
-    def get_validator_ids(self) -> List[str]:
+    def get_validator_ids(self) -> list[str]:
         """
         Retorna la lista de IDs de validadores autorizados.
 
@@ -269,7 +269,7 @@ class Settings:
         """
         return str(telegram_id) in self.TELEGRAM_VALIDATOR_IDS
 
-    def get_validator_ids_as_int(self) -> List[int]:
+    def get_validator_ids_as_int(self) -> list[int]:
         """
         Retorna los IDs de validadores como enteros.
 

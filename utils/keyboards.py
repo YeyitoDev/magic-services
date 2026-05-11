@@ -33,16 +33,14 @@ Uso:
 
 import calendar as cal_module
 from datetime import datetime
-from typing import List, Optional
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
 
 # ============================================================================
 # Helper interno
 # ============================================================================
 
-def _build_keyboard(buttons: List[List[dict]]) -> InlineKeyboardMarkup:
+def _build_keyboard(buttons: list[list[dict]]) -> InlineKeyboardMarkup:
     """
     Construye un InlineKeyboardMarkup a partir de una estructura declarativa.
 
@@ -284,7 +282,7 @@ def payment_validation_keyboard(
     user_id: int,
     amount: float,
     source: str = "telegram",
-    extra_data: Optional[str] = None,
+    extra_data: str | None = None,
 ) -> InlineKeyboardMarkup:
     """
     Teclado de validación de pago para el usuario validador (admin).
@@ -655,18 +653,18 @@ class CalendarKeyboard:
 
     def __init__(self) -> None:
         """Inicializa el calendario con localización en español."""
-        self.months_es: List[str] = [
+        self.months_es: list[str] = [
             "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
         ]
-        self.days_es: List[str] = ["L", "M", "X", "J", "V", "S", "D"]
+        self.days_es: list[str] = ["L", "M", "X", "J", "V", "S", "D"]
 
     def crear_calendario(
         self,
-        year: Optional[int] = None,
-        month: Optional[int] = None,
-        user_id: Optional[int] = None,
-        message_id: Optional[int] = None,
+        year: int | None = None,
+        month: int | None = None,
+        user_id: int | None = None,
+        message_id: int | None = None,
     ) -> InlineKeyboardMarkup:
         """
         Crea un calendario interactivo para seleccionar una fecha.

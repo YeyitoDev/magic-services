@@ -5,12 +5,17 @@ Representan los servicios ofrecidos (Stake, Grupo VIP) y sus precios
 con posibles descuentos y duración en meses.
 """
 
-from typing import List, Optional
+
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from models.base import BaseModel
+
+if TYPE_CHECKING:
+    from models.purchase import Purchase
+    from models.subscription import Subscription
 
 
 class Service(BaseModel):
@@ -35,13 +40,13 @@ class Service(BaseModel):
     is_subscription = Column(Boolean, default=False)
 
     # Relaciones
-    prices: List["ServicePrice"] = relationship(
+    prices: list["ServicePrice"] = relationship(
         "ServicePrice", back_populates="service", lazy="selectin"
     )
-    purchases: List["Purchase"] = relationship(
+    purchases: list["Purchase"] = relationship(
         "Purchase", back_populates="service", lazy="selectin"
     )
-    subscriptions: List["Subscription"] = relationship(
+    subscriptions: list["Subscription"] = relationship(
         "Subscription", back_populates="service", lazy="selectin"
     )
 

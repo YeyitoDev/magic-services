@@ -16,8 +16,6 @@ Uso:
 import re
 import unicodedata
 from datetime import datetime
-from typing import Optional
-
 
 # ---------------------------------------------------------------------------
 # Constantes: Palabras clave que preceden a montos según plataforma
@@ -88,7 +86,7 @@ def clean_text(text: str) -> str:
 # ============================================================================
 
 
-def extract_amount(text: str) -> Optional[float]:
+def extract_amount(text: str) -> float | None:
     """
     Extrae un monto monetario desde el texto de un comprobante de pago.
 
@@ -167,7 +165,7 @@ def extract_amount(text: str) -> Optional[float]:
 # ============================================================================
 
 
-def extract_date(text: str) -> Optional[str]:
+def extract_date(text: str) -> str | None:
     """
     Extrae una fecha desde el texto de un comprobante y la retorna
     en formato 'ddmmyyyy'.

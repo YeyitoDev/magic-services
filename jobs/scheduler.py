@@ -34,19 +34,18 @@ Uso:
 import logging
 import signal
 import sys
-import threading
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Optional
+from datetime import datetime
+from typing import Any
 
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
-from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import (
-    EVENT_JOB_EXECUTED,
     EVENT_JOB_ERROR,
+    EVENT_JOB_EXECUTED,
     EVENT_JOB_MISSED,
     JobExecutionEvent,
 )
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
 from config.settings import settings
 
@@ -104,7 +103,7 @@ class JobScheduler:
                 "misfire_grace_time": 300,  # 5 minutos de gracia para misfires
             },
         )
-        self._jobs: Dict[str, Dict[str, Any]] = {}
+        self._jobs: dict[str, dict[str, Any]] = {}
         self._running: bool = False
 
         # Registrar listeners de eventos para logging
@@ -433,7 +432,7 @@ class JobScheduler:
     # Métodos de utilidad
     # ------------------------------------------------------------------
 
-    def get_jobs_status(self) -> Dict[str, Any]:
+    def get_jobs_status(self) -> dict[str, Any]:
         """
         Obtiene el estado actual de todos los jobs registrados.
 

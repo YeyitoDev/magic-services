@@ -14,8 +14,8 @@ from sqlalchemy.orm import relationship
 from models.base import BaseModel
 
 if TYPE_CHECKING:
-    from models.user import User
     from models.service import Service
+    from models.user import User
 
 
 class Purchase(BaseModel):

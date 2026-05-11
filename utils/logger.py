@@ -26,9 +26,10 @@ import os
 import shutil
 import threading
 import time
-from datetime import datetime, timedelta, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 import requests
 
@@ -38,7 +39,7 @@ from config.settings import settings
 # ANSI Colors
 # ============================================================================
 
-ANSI_COLORS: Dict[str, str] = {
+ANSI_COLORS: dict[str, str] = {
     "DEBUG": "\033[36m",
     "INFO": "\033[32m",
     "WARNING": "\033[33m",
@@ -47,7 +48,7 @@ ANSI_COLORS: Dict[str, str] = {
     "RESET": "\033[0m",
 }
 
-LEVEL_COLOR: Dict[int, str] = {
+LEVEL_COLOR: dict[int, str] = {
     logging.DEBUG: ANSI_COLORS["DEBUG"],
     logging.INFO: ANSI_COLORS["INFO"],
     logging.WARNING: ANSI_COLORS["WARNING"],
@@ -63,8 +64,8 @@ class JsonFormatter(logging.Formatter):
     """Formateador JSON estructurado."""
 
     def format(self, record: logging.LogRecord) -> str:
-        log_entry: Dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+        log_entry: dict[str, Any] = {
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -130,7 +131,7 @@ class DailyRotatingFileHandler(logging.Handler):
         self.filename_pattern = filename_pattern
         self.backup_count = backup_count
         self.encoding = encoding
-        self._current_date: Optional[str] = None
+        self._current_date: str | None = None
         self._file = None
         self._lock = threading.Lock()
         log_dir = os.path.dirname(filename_pattern) or "."
@@ -225,7 +226,7 @@ class DailyRotatingFileHandler(logging.Handler):
                     with gzip.open(archive_path, "wb") as f_out:
                         shutil.copyfileobj(f_in, f_out)
                 os.remove(fpath)
-            except (OSError, IOError):
+            except OSError:
                 pass
 
     def _rotation_scheduler(self) -> None:
@@ -249,14 +250,14 @@ class TelegramAlertHandler(logging.Handler):
     def __init__(
         self,
         bot_token: str,
-        admin_ids: List[int],
+        admin_ids: list[int],
         rate_limit_seconds: int = 300,
     ) -> None:
         super().__init__(level=logging.CRITICAL)
         self.bot_token = bot_token
         self.admin_ids = admin_ids
         self.rate_limit_seconds = rate_limit_seconds
-        self._last_alert: Dict[str, float] = {}
+        self._last_alert: dict[str, float] = {}
         self._lock = threading.Lock()
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -295,7 +296,7 @@ class TelegramAlertHandler(logging.Handler):
             f"*Function:* `{record.funcName}:{record.lineno}`\n"
             f"*Module:* `{record.module}`\n"
             f"*PID:* `{os.getpid()}`\n"
-            f"*Time (UTC):* `{datetime.now(timezone.utc).isoformat()}`\n\n"
+            f"*Time (UTC):* `{datetime.now(UTC).isoformat()}`\n\n"
             f"*Message:* {msg}{exc_info}"
         )
 
@@ -405,7 +406,7 @@ class AuditLogger:
 class HealthCheck:
     """Ping system para Healthchecks.io o similar."""
 
-    def __init__(self, ping_url: Optional[str] = None) -> None:
+    def __init__(self, ping_url: str | None = None) -> None:
         self._ping_url = ping_url
 
     def configure(self, ping_url: str) -> None:
@@ -504,7 +505,7 @@ def setup_logger(
     name: str,
     log_level: str = "INFO",
     log_format: str = "text",
-    log_file_path: Optional[str] = None,
+    log_file_path: str | None = None,
     max_file_size: int = 10 * 1024 * 1024,
     backup_count: int = 10,
     console_output: bool = True,

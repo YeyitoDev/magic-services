@@ -22,11 +22,11 @@ Uso:
 """
 
 from models.base import Base, BaseModel, TimestampMixin
-from models.user import User
-from models.service import Service, ServicePrice
 from models.purchase import Purchase
-from models.subscription import Subscription
 from models.selected_service import SelectedService
+from models.service import Service, ServicePrice
+from models.subscription import Subscription
+from models.user import User
 
 __all__ = [
     "Base",

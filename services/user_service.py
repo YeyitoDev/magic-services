@@ -21,7 +21,6 @@ Uso:
 """
 
 import logging
-from typing import Optional
 
 from models.user import User
 from repositories.user_repo import UserRepository
@@ -85,7 +84,7 @@ class UserService:
     # Consulta
     # ------------------------------------------------------------------
 
-    def get_user(self, telegram_id: int) -> Optional[User]:
+    def get_user(self, telegram_id: int) -> User | None:
         """
         Obtiene un usuario por su ID de Telegram.
 

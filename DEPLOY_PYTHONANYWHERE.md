@@ -1,120 +1,67 @@
-# 1. Crear feature branch
-git checkout develop
-git pull origin develop
-git checkout -b feature/nueva-funcionalidad
+# Deploy en PythonAnywhere
 
-# 2. Hacer cambios y commit
-git add .
-git commit -m "feat: descripción del cambio"
+## Setup Inicial (hacer solo una vez)
 
-# 3. Push y crear PR
-git push origin feature/nueva-funcionalidad
-# Crear Pull Request en GitHub de feature/* → develop
+### 1. Crear cuenta en pythonanywhere.com
+Regístrate en [pythonanywhere.com](https://www.pythonanywhere.com) y crea una cuenta gratuita.
 
-# 4. Merge a develop (tras review)
-git checkout develop
-git merge feature/nueva-funcionalidad
-git push origin develop
-
-# 5. Release a main
-git checkout main
-git merge develop
-git tag v2.0.1
-git push origin main --tags
-# → CI/CD hace deploy automático a PythonAnywhere
-```
-
-## Convenciones de commit
-
-| Tipo | Ejemplo |
-|------|---------|
-| `feat:` | `feat: dynamic pricing from database` |
-| `fix:` | `fix: button_data_invalid in payment keyboard` |
-| `refactor:` | `refactor: extract PricingService from subscription_service` |
-| `docs:` | `docs: add PythonAnywhere deployment guide` |
-| `chore:` | `chore: update dependencies` |
-</｜｜DSML｜｜parameter>
-</｜｜DSML｜｜invoke>
-<｜｜DSML｜｜invoke name="edit_file">
-<｜｜DSML｜｜parameter name="display_description" string="true">Create DEPLOY_PYTHONANYWHERE.md</｜｜DSML｜｜parameter>
-<｜｜DSML｜｜parameter name="mode" string="true">create</｜｜DSML｜｜parameter>
-<｜｜DSML｜｜parameter name="path" string="true">/Users/sergio/Desktop/Magic/MagicWeb/magic-chatbot/v2_refactor/DEPLOY_PYTHONANYWHERE.md</｜｜DSML｜｜parameter>
-<｜｜DSML｜｜parameter name="content" string="true"># Deploy en PythonAnywhere - Magic Chatbot v2
-
-## 1. Subir el código
+### 2. Abrir Bash Console y ejecutar:
 
 ```bash
-# Opción A: Git clone (recomendado)
-cd ~
-git clone https://github.com/TU_USUARIO/magic-chatbot.git
-cd magic-chatbot
+# Clonar el repo
+git clone https://github.com/YeyitoDev/magic-services.git
+cd magic-services
 
-# Opción B: Upload ZIP
-# En el dashboard: Files → Upload a file → magic-chatbot.zip → Unzip
-```
-
-## 2. Configurar entorno virtual
-
-```bash
-cd ~/magic-chatbot
+# Crear virtualenv
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r v2_refactor/requirements.txt
+pip install -r requirements.txt
+
+# Configurar .env para testing
+cp .env.testing .env
+
+# Probar que arranca
+python main.py
+# Ctrl+C después de ver que conecta
 ```
 
-## 3. Configurar variables de entorno
+### 3. Crear Always-on Task
 
-```bash
-cd ~/magic-chatbot/v2_refactor
-cp .env.example .env
-nano .env
-```
-
-Variables CRÍTICAS para producción:
-```
-ENVIRONMENT=production
-DEBUG=false
-LOG_LEVEL=INFO
-TELEGRAM_BOT_TOKEN=TU_TOKEN_PRODUCCION
-DB_HOST=magic-db-prd-original.cpmay4kgurq6.us-east-1.rds.amazonaws.com
-DB_NAME=magic-db-prd
-DB_USER=yeyo_admin
-DB_PASSWORD=PrDMagic2024.
-GOOGLE_CREDENTIALS_JSON={"type":"service_account",...}
-```
-
-## 4. Always-on Task (mantiene el bot vivo 24/7)
-
-```
 Dashboard → Tasks → Always-on tasks → Add:
-  Command: cd ~/magic-chatbot && source .venv/bin/activate && cd v2_refactor && python3 main.py
+
+```
+Command: cd ~/magic-services && source .venv/bin/activate && python main.py
 ```
 
-## 5. Scheduled Tasks (cron jobs)
+### 4. Configurar API Token
 
-| Tarea | Schedule | Command |
-|-------|----------|---------|
-| Limpieza suscripciones | Diario 20:00 UTC-5 | `cd ~/magic-chatbot && source .venv/bin/activate && cd v2_refactor && python3 -m jobs.subscription_cleanup validar` |
-| Pipeline promociones | Cada 15 min | `cd ~/magic-chatbot && source .venv/bin/activate && cd v2_refactor && python3 main.py --promotions` |
+Account → API Token → Generate → Guardarlo como `PYTHONANYWHERE_API_TOKEN`
 
-## 6. Verificar que funcione
+### 5. Configurar Telegram Bot Token
 
-```bash
-# Ver logs
-tail -f ~/magic-chatbot/v2_refactor/logs/app_$(date +%Y-%m-%d).log
+Crear un bot con [@BotFather](https://t.me/BotFather) en Telegram y guardar el token como `TELEGRAM_BOT_TOKEN`.
 
-# Ver que el bot responda
-# Enviar /start a tu bot desde Telegram
-```
+### 6. GitHub Secrets
 
-## 7. GitHub Secrets (para CI/CD)
+Agregar en Settings → Secrets → Actions:
 
-En GitHub → Settings → Secrets and variables → Actions → Añadir:
-- `TELEGRAM_BOT_TOKEN`
-- `GOOGLE_CREDENTIALS_JSON`
-- `PYTHONANYWHERE_USERNAME`
-- `PYTHONANYWHERE_API_TOKEN`
-- `PYTHONANYWHERE_DOMAIN`
-</｜｜DSML｜｜parameter>
-</｜｜DSML｜｜invoke>
-</｜｜DSML｜｜tool_calls>
+| Secret | Valor |
+|--------|-------|
+| PYTHONANYWHERE_USERNAME | Tu usuario |
+| PYTHONANYWHERE_PASSWORD | Tu contraseña |
+| PYTHONANYWHERE_API_TOKEN | Token generado |
+| TELEGRAM_BOT_TOKEN | Token del bot |
+
+## Deploy Automático
+
+- Push a `develop` → Deploy a testing (vía SSH + always-on task)
+- Push a `main` → Deploy a producción (vía SSH + always-on task)
+
+El workflow se encarga de:
+
+1. Ejecutar los tests
+2. Conectarse por SSH a PythonAnywhere
+3. Hacer `git pull` de la rama correspondiente
+4. Copiar el archivo `.env` adecuado (`.env.testing` o `.env.production`)
+5. Reiniciar la always-on task vía API
+6. Enviar notificación por Telegram

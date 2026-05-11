@@ -18,8 +18,8 @@ Uso en tests:
 
 import os
 import sys
+from collections.abc import Generator
 from datetime import date, datetime, timedelta
-from typing import Generator
 
 import pytest
 from sqlalchemy import create_engine
@@ -75,8 +75,8 @@ def db_session(engine, tables) -> Generator[Session, None, None]:
 
     Scope: function - se ejecuta para cada test individual.
     """
-    TestSession = sessionmaker(bind=engine)
-    session = TestSession()
+    test_session_factory = sessionmaker(bind=engine)
+    session = test_session_factory()
 
     # Iniciar una transacción que se hará rollback al final
     connection = engine.connect()
@@ -155,11 +155,11 @@ def sample_user(db_session, user_repo):
     Crea un usuario de prueba en la base de datos.
 
     Returns:
-        User con telegram_id=123456789, telegram_name="Test User".
+        User con telegram_id=777777777, telegram_name="Fixture User".
     """
     from models.user import User
 
-    user = User(telegram_id=123456789, telegram_name="Test User")
+    user = User(telegram_id=777777777, telegram_name="Fixture User")
     db_session.add(user)
     db_session.commit()
     return user

@@ -33,9 +33,8 @@ import json
 import logging
 import os
 import threading
-import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from models.service import ServicePrice
 
@@ -58,8 +57,8 @@ class PricingService:
 
     def __init__(self, service_repo) -> None:
         self._service_repo = service_repo
-        self._cache: List[ServicePrice] = []
-        self._cache_updated_at: Optional[datetime] = None
+        self._cache: list[ServicePrice] = []
+        self._cache_updated_at: datetime | None = None
         self._lock = threading.Lock()
 
         # Cargar caché al iniciar
@@ -94,11 +93,11 @@ class PricingService:
         else:
             logger.error("No se encontraron precios en BD ni en caché JSON.")
 
-    def _fetch_from_db(self) -> List[ServicePrice]:
+    def _fetch_from_db(self) -> list[ServicePrice]:
         """Obtiene todos los ServicePrice desde la BD."""
         return self._service_repo._session.query(ServicePrice).all()
 
-    def _save_to_json(self, prices: List[ServicePrice]) -> None:
+    def _save_to_json(self, prices: list[ServicePrice]) -> None:
         """Guarda los precios en el archivo JSON de caché."""
         data = {
             "updated_at": datetime.now().isoformat(),
@@ -119,12 +118,12 @@ class PricingService:
         except Exception as e:
             logger.warning(f"No se pudo guardar caché JSON: {e}")
 
-    def _load_from_json(self) -> List[ServicePrice]:
+    def _load_from_json(self) -> list[ServicePrice]:
         """Carga precios desde el archivo JSON de caché."""
         if not os.path.exists(CACHE_FILE):
             return []
         try:
-            with open(CACHE_FILE, "r") as f:
+            with open(CACHE_FILE) as f:
                 data = json.load(f)
             return [
                 ServicePrice(
@@ -165,19 +164,19 @@ class PricingService:
     # Consultas de precios
     # ------------------------------------------------------------------
 
-    def get_all_prices(self) -> List[ServicePrice]:
+    def get_all_prices(self) -> list[ServicePrice]:
         """Obtiene todos los precios (con auto-refresh si TTL expiró)."""
         if self._should_refresh():
             self._load_cache()
         with self._lock:
             return list(self._cache)
 
-    def get_prices_for_service(self, service_id: int) -> List[ServicePrice]:
+    def get_prices_for_service(self, service_id: int) -> list[ServicePrice]:
         """Obtiene los precios de un servicio específico."""
         all_prices = self.get_all_prices()
         return [p for p in all_prices if p.service_id == service_id]
 
-    def match_price(self, amount: float) -> Optional[ServicePrice]:
+    def match_price(self, amount: float) -> ServicePrice | None:
         """
         Encuentra el plan que corresponde a un monto pagado.
 
@@ -205,7 +204,7 @@ class PricingService:
 
         return None
 
-    def get_service_type(self, amount: float) -> Optional[str]:
+    def get_service_type(self, amount: float) -> str | None:
         """
         Determina el tipo de servicio según el monto:
         - > 50 → grupo_vip
@@ -346,7 +345,7 @@ class PricingService:
 
 
 # Singleton global
-_pricing_service: Optional[PricingService] = None
+_pricing_service: PricingService | None = None
 
 
 def get_pricing_service(service_repo=None) -> PricingService:

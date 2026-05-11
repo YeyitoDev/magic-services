@@ -28,10 +28,9 @@ Uso:
 import logging
 import os
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any
 
-from config.settings import settings
 from repositories.selected_service_repo import SelectedServiceRepository
 from repositories.subscription_repo import SubscriptionRepository
 
@@ -147,7 +146,7 @@ class ReminderService:
     # Pipeline principal de recordatorios
     # ------------------------------------------------------------------
 
-    def process_pending_reminders(self) -> Dict[str, Any]:
+    def process_pending_reminders(self) -> dict[str, Any]:
         """
         Procesa todos los recordatorios pendientes del sistema.
 

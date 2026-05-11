@@ -34,10 +34,9 @@ Uso:
 
 import logging
 import os
-from typing import Optional
 
 from telegram import Chat, Update
-from telegram.ext import ContextTypes, MessageHandler, filters
+from telegram.ext import ContextTypes
 
 logger = logging.getLogger(__name__)
 
@@ -234,8 +233,8 @@ class MessageHandlers:
             return
 
         # --- Paso 3: Extraer monto y fecha del texto ---
-        from utils.text_parser import extract_amount, extract_date
         from utils.datetime_utils import get_lima_time_formatted
+        from utils.text_parser import extract_amount, extract_date
 
         monto_extraido = extract_amount(detected_text)
         fecha_extraida = extract_date(detected_text)
@@ -515,7 +514,7 @@ class MessageHandlers:
 
         try:
             target_user_id = int(parts[1])
-            message_id = parts[2]
+            parts[2]
             corrected_amount = float(parts[3])
         except (ValueError, IndexError) as e:
             await update.message.reply_text(
@@ -647,10 +646,10 @@ class MessageHandlers:
             await context.bot.send_message(
                 chat_id=user_id,
                 text=(
-                    f"🎁 <b>¡TE REGALO 70 SOLES GRATIS!</b>\n\n"
-                    f"Regístrate en Betsafe con este link exclusivo, "
-                    f"haz tu primer depósito de mínimo S/ 40 y recibe "
-                    f"<b>S/ 70 totalmente gratis</b> para apostar."
+                    "🎁 <b>¡TE REGALO 70 SOLES GRATIS!</b>\n\n"
+                    "Regístrate en Betsafe con este link exclusivo, "
+                    "haz tu primer depósito de mínimo S/ 40 y recibe "
+                    "<b>S/ 70 totalmente gratis</b> para apostar."
                 ),
                 parse_mode="HTML",
             )

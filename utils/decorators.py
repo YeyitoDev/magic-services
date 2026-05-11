@@ -38,7 +38,8 @@ import asyncio
 import functools
 import logging
 import time
-from typing import Any, Callable, Optional, Tuple, Type, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 # ---------------------------------------------------------------------------
 # Type Variables
@@ -61,8 +62,8 @@ def retry(
     max_attempts: int = 3,
     delay: float = 1.0,
     backoff: float = 2.0,
-    exceptions: Tuple[Type[Exception], ...] = (Exception,),
-    on_retry: Optional[Callable[[Exception, int], None]] = None,
+    exceptions: tuple[type[Exception], ...] = (Exception,),
+    on_retry: Callable[[Exception, int], None] | None = None,
 ) -> Callable[[F], F]:
     """
     Decorador que reintenta una función cuando ocurre una excepción.
@@ -90,7 +91,7 @@ def retry(
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             current_delay = delay
-            last_exception: Optional[Exception] = None
+            last_exception: Exception | None = None
 
             for attempt in range(1, max_attempts + 1):
                 try:
@@ -131,8 +132,8 @@ def retry_async(
     max_attempts: int = 3,
     delay: float = 1.0,
     backoff: float = 2.0,
-    exceptions: Tuple[Type[Exception], ...] = (Exception,),
-    on_retry: Optional[Callable[[Exception, int], None]] = None,
+    exceptions: tuple[type[Exception], ...] = (Exception,),
+    on_retry: Callable[[Exception, int], None] | None = None,
 ) -> Callable[[F], F]:
     """
     Versión asíncrona del decorador retry para corrutinas.
@@ -156,7 +157,7 @@ def retry_async(
         @functools.wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             current_delay = delay
-            last_exception: Optional[Exception] = None
+            last_exception: Exception | None = None
 
             for attempt in range(1, max_attempts + 1):
                 try:
@@ -327,7 +328,7 @@ def log_execution_async(
 # DB Session Decorator (Síncrono)
 # ============================================================================
 
-def db_session(func: F) -> F:
+def db_session[F: Callable[..., Any]](func: F) -> F:
     """
     Decorador que inyecta una sesión de SQLAlchemy como primer argumento
     y maneja automáticamente commit/rollback/close.
@@ -371,7 +372,7 @@ def db_session(func: F) -> F:
 # DB Session Decorator (Asíncrono)
 # ============================================================================
 
-def db_session_async(func: F) -> F:
+def db_session_async[F: Callable[..., Any]](func: F) -> F:
     """
     Versión asíncrona del decorador db_session.
 

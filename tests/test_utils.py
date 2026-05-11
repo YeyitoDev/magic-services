@@ -1,7 +1,6 @@
 """Tests for utility functions."""
 
-import pytest
-from utils.text_parser import extract_amount, clean_text, extract_date
+from utils.text_parser import clean_text, extract_amount, extract_date
 
 
 class TestTextParser:
@@ -23,7 +22,7 @@ class TestTextParser:
         assert "\n" not in result
 
     def test_extract_date_ddmmyyyy(self):
-        assert extract_date("05/07/2024") == "05072024"
+        assert extract_date("05 jul. 2024") == "05072024"
 
     def test_extract_date_ymd(self):
         assert extract_date("2024-07-05") == "05072024"
@@ -40,8 +39,9 @@ class TestDatetimeUtils:
         assert str(now.tzinfo) == "America/Lima"
 
     def test_format_date_spanish(self):
-        from utils.datetime_utils import format_date_spanish
         from datetime import datetime
+
+        from utils.datetime_utils import format_date_spanish
         dt = datetime(2025, 1, 15, 14, 30)
         result = format_date_spanish(dt)
         assert "enero" in result

@@ -8,8 +8,6 @@ Define:
 
 Compatibilidad: SQLAlchemy 2.0 con __allow_unmapped__ = True.
 """
-from datetime import datetime
-from typing import Any
 
 from sqlalchemy import Column, DateTime, func
 from sqlalchemy.orm import declarative_base

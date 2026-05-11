@@ -20,11 +20,11 @@ Uso:
 """
 
 from repositories.base import BaseRepository
-from repositories.user_repo import UserRepository
-from repositories.service_repo import ServiceRepository
 from repositories.purchase_repo import PurchaseRepository
-from repositories.subscription_repo import SubscriptionRepository
 from repositories.selected_service_repo import SelectedServiceRepository
+from repositories.service_repo import ServiceRepository
+from repositories.subscription_repo import SubscriptionRepository
+from repositories.user_repo import UserRepository
 
 __all__ = [
     "BaseRepository",

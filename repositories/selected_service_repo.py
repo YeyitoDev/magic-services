@@ -21,7 +21,6 @@ Uso:
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 from sqlalchemy import update
 
@@ -48,7 +47,7 @@ class SelectedServiceRepository(BaseRepository):
 
     def get_by_user(
         self, user_telegram_id: int
-    ) -> Optional[SelectedService]:
+    ) -> SelectedService | None:
         """
         Obtiene el servicio actualmente seleccionado por un usuario.
 
@@ -65,7 +64,7 @@ class SelectedServiceRepository(BaseRepository):
             .first()
         )
 
-    def get_all(self) -> List[SelectedService]:
+    def get_all(self) -> list[SelectedService]:
         """
         Obtiene todos los registros de servicios seleccionados.
 
@@ -85,7 +84,7 @@ class SelectedServiceRepository(BaseRepository):
         self,
         user_telegram_id: int,
         service_id: int,
-        selected_date: Optional[datetime] = None,
+        selected_date: datetime | None = None,
     ) -> SelectedService:
         """
         Inserta o actualiza el servicio seleccionado por un usuario.
@@ -219,7 +218,7 @@ class SelectedServiceRepository(BaseRepository):
         self,
         user_telegram_id: int,
         max_minutes: int = 10,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Obtiene el nombre del servicio seleccionado si fue seleccionado
         recientemente (dentro de la ventana de tiempo).

@@ -30,9 +30,8 @@ Uso:
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Optional
 
-from utils.datetime_utils import get_lima_time, LIMA_TZ
+from utils.datetime_utils import LIMA_TZ, get_lima_time
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +60,7 @@ class PurchaseResult:
     service_id: int = 0
     duration_months: int = 0
     is_subscription: bool = False
-    end_date: Optional[datetime] = None
+    end_date: datetime | None = None
     errors: list = field(default_factory=list)
 
 
@@ -117,7 +116,7 @@ class SubscriptionService:
         telegram_id: int,
         price: float,
         from_channel: str,
-        purchase_date: Optional[str] = None,
+        purchase_date: str | None = None,
     ) -> PurchaseResult:
         """
         Procesa la compra de un servicio por parte de un usuario.
@@ -191,7 +190,7 @@ class SubscriptionService:
 
         # --- Paso 4: Registrar la compra ---
         try:
-            purchase = self._purchase_repo.create_purchase(
+            self._purchase_repo.create_purchase(
                 user_telegram_id=telegram_id,
                 service_id=service_id,
                 price=price,
@@ -264,7 +263,7 @@ class SubscriptionService:
     # ------------------------------------------------------------------
 
     def _resolve_purchase_date(
-        self, purchase_date_str: Optional[str]
+        self, purchase_date_str: str | None
     ) -> datetime:
         """
         Convierte una fecha de compra en string a datetime con timezone Lima.
@@ -320,7 +319,7 @@ class SubscriptionService:
             return ("stake", 1)
         return (None, 0)
 
-    def _determine_vip_plan(self, price: float) -> Optional[dict]:
+    def _determine_vip_plan(self, price: float) -> dict | None:
         """
         Determina el plan VIP según el monto pagado.
 
@@ -489,7 +488,7 @@ class SubscriptionService:
         logger.info(f"Limpieza de suscripciones: {count} expiradas eliminadas.")
         return count
 
-    def get_service_name(self, service_id: int) -> Optional[str]:
+    def get_service_name(self, service_id: int) -> str | None:
         """
         Obtiene el nombre del servicio dado su ID.
 

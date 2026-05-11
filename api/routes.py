@@ -20,12 +20,12 @@ Basado en: api_magic.py (líneas 1-89)
 """
 
 import logging
+from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
-from typing import Callable, Optional
 
 import pandas as pd
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, current_app, jsonify, request
 
 logger = logging.getLogger(__name__)
 
@@ -263,7 +263,6 @@ def register_service_payment():
         }), 400
 
     # Cargar CSV existente o crear uno nuevo
-    import os
 
     filepath = SERVICES_PAYMENTS_CSV_PATH
     df = load_csv_data(filepath)
@@ -406,8 +405,8 @@ def get_stats():
 
     try:
         subscription_service = container.resolve("subscription_service")
-        user_repo = container.resolve("user_repository")
-        purchase_repo = container.resolve("purchase_repository")
+        container.resolve("user_repository")
+        container.resolve("purchase_repository")
 
         active_subs = subscription_service.get_active_subscriptions()
         expired_subs = subscription_service.get_expired_subscriptions()
@@ -474,6 +473,7 @@ def telegram_webhook():
 
         # Pasar el update a python-telegram-bot
         import asyncio
+
         from telegram import Update
 
         update = Update.de_json(data, telegram_app.bot)

@@ -23,7 +23,8 @@ Uso:
     db = container.resolve("db_session")
 """
 
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 
 class Container:
@@ -42,8 +43,8 @@ class Container:
 
     def __init__(self) -> None:
         """Inicializa un contenedor vacío."""
-        self._services: Dict[str, Any] = {}
-        self._factories: Dict[str, Callable[[], Any]] = {}
+        self._services: dict[str, Any] = {}
+        self._factories: dict[str, Callable[[], Any]] = {}
 
     # ------------------------------------------------------------------
     # Registro
@@ -144,14 +145,14 @@ class Container:
         self._services.clear()
         self._factories.clear()
 
-    def list_services(self) -> Dict[str, str]:
+    def list_services(self) -> dict[str, str]:
         """
         Lista los servicios registrados con su tipo.
 
         Returns:
             Diccionario {nombre: tipo}, donde tipo es 'instance' o 'factory'.
         """
-        result: Dict[str, str] = {}
+        result: dict[str, str] = {}
         for name in self._services:
             result[name] = "instance"
         for name in self._factories:
@@ -184,11 +185,11 @@ class Container:
         self.register_factory("db_session", lambda: SessionLocal())
 
         # ---- Repositorios ----
-        from repositories.user_repo import UserRepository
-        from repositories.service_repo import ServiceRepository
         from repositories.purchase_repo import PurchaseRepository
-        from repositories.subscription_repo import SubscriptionRepository
         from repositories.selected_service_repo import SelectedServiceRepository
+        from repositories.service_repo import ServiceRepository
+        from repositories.subscription_repo import SubscriptionRepository
+        from repositories.user_repo import UserRepository
 
         self.register_factory(
             "user_repository",
@@ -212,11 +213,11 @@ class Container:
         )
 
         # ---- Servicios de dominio ----
-        from services.user_service import UserService
-        from services.subscription_service import SubscriptionService
         from services.payment_service import PaymentService
         from services.promotion_service import PromotionService
         from services.reminder_service import ReminderService
+        from services.subscription_service import SubscriptionService
+        from services.user_service import UserService
 
         self.register_factory(
             "user_service",
@@ -270,7 +271,7 @@ class Container:
         """Inserta los precios por defecto si la tabla service_prices está vacía."""
         try:
             session = self.resolve("db_session")
-            from models.service import ServicePrice, Service
+            from models.service import Service, ServicePrice
 
             existing = session.query(ServicePrice).count()
             if existing > 0:

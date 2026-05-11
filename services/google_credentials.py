@@ -14,14 +14,14 @@ Uso:
 """
 
 import json
-import os
 import logging
-from typing import Any, Dict
+import os
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def get_google_credentials() -> Dict[str, Any]:
+def get_google_credentials() -> dict[str, Any]:
     """
     Obtiene las credenciales de Google Cloud desde:
     1. Variable de entorno GOOGLE_CREDENTIALS_JSON (prod/CI)
@@ -46,7 +46,7 @@ def get_google_credentials() -> Dict[str, Any]:
     creds_path = settings.GOOGLE_CREDENTIALS_PATH
     if creds_path and os.path.exists(creds_path):
         logger.info(f"Google credentials loaded from file: {creds_path}")
-        with open(creds_path, 'r') as f:
+        with open(creds_path) as f:
             return json.load(f)
 
     raise FileNotFoundError(

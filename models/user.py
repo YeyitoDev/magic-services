@@ -8,7 +8,7 @@ Mantiene relaciones con sus compras (Purchase), suscripciones (Subscription)
 y el servicio actualmente seleccionado (SelectedService).
 """
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import BigInteger, Column, String
 from sqlalchemy.orm import relationship
@@ -17,8 +17,8 @@ from models.base import BaseModel
 
 if TYPE_CHECKING:
     from models.purchase import Purchase
-    from models.subscription import Subscription
     from models.selected_service import SelectedService
+    from models.subscription import Subscription
 
 
 class User(BaseModel):
@@ -43,13 +43,13 @@ class User(BaseModel):
     # Relaciones
     # ------------------------------------------------------------------
 
-    purchases: List["Purchase"] = relationship(
+    purchases: list["Purchase"] = relationship(
         "Purchase",
         back_populates="user",
         lazy="selectin",
     )
 
-    subscriptions: List["Subscription"] = relationship(
+    subscriptions: list["Subscription"] = relationship(
         "Subscription",
         back_populates="user",
         lazy="selectin",

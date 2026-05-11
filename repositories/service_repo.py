@@ -10,7 +10,6 @@ Operaciones:
 - Listado de todos los servicios.
 """
 
-from typing import List, Optional
 
 from sqlalchemy import or_
 
@@ -29,7 +28,7 @@ class ServiceRepository(BaseRepository):
     # Service: Búsqueda
     # ------------------------------------------------------------------
 
-    def get_by_id(self, service_id: int) -> Optional[Service]:
+    def get_by_id(self, service_id: int) -> Service | None:
         """
         Busca un servicio por su ID único.
 
@@ -45,7 +44,7 @@ class ServiceRepository(BaseRepository):
             .first()
         )
 
-    def get_by_name(self, name: str) -> Optional[Service]:
+    def get_by_name(self, name: str) -> Service | None:
         """
         Busca un servicio por su nombre exacto.
 
@@ -61,7 +60,7 @@ class ServiceRepository(BaseRepository):
             .first()
         )
 
-    def get_all_services(self) -> List[Service]:
+    def get_all_services(self) -> list[Service]:
         """
         Obtiene todos los servicios registrados.
 
@@ -74,7 +73,7 @@ class ServiceRepository(BaseRepository):
     # ServicePrice: Búsqueda
     # ------------------------------------------------------------------
 
-    def get_price_by_amount(self, amount: float) -> Optional[ServicePrice]:
+    def get_price_by_amount(self, amount: float) -> ServicePrice | None:
         """
         Busca un precio de servicio que coincida con el monto pagado.
 
@@ -104,7 +103,7 @@ class ServiceRepository(BaseRepository):
             .first()
         )
 
-    def get_prices_for_service(self, service_id: int) -> List[ServicePrice]:
+    def get_prices_for_service(self, service_id: int) -> list[ServicePrice]:
         """
         Obtiene todos los precios asociados a un servicio.
 
@@ -124,7 +123,7 @@ class ServiceRepository(BaseRepository):
     # Consultas compuestas
     # ------------------------------------------------------------------
 
-    def get_service_name(self, service_id: int) -> Optional[str]:
+    def get_service_name(self, service_id: int) -> str | None:
         """
         Obtiene el nombre de un servicio dado su ID.
 
@@ -137,7 +136,7 @@ class ServiceRepository(BaseRepository):
         service = self.get_by_id(service_id)
         return service.name if service else None
 
-    def get_service_by_price(self, amount: float) -> Optional[Service]:
+    def get_service_by_price(self, amount: float) -> Service | None:
         """
         Determina a qué servicio corresponde un monto pagado.
 
