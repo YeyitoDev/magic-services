@@ -50,7 +50,7 @@ def get_google_credentials() -> dict[str, Any]:
     creds_path = settings.GOOGLE_CREDENTIALS_PATH
     if creds_path and os.path.exists(creds_path):
         try:
-            with open(creds_path, 'r') as f:
+            with open(creds_path) as f:
                 creds = json.load(f)
             logger.info(f"Google credentials loaded from file: {creds_path}")
             return creds
@@ -61,7 +61,7 @@ def get_google_credentials() -> dict[str, Any]:
     default_path = "./credentials/google.json"
     if os.path.exists(default_path):
         try:
-            with open(default_path, 'r') as f:
+            with open(default_path) as f:
                 creds = json.load(f)
             logger.info(f"Google credentials loaded from default file: {default_path}")
             return creds
