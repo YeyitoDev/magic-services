@@ -33,33 +33,44 @@ def get_google_credentials() -> dict[str, Any]:
 
     Raises:
         FileNotFoundError: Si no se encuentran credenciales en ninguna fuente.
-        json.JSONDecodeError: Si el JSON es inválido.
     """
     from config.settings import settings
 
-    # 1. Variable de entorno GOOGLE_CREDENTIALS_JSON (prod/CI)
+    # 1. Variable de entorno GOOGLE_CREDENTIALS_JSON
     creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
     if creds_json:
-        logger.info("Google credentials loaded from GOOGLE_CREDENTIALS_JSON env var")
-        return json.loads(creds_json)
+        try:
+            creds = json.loads(creds_json)
+            logger.info("Google credentials loaded from GOOGLE_CREDENTIALS_JSON env var")
+            return creds
+        except json.JSONDecodeError as e:
+            logger.warning(f"GOOGLE_CREDENTIALS_JSON has invalid JSON: {e}. Trying file...")
 
-    # 2. Archivo JSON en GOOGLE_CREDENTIALS_PATH (dev/PythonAnywhere)
+    # 2. Archivo en GOOGLE_CREDENTIALS_PATH
     creds_path = settings.GOOGLE_CREDENTIALS_PATH
     if creds_path and os.path.exists(creds_path):
-        logger.info(f"Google credentials loaded from file: {creds_path}")
-        with open(creds_path, 'r') as f:
-            return json.load(f)
+        try:
+            with open(creds_path, 'r') as f:
+                creds = json.load(f)
+            logger.info(f"Google credentials loaded from file: {creds_path}")
+            return creds
+        except (json.JSONDecodeError, FileNotFoundError) as e:
+            logger.warning(f"Failed to load from {creds_path}: {e}. Trying default...")
 
     # 3. Archivo por defecto: credentials/google.json
     default_path = "./credentials/google.json"
     if os.path.exists(default_path):
-        logger.info(f"Google credentials loaded from default file: {default_path}")
-        with open(default_path, 'r') as f:
-            return json.load(f)
+        try:
+            with open(default_path, 'r') as f:
+                creds = json.load(f)
+            logger.info(f"Google credentials loaded from default file: {default_path}")
+            return creds
+        except (json.JSONDecodeError, FileNotFoundError) as e:
+            logger.warning(f"Failed to load from {default_path}: {e}")
 
     raise FileNotFoundError(
         "Google credentials not found. Set GOOGLE_CREDENTIALS_JSON env var "
-        "or ensure GOOGLE_CREDENTIALS_PATH points to a valid JSON file."
+        "or create credentials/google.json with valid JSON."
     )
 
 
