@@ -94,7 +94,7 @@ class TextFormatter(logging.Formatter):
 
     def __init__(self) -> None:
         super().__init__(
-            fmt="%(asctime)s | %(levelname)-8s | %(name)-25s | %(funcName)s:%(lineno)-4d | %(message)s",
+            fmt="%(asctime)s | %(levelname)-5s | %(name)-20s | %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
@@ -494,6 +494,16 @@ def configure_root_logger() -> logging.Logger:
             logging.warning(f"No se pudo configurar TelegramAlertHandler: {e}")
 
     root_logger.propagate = False
+
+    # Silence noisy third-party loggers
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.orm").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("botocore").setLevel(logging.WARNING)
+
     return root_logger
 
 

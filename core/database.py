@@ -38,7 +38,7 @@ engine = create_engine(
     pool_timeout=settings.DB_POOL_TIMEOUT,
     pool_pre_ping=True,           # Verifica que la conexión siga viva
     pool_recycle=3600,            # Recicla conexiones cada hora
-    echo=settings.DEBUG,          # Log de queries SQL en modo debug
+    echo=False,                   # SQL queries never printed
 )
 
 # ---------------------------------------------------------------------------
