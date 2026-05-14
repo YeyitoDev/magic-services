@@ -280,9 +280,10 @@ def build_telegram_app(container):
     )
     app.add_handler(CommandHandler("servicio_id", command_handlers.servicio_id))
     app.add_handler(CommandHandler("generar_link", command_handlers.generar_link_servicio))
+    app.add_handler(CommandHandler("version", command_handlers.version))
     app.add_handler(CommandHandler("help", command_handlers.start))  # help redirige a start
 
-    logger.info("✅ Handlers de comandos registrados: /start, /vm, /wsp, /valid, /id, /help")
+    logger.info("✅ Handlers de comandos registrados: /start, /vm, /wsp, /valid, /id, /version, /help")
 
     # ------------------------------------------------------------------
     # Registrar handlers de callbacks (botones inline)
