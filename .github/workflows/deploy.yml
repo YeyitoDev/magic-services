@@ -36,6 +36,7 @@ jobs:
             cd ~/magic-services
             git checkout develop
             git pull origin develop
+            pkill -f "python main.py" || true
             source .venv/bin/activate
             echo "GOOGLE_CREDENTIALS_JSON=${{ secrets.GOOGLE_CREDENTIALS_JSON }}" >> .env.testing
             cp .env.testing .env
@@ -72,6 +73,7 @@ jobs:
             cd ~/magic-services
             git checkout main
             git pull origin main
+            pkill -f "python main.py" || true
             source .venv/bin/activate
             echo "GOOGLE_CREDENTIALS_JSON=${{ secrets.GOOGLE_CREDENTIALS_JSON }}" >> .env.production
             cp .env.production .env
