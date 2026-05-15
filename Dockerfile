@@ -9,4 +9,4 @@ COPY . .
 
 RUN mkdir -p images output logs csv estados credentials
 
-CMD sh -c 'mkdir -p credentials && echo "$GOOGLE_CREDENTIALS_JSON" > credentials/google.json && python main.py'
+CMD python -c "import os; f=open('credentials/google.json','w'); f.write(os.environ['GOOGLE_CREDENTIALS_JSON']); f.close()" && python main.py
