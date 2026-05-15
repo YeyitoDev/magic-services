@@ -11,13 +11,3 @@ app = "magic-services"
   memory = "512mb"
   cpu_kind = "shared"
   cpus = 1
-
-[[services]]
-  internal_port = 8080
-  protocol = "tcp"
-
-  [[services.checks]]
-    type = "tcp"
-    interval = "30s"
-    timeout = "5s"
-    grace_period = "60s"
