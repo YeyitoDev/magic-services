@@ -40,6 +40,9 @@ def get_google_credentials() -> dict[str, Any]:
     creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
     if creds_json:
         try:
+            # Fix: Fly.io secrets may escape newlines as \\n
+            if "\\n" in creds_json:
+                creds_json = creds_json.replace("\\n", "\n")
             creds = json.loads(creds_json)
             logger.info("Google credentials loaded from GOOGLE_CREDENTIALS_JSON env var")
             return creds
