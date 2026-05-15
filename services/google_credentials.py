@@ -46,8 +46,16 @@ def get_google_credentials() -> dict[str, Any]:
             creds = json.loads(creds_json)
             logger.info("Google credentials loaded from GOOGLE_CREDENTIALS_JSON env var")
             return creds
-        except json.JSONDecodeError as e:
-            logger.warning(f"GOOGLE_CREDENTIALS_JSON has invalid JSON: {e}. Trying file...")
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            # Maybe it's base64 encoded
+            try:
+                import base64
+                decoded = base64.b64decode(creds_json).decode("utf-8")
+                creds = json.loads(decoded)
+                logger.info("Google credentials loaded from GOOGLE_CREDENTIALS_JSON (base64 decoded)")
+                return creds
+            except Exception:
+                logger.warning("GOOGLE_CREDENTIALS_JSON has invalid JSON. Trying file...")
 
     # 2. Archivo en GOOGLE_CREDENTIALS_PATH
     creds_path = settings.GOOGLE_CREDENTIALS_PATH
