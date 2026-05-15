@@ -16,7 +16,6 @@ jobs:
   deploy-testing:
     if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'testing')
     runs-on: ubuntu-latest
-    environment: testing
     steps:
       - uses: actions/checkout@v4
 
