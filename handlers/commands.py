@@ -166,31 +166,20 @@ class CommandHandlers:
         """Muestra la versión actual del bot."""
         from config.settings import settings
         from datetime import datetime
-        import subprocess, os
-
-        # Try to get git commit
-        try:
-            commit = subprocess.check_output(
-                ["git", "rev-parse", "--short", "HEAD"],
-                stderr=subprocess.DEVNULL
-            ).decode().strip()
-            branch = subprocess.check_output(
-                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-                stderr=subprocess.DEVNULL
-            ).decode().strip()
-        except Exception:
-            commit = "unknown"
-            branch = "unknown"
-
+        import os
+        
         user_id = update.message.chat.id
         await context.bot.send_message(
             chat_id=user_id,
             text=(
-                f"🔮 <b>Magic Chatbot v2</b>\n"
-                f"├ 🏷️ Versión: <code>{settings.PROJECT_VERSION}</code>\n"
-                f"├ 🌿 Rama: <code>{branch}</code>\n"
-                f"├ 📝 Commit: <code>{commit}</code>\n"
-                f"├ 🌐 Entorno: <code>{settings.ENVIRONMENT}</code>\n"
+                f"🔮 <b>Magic Chatbot v2</b>
+"
+                f"├ 🏷️ Versión: <code>{settings.PROJECT_VERSION}</code>
+"
+                f"├ 🌐 Entorno: <code>{settings.ENVIRONMENT}</code>
+"
+                f"├ 🐍 Python: <code>OK</code>
+"
                 f"└ 🕐 Hora: <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>"
             ),
             parse_mode="HTML",
