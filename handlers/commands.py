@@ -164,26 +164,24 @@ class CommandHandlers:
 
     async def version(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Muestra la versión actual del bot."""
-        from config.settings import settings
         from datetime import datetime
-        import os
-        
+
+        from config.settings import settings
+
         user_id = update.message.chat.id
+        msg = (
+            f"🔮 <b>Magic Chatbot v2</b>\n"
+            f"├ 🏷️ Versión: <code>{settings.PROJECT_VERSION}</code>\n"
+            f"├ 🌐 Entorno: <code>{settings.ENVIRONMENT}</code>\n"
+            f"├ 🐍 Python: <code>OK</code>\n"
+            f"└ 🕐 Hora: <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>"
+        )
         await context.bot.send_message(
             chat_id=user_id,
-            text=(
-                f"🔮 <b>Magic Chatbot v2</b>
-"
-                f"├ 🏷️ Versión: <code>{settings.PROJECT_VERSION}</code>
-"
-                f"├ 🌐 Entorno: <code>{settings.ENVIRONMENT}</code>
-"
-                f"├ 🐍 Python: <code>OK</code>
-"
-                f"└ 🕐 Hora: <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>"
-            ),
+            text=msg,
             parse_mode="HTML",
         )
+
 
     # ==================================================================
     # /vm - Validar monto (corregir monto manualmente)
