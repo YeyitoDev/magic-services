@@ -19,11 +19,13 @@ Uso:
     # texto: "¡Yapeaste! S/ 150.00 a Jose Gonzalez"
 """
 
+import io
 import logging
+from typing import Optional
 
 from google.cloud import vision
 
-from services.google_credentials import get_google_credentials
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -38,38 +40,39 @@ class GoogleVisionService:
 
     Attributes:
         _client (vision.ImageAnnotatorClient): Cliente autenticado de Vision API.
+        _credentials_path (str): Ruta al archivo JSON de credenciales.
     """
 
-    def __init__(self, credentials_path: str | None = None) -> None:
+    def __init__(self, credentials_path: Optional[str] = None) -> None:
         """
         Inicializa el cliente de Google Cloud Vision.
 
         Args:
-            credentials_path: Ruta al archivo JSON de credenciales de servicio
-                             (opcional, para backward compatibility). Si no se
-                             proporciona, se usa get_google_credentials().
+            credentials_path: Ruta al archivo JSON de credenciales de servicio.
+                             Si es None, se usa el valor de settings.GOOGLE_CREDENTIALS_PATH.
 
         Raises:
-            FileNotFoundError: Si no se encuentran credenciales válidas.
+            FileNotFoundError: Si el archivo de credenciales no existe.
             Exception: Si hay error al inicializar el cliente de Vision.
         """
+        self._credentials_path = credentials_path or settings.GOOGLE_CREDENTIALS_PATH
+
         try:
-            if credentials_path:
-                self._client = vision.ImageAnnotatorClient.from_service_account_json(
-                    credentials_path
-                )
-                logger.info("Vision client initialized from explicit credentials path.")
-            else:
-                creds_info = get_google_credentials()
-                self._client = vision.ImageAnnotatorClient.from_service_account_info(
-                    creds_info
-                )
-                logger.info("Vision client initialized from get_google_credentials().")
+            self._client = vision.ImageAnnotatorClient.from_service_account_json(
+                self._credentials_path
+            )
+            logger.info(
+                "Cliente de Google Cloud Vision inicializado correctamente."
+            )
         except FileNotFoundError:
-            logger.error("Google credentials not found for Vision API.")
+            logger.error(
+                f"Archivo de credenciales no encontrado: {self._credentials_path}"
+            )
             raise
         except Exception as e:
-            logger.error(f"Error initializing Vision API client: {e}")
+            logger.error(
+                f"Error al inicializar Vision API client: {e}"
+            )
             raise
 
     # ------------------------------------------------------------------
@@ -103,7 +106,7 @@ class GoogleVisionService:
 
         # Leer la imagen desde el sistema de archivos
         try:
-            with open(image_path, 'rb') as image_file:
+            with io.open(image_path, 'rb') as image_file:
                 content = image_file.read()
         except FileNotFoundError:
             logger.error(f"Archivo de imagen no encontrado: {image_path}")
@@ -200,11 +203,19 @@ class GoogleVisionService:
         Verifica que el servicio de Vision API esté disponible.
 
         Realiza una verificación simple de que el cliente está correctamente
-        inicializado.
+        inicializado y el archivo de credenciales existe.
 
         Returns:
             True si el servicio está listo para usar.
         """
+        import os
+
+        if not os.path.exists(self._credentials_path):
+            logger.error(
+                f"Credenciales no encontradas en: {self._credentials_path}"
+            )
+            return False
+
         if self._client is None:
             logger.error("Cliente de Vision API no inicializado.")
             return False
@@ -216,7 +227,7 @@ class GoogleVisionService:
 # Instancia por defecto (singleton a nivel módulo, lazy)
 # ---------------------------------------------------------------------------
 
-_vision_service_instance: GoogleVisionService | None = None
+_vision_service_instance: Optional[GoogleVisionService] = None
 
 
 def get_vision_service() -> GoogleVisionService:
@@ -243,3 +254,4 @@ def get_vision_service() -> GoogleVisionService:
     if _vision_service_instance is None:
         _vision_service_instance = GoogleVisionService()
     return _vision_service_instance
+
