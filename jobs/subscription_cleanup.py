@@ -104,10 +104,11 @@ class SubscriptionCleanupJob:
         Returns:
             Dict with stats: total, active, expired, special, removed
         """
+        from datetime import date
+
         from core.database import SessionLocal
         from models.subscription import Subscription
         from models.user import User
-        from datetime import date
 
         session = SessionLocal()
         today = date.today()
@@ -173,7 +174,8 @@ class SubscriptionCleanupJob:
                     print(f"\n🚨 {stats['removed']} usuarios eliminados del grupo y BD")
 
             # Save report
-            import os, json
+            import json
+            import os
             from datetime import datetime
             output_dir = os.path.join("output", today.strftime("%Y-%m-%d"))
             os.makedirs(output_dir, exist_ok=True)
@@ -195,7 +197,7 @@ class SubscriptionCleanupJob:
                 json.dump(report, f, indent=2)
 
             with open(os.path.join(output_dir, f"resumen_{hora}.txt"), "w") as f:
-                f.write(f"DB-ONLY CLEANUP REPORT\n")
+                f.write("DB-ONLY CLEANUP REPORT\n")
                 f.write(f"Date: {today}\n")
                 f.write(f"Mode: {mode}\n")
                 f.write(f"Total Users with Subs: {stats['total']}\n")
@@ -203,7 +205,7 @@ class SubscriptionCleanupJob:
                 f.write(f"Expired Subscriptions: {stats['expired']}\n")
                 f.write(f"Removed: {stats['removed']}\n")
 
-            print(f"DB-Only Cleanup Complete:")
+            print("DB-Only Cleanup Complete:")
             print(f"  Total: {stats['total']}")
             print(f"  Active: {stats['active']}")
             print(f"  Expired: {stats['expired']}")

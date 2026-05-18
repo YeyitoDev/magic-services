@@ -7,14 +7,16 @@ Creates users with various subscription states:
 """
 
 import sys
+
 sys.path.insert(0, '.')
 
-from core.database import SessionLocal
-from models.user import User
-from models.service import Service, ServicePrice
-from models.subscription import Subscription
-from models.purchase import Purchase
 from datetime import date, timedelta
+
+from core.database import SessionLocal
+from models.purchase import Purchase
+from models.service import Service
+from models.subscription import Subscription
+from models.user import User
 
 session = SessionLocal()
 

@@ -47,7 +47,7 @@ class SubscriptionRepository(BaseRepository):
         """
         return (
             self._session.query(Subscription)
-            .filter(Subscription.is_active == True)
+            .filter(Subscription.is_active)
             .all()
         )
 
@@ -68,7 +68,7 @@ class SubscriptionRepository(BaseRepository):
             .filter(
                 and_(
                     Subscription.user_telegram_id == user_telegram_id,
-                    Subscription.is_active == True,
+                    Subscription.is_active,
                 )
             )
             .all()
@@ -95,7 +95,7 @@ class SubscriptionRepository(BaseRepository):
                 and_(
                     Subscription.user_telegram_id == user_telegram_id,
                     Subscription.service_id == service_id,
-                    Subscription.is_active == True,
+                    Subscription.is_active,
                 )
             )
             .order_by(Subscription.end_date.desc())
