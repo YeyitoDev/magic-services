@@ -141,10 +141,47 @@ class SubscriptionCleanupJob:
             # Users with no subscription are "special clients" - can't detect without Telegram
 
             if mode == "eliminar":
+                from services.telegram_api import TelegramAPIService
+                api = TelegramAPIService()
+                chat_id = int(self.vip_group_id)
+
                 for sub in expired_subs:
-                    session.delete(sub)
-                    stats["removed"] += 1
-                session.commit()
+                    user_id = int(sub.user_telegram_id)
+                    try:
+                        # 1. Send expired message
+                        from services.reminder_service import ReminderService
+                        from repositories.selected_service_repo import SelectedServiceRepository
+                        from repositories.subscription_repo import SubscriptionRepository
+                        reminder = ReminderService(
+                            SelectedServiceRepository(session),
+                            SubscriptionRepository(session)
+                        )
+                        reminder.send_expired_subscription_message(user_id, sub.end_date)
+                        print(f"  ✓ Mensaje enviado a {user_id}")
+                    except Exception as e:
+                        print(f"  ✗ Error mensaje a {user_id}: {e}")
+
+                    try:
+                        # 2. Kick from group + unban
+                        result = api.remove_user_allow_rejoin(chat_id=chat_id, user_id=user_id)
+                        if result.get("kick_success"):
+                            print(f"  ✓ Usuario {user_id} expulsado del grupo")
+                            stats["removed"] += 1
+                        else:
+                            print(f"  ✗ No se pudo expulsar a {user_id}: {result}")
+                    except Exception as e:
+                        print(f"  ✗ Error kick {user_id}: {e}")
+
+                    try:
+                        # 3. Delete subscription from DB
+                        session.delete(sub)
+                        print(f"  ✓ Suscripción eliminada de BD para {user_id}")
+                    except Exception as e:
+                        print(f"  ✗ Error BD {user_id}: {e}")
+
+                if stats["removed"] > 0:
+                    session.commit()
+                    print(f"\n🚨 {stats['removed']} usuarios eliminados del grupo y BD")
 
             # Save report
             import os, json
