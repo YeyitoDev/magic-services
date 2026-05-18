@@ -93,6 +93,102 @@ class SubscriptionCleanupJob:
         self.validator_ids = settings.TELEGRAM_VALIDATOR_IDS
 
     # ------------------------------------------------------------------
+    # DB-only mode (no Telegram API needed)
+    # ------------------------------------------------------------------
+
+    def run_db_only(self, mode: str = "validar") -> dict:
+        """
+        DB-only cleanup: checks subscriptions directly from database.
+        Does NOT require Telegram API or Telethon.
+
+        Returns:
+            Dict with stats: total, active, expired, special, removed
+        """
+        from core.database import SessionLocal
+        from models.subscription import Subscription
+        from models.user import User
+        from datetime import date
+
+        session = SessionLocal()
+        today = date.today()
+
+        stats = {
+            "total": 0,
+            "active": 0,
+            "expired": 0,
+            "special": 0,
+            "removed": 0,
+        }
+
+        try:
+            # Get all subscriptions
+            all_subs = session.query(Subscription).all()
+            all_users = {u.telegram_id: u for u in session.query(User).all()}
+
+            # Get unique user IDs from subscriptions
+            sub_user_ids = set(s.user_telegram_id for s in all_subs)
+            stats["total"] = len(sub_user_ids)
+
+            # Classify
+            expired_subs = []
+            for sub in all_subs:
+                if sub.end_date < today:
+                    expired_subs.append(sub)
+
+            stats["expired"] = len(set(s.user_telegram_id for s in expired_subs))
+            stats["active"] = stats["total"] - stats["expired"]
+
+            # Users with no subscription are "special clients" - can't detect without Telegram
+
+            if mode == "eliminar":
+                for sub in expired_subs:
+                    session.delete(sub)
+                    stats["removed"] += 1
+                session.commit()
+
+            # Save report
+            import os, json
+            from datetime import datetime
+            output_dir = os.path.join("output", today.strftime("%Y-%m-%d"))
+            os.makedirs(output_dir, exist_ok=True)
+
+            report = {
+                "date": str(today),
+                "mode": mode,
+                "stats": stats,
+                "expired_users": [
+                    {"user_id": s.user_telegram_id,
+                     "end_date": str(s.end_date),
+                     "name": all_users.get(s.user_telegram_id, User()).telegram_name}
+                    for s in expired_subs
+                ]
+            }
+
+            hora = datetime.now().strftime("%H%M%S")
+            with open(os.path.join(output_dir, f"resumen_{hora}.json"), "w") as f:
+                json.dump(report, f, indent=2)
+
+            with open(os.path.join(output_dir, f"resumen_{hora}.txt"), "w") as f:
+                f.write(f"DB-ONLY CLEANUP REPORT\n")
+                f.write(f"Date: {today}\n")
+                f.write(f"Mode: {mode}\n")
+                f.write(f"Total Users with Subs: {stats['total']}\n")
+                f.write(f"Active Subscriptions: {stats['active']}\n")
+                f.write(f"Expired Subscriptions: {stats['expired']}\n")
+                f.write(f"Removed: {stats['removed']}\n")
+
+            print(f"DB-Only Cleanup Complete:")
+            print(f"  Total: {stats['total']}")
+            print(f"  Active: {stats['active']}")
+            print(f"  Expired: {stats['expired']}")
+            print(f"  Removed: {stats['removed']}")
+
+        finally:
+            session.close()
+
+        return stats
+
+    # ------------------------------------------------------------------
     # Método principal
     # ------------------------------------------------------------------
 

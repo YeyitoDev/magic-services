@@ -50,8 +50,21 @@ jobs:
           GOOGLE_CREDENTIALS_JSON=${{ secrets.GOOGLE_CREDENTIALS_JSON }}
           EOF
 
-      - name: Run cleanup
-        run: python -m jobs.subscription_cleanup ${{ github.event.inputs.mode || 'validar' }}
+      - name: Run cleanup (DB only)
+        run: |
+          python -c "
+          from core.container import container
+          from services.telegram_api import TelegramAPIService
+          from jobs.subscription_cleanup import SubscriptionCleanupJob
+
+          container.initialize_defaults()
+          job = SubscriptionCleanupJob(
+              telegram_api=TelegramAPIService(),
+              subscription_service=container.resolve('subscription_service'),
+              user_service=container.resolve('user_service'),
+          )
+          job.run_db_only(mode='${{ github.event.inputs.mode || 'validar' }}')
+          "
 
       - name: Save logs as artifact
         if: always()
