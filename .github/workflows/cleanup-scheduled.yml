@@ -63,12 +63,37 @@ jobs:
             logs/
           retention-days: 30
 
-      - name: Notify Telegram
+      - name: Notify Telegram with results
         if: always()
         run: |
-          STATUS="${{ job.status }}"
           ENV="${{ github.event.inputs.environment || 'testing' }}"
           MODE="${{ github.event.inputs.mode || 'validar' }}"
+
+          # Count results from output files
+          TOTAL="?"
+          EXPIRED="?"
+          KICKED="?"
+
+          if [ -f output/*/resumen_*.txt ]; then
+            TOTAL=$(grep "Total Usuarios" output/*/resumen_*.txt 2>/dev/null | tail -1 | awk '{print $NF}' || echo "?")
+            EXPIRED=$(grep "Expirad" output/*/resumen_*.txt 2>/dev/null | tail -1 | awk '{print $NF}' || echo "?")
+          fi
+          if [ -f output/*/eliminados_*.json ]; then
+            KICKED=$(python -c "import json; d=json.load(open('output/'+__import__('os').listdir('output')[0]+'/eliminados_'+[f for f in __import__('os').listdir('output/'+__import__('os').listdir('output')[0]) if 'eliminados' in f][0])); print(d['total_eliminados'])" 2>/dev/null || echo "0")
+          fi
+
+          if [ "$MODE" = "validar" ]; then
+            ICON="🔍"
+          else
+            ICON="🚨"
+          fi
+
+          MSG="${ICON} Limpieza [${ENV}] [${MODE}]
+          ├ 👥 Total: ${TOTAL}
+          ├ ❌ Expirados: ${EXPIRED}
+          └ 🚫 Eliminados: ${KICKED}
+          🕐 $(date +'%Y-%m-%d %H:%M')"
+
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d "chat_id=6475885611" \
-            -d "text=🧹 Limpieza [$ENV] [$MODE] - $(date +'%Y-%m-%d %H:%M') - Status: $STATUS"
+            -d "text=${MSG}"
