@@ -147,19 +147,8 @@ class SubscriptionCleanupJob:
 
                 for sub in expired_subs:
                     user_id = int(sub.user_telegram_id)
-                    try:
-                        # 1. Send expired message
-                        from services.reminder_service import ReminderService
-                        from repositories.selected_service_repo import SelectedServiceRepository
-                        from repositories.subscription_repo import SubscriptionRepository
-                        reminder = ReminderService(
-                            SelectedServiceRepository(session),
-                            SubscriptionRepository(session)
-                        )
-                        reminder.send_expired_subscription_message(user_id, sub.end_date)
-                        print(f"  ✓ Mensaje enviado a {user_id}")
-                    except Exception as e:
-                        print(f"  ✗ Error mensaje a {user_id}: {e}")
+                    # 1. Skip message (users must have messaged the bot first)
+                    print(f"  ⋯ Procesando {user_id}...")
 
                     try:
                         # 2. Kick from group + unban
