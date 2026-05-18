@@ -72,7 +72,8 @@ class TestSubscriptionModel:
         db_session.add(sub)
         db_session.commit()
 
-        assert sub.is_active is True
+        assert sub.is_active is True   # columna: default=True
+        assert sub.is_valid is True    # propiedad: end_date >= hoy
         assert sub.days_remaining >= 29
 
     def test_subscription_expired(self, db_session):
@@ -98,5 +99,6 @@ class TestSubscriptionModel:
         db_session.add(sub)
         db_session.commit()
 
-        assert sub.is_active is False
+        assert sub.is_active is True   # columna: sigue True hasta que se marque inactiva
+        assert sub.is_valid is False   # propiedad: end_date < hoy
         assert sub.days_remaining < 0

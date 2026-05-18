@@ -273,6 +273,17 @@ class Container:
             session = self.resolve("db_session")
             from models.service import Service, ServicePrice
 
+            # ---- Migración: agregar columna is_active si no existe ----
+            from sqlalchemy import text
+            try:
+                session.execute(text(
+                    "ALTER TABLE subscriptions ADD COLUMN is_active BOOLEAN DEFAULT TRUE"
+                ))
+                session.commit()
+            except Exception:
+                session.rollback()
+                pass  # Column already exists
+
             existing = session.query(ServicePrice).count()
             if existing > 0:
                 return  # Ya hay precios, no hacer nada

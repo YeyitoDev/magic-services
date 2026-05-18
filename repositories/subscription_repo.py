@@ -40,15 +40,14 @@ class SubscriptionRepository(BaseRepository):
         """
         Obtiene todas las suscripciones actualmente activas.
 
-        Una suscripción está activa si su end_date >= fecha de hoy.
+        Una suscripción está activa si is_active == True.
 
         Returns:
             Lista de suscripciones vigentes.
         """
-        today = date.today()
         return (
             self._session.query(Subscription)
-            .filter(Subscription.end_date >= today)
+            .filter(Subscription.is_active == True)
             .all()
         )
 
@@ -64,13 +63,12 @@ class SubscriptionRepository(BaseRepository):
         Returns:
             Lista de suscripciones activas del usuario.
         """
-        today = date.today()
         return (
             self._session.query(Subscription)
             .filter(
                 and_(
                     Subscription.user_telegram_id == user_telegram_id,
-                    Subscription.end_date >= today,
+                    Subscription.is_active == True,
                 )
             )
             .all()
@@ -80,7 +78,7 @@ class SubscriptionRepository(BaseRepository):
         self, user_telegram_id: int, service_id: int
     ) -> Subscription | None:
         """
-        Busca la suscripción de un usuario a un servicio específico.
+        Busca la suscripción activa de un usuario a un servicio específico.
 
         Retorna la suscripción más reciente (mayor end_date) si hay varias.
 
@@ -97,6 +95,7 @@ class SubscriptionRepository(BaseRepository):
                 and_(
                     Subscription.user_telegram_id == user_telegram_id,
                     Subscription.service_id == service_id,
+                    Subscription.is_active == True,
                 )
             )
             .order_by(Subscription.end_date.desc())
@@ -189,6 +188,7 @@ class SubscriptionRepository(BaseRepository):
                 service_id=service_id,
                 start_date=today,
                 end_date=today,
+                is_active=True,
             )
             self.add(subscription)
             self.commit()

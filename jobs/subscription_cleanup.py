@@ -645,6 +645,22 @@ class SubscriptionCleanupJob:
                     logger.warning(f"Error al desbanear a {user_id}: {e}")
                     mensaje_eliminacion += f" | Error desbaneo: {e}"
 
+                # 4. Marcar suscripción como inactiva en BD
+                try:
+                    from core.database import SessionLocal
+                    from models.subscription import Subscription
+                    session = SessionLocal()
+                    sub = session.query(Subscription).filter_by(
+                        user_telegram_id=int(user_id), is_active=True
+                    ).first()
+                    if sub:
+                        sub.is_active = False
+                        session.commit()
+                        logger.info(f"Suscripción de user={user_id} marcada como inactiva.")
+                    session.close()
+                except Exception as e:
+                    logger.warning(f"Error al marcar inactiva suscripción de {user_id}: {e}")
+
                 # Registrar usuario eliminado
                 removed_users.append({
                     "user_telegram_id": user_id,

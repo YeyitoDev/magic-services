@@ -384,6 +384,9 @@ class SubscriptionService:
                 subscription=subscription,
                 additional_days=duration_days,
             )
+            # Asegurar que is_active esté a True al extender
+            subscription.is_active = True
+            self._subscription_repo.commit()
             logger.info(
                 f"Suscripción extendida: user={telegram_id}, "
                 f"service_id={service_id}, nueva end_date={new_end_date}"
@@ -397,6 +400,7 @@ class SubscriptionService:
                 service_id=service_id,
                 start_date=purchase_date_only,
                 end_date=purchase_date_only + timedelta(days=duration_days),
+                is_active=True,
             )
             self._subscription_repo.add(subscription)
             self._subscription_repo.commit()

@@ -8,7 +8,7 @@ determinado. Incluye propiedades para verificar vigencia y días restantes.
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Column, Date, ForeignKey, Integer
+from sqlalchemy import BigInteger, Boolean, Column, Date, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
 from models.base import BaseModel
@@ -31,11 +31,12 @@ class Subscription(BaseModel):
         service_id (int): FK al servicio contratado.
         start_date (date): Fecha de inicio de la suscripción.
         end_date (date): Fecha de vencimiento de la suscripción.
+        is_active (bool): Columna - True si la suscripción está activa (no cancelada).
         user (User): Relación inversa al usuario.
         service (Service): Relación inversa al servicio.
 
     Properties:
-        is_active (bool): True si la suscripción no ha vencido (end_date >= hoy).
+        is_valid (bool): True si end_date >= hoy (vigente por fecha).
         days_remaining (int): Días restantes hasta el vencimiento (negativo si ya expiró).
     """
 
@@ -50,6 +51,7 @@ class Subscription(BaseModel):
     )
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False, doc="True si la suscripción está activa")
 
     # ------------------------------------------------------------------
     # Relaciones inversas
@@ -71,16 +73,8 @@ class Subscription(BaseModel):
     # ------------------------------------------------------------------
 
     @property
-    def is_active(self) -> bool:
-        """
-        Determina si la suscripción está actualmente activa.
-
-        Una suscripción está activa si su fecha de fin (end_date) es
-        mayor o igual a la fecha actual.
-
-        Returns:
-            True si la suscripción está vigente.
-        """
+    def is_valid(self) -> bool:
+        """True si end_date >= hoy (vigente por fecha)."""
         return self.end_date >= date.today()
 
     @property
@@ -117,5 +111,5 @@ class Subscription(BaseModel):
             f"service_id={self.service_id}, "
             f"start_date={self.start_date!r}, "
             f"end_date={self.end_date!r}, "
-            f"is_active={self.is_active})"
+            f"is_active={self.is_active}, is_valid={self.is_valid})"
         )
