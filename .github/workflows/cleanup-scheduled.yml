@@ -82,18 +82,12 @@ jobs:
           ENV="${{ github.event.inputs.environment || 'testing' }}"
           MODE="${{ github.event.inputs.mode || 'validar' }}"
 
-          # Count results from output files
-          TOTAL="?"
-          EXPIRED="?"
-          KICKED="?"
-
-          if [ -f output/*/resumen_*.txt ]; then
-            TOTAL=$(grep "Total Usuarios" output/*/resumen_*.txt 2>/dev/null | tail -1 | awk '{print $NF}' || echo "?")
-            EXPIRED=$(grep "Expirad" output/*/resumen_*.txt 2>/dev/null | tail -1 | awk '{print $NF}' || echo "?")
-          fi
-          if [ -f output/*/eliminados_*.json ]; then
-            KICKED=$(python -c "import json; d=json.load(open('output/'+__import__('os').listdir('output')[0]+'/eliminados_'+[f for f in __import__('os').listdir('output/'+__import__('os').listdir('output')[0]) if 'eliminados' in f][0])); print(d['total_eliminados'])" 2>/dev/null || echo "0")
-          fi
+          # Parse output from DB-only cleanup
+          RAW=$(grep -E "Total|Active|Expired|Removed" output/*/resumen_*.txt 2>/dev/null || echo "")
+          TOTAL=$(echo "$RAW" | grep "Total" | awk -F': ' '{print $2}' || echo "?")
+          ACTIVE=$(echo "$RAW" | grep "Active" | awk -F': ' '{print $2}' || echo "?")
+          EXPIRED=$(echo "$RAW" | grep "Expirado\|Expired" | awk -F': ' '{print $2}' || echo "?")
+          REMOVED=$(echo "$RAW" | grep "Removed" | awk -F': ' '{print $2}' || echo "0")
 
           if [ "$MODE" = "validar" ]; then
             ICON="🔍"
@@ -103,8 +97,9 @@ jobs:
 
           MSG="${ICON} Limpieza [${ENV}] [${MODE}]
           ├ 👥 Total: ${TOTAL}
+          ├ ✅ Activos: ${ACTIVE}
           ├ ❌ Expirados: ${EXPIRED}
-          └ 🚫 Eliminados: ${KICKED}
+          └ 🚫 Eliminados: ${REMOVED}
           🕐 $(date +'%Y-%m-%d %H:%M')"
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
