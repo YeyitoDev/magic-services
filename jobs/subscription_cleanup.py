@@ -106,11 +106,14 @@ class SubscriptionCleanupJob:
         """
         from datetime import date
 
-        from core.database import SessionLocal
+        from core.database import SessionLocal as MakeSession
         from models.subscription import Subscription
         from models.user import User
 
-        session = SessionLocal()
+        session = MakeSession()
+        # Keep connection alive during long operations
+        session.execute("SET SESSION wait_timeout=28800")
+        session.execute("SET SESSION interactive_timeout=28800")
         today = date.today()
 
         stats = {
@@ -152,11 +155,18 @@ class SubscriptionCleanupJob:
                     print(f"  ⋯ Procesando {user_id}...")
 
                     try:
+                        # Reconnect DB if needed
+                        if not session.is_active:
+                            session = MakeSession()
                         # 2. Kick from group + unban
                         result = api.remove_user_allow_rejoin(chat_id=chat_id, user_id=user_id)
                         if result.get("kick_success"):
                             print(f"  ✓ Usuario {user_id} expulsado del grupo")
                             stats["removed"] += 1
+                        # Commit every 50 users to avoid losing progress
+                        if stats["removed"] % 50 == 0:
+                            session.commit()
+                            print(f"  💾 Commit parcial: {stats['removed']} usuarios procesados")
                         else:
                             print(f"  ✗ No se pudo expulsar a {user_id}: {result}")
                     except Exception as e:
