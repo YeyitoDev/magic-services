@@ -305,22 +305,22 @@ class CallbackHandlers:
         query = update.callback_query
         if tipo_servicio in ("Stake", "stake"):
             mensaje = (
-                "<b>🎲 STAKE DE MÁXIMA SEGURIDAD</b>\n\n"
-                "<b>💰 Precio: S/ 50.00</b>\n\n"
+                "🎲 *STAKE DE MÁXIMA SEGURIDAD*\n\n"
+                "💰 *Precio: S/ 50.00*\n\n"
                 "Los números de cuenta son los siguientes mi hermano 🔮\n\n"
                 "Titular: José González Reategui\n"
                 "Yape/Plin: 952903700\n"
-                "BCP: 19402020623033\n"
+                "BCP: 194020262033\n"
                 "SCOTIA: 1780142814\n\n"
                 "Solo envía la captura de tu transferencia por este medio 📲"
             )
         else:
             mensaje = (
-                "<b>💎 GRUPO VIP</b>\n\n"
-                "<b>🔥 PRECIOS VIP</b>\n"
-                "• 1 Mes = S/. 100\n"
-                "• 2 Meses = S/. 150\n"
-                "• 3 Meses = S/. 200\n\n"
+                "💎 *GRUPO VIP*\n\n"
+                "🔥 *PRECIOS VIP*\n"
+                "* 1 Mes = S/. 100\n"
+                "* 2 Meses = S/. 150\n"
+                "* 3 Meses = S/. 200\n\n"
                 "Los números de cuenta son los siguientes mi hermano 🔮\n\n"
                 "Titular: José González Reategui\n"
                 "Yape/Plin: 952903700\n"
@@ -330,7 +330,7 @@ class CallbackHandlers:
             )
         from utils.keyboards import buy_service_keyboard
         await query.edit_message_text(
-            text=mensaje, parse_mode="HTML",
+            text=mensaje, parse_mode="Markdown",
             reply_markup=buy_service_keyboard(tipo_servicio),
         )
 
@@ -480,7 +480,11 @@ class CallbackHandlers:
         elif respuesta_compra == "no":
             await context.bot.send_message(
                 chat_id=user_id,
-                text="Seguro la próxima te animas mi gato, te recomiendo seguir jugando las apuestas gratis que enviamos por el grupo y te regalo un bono de S/ 40 en la mejor casa de apuestas del mundo"
+                text=(
+                    "Seguro la próxima te animas mi gato, te recomiendo seguir jugando "
+                    "las apuestas gratis que enviamos por el grupo y te regalo un bono "
+                    "de S/ 40 en la mejor casa de apuestas del mundo"
+                )
             )
             await context.bot.send_photo(
                 chat_id=user_id,
@@ -489,7 +493,7 @@ class CallbackHandlers:
             from utils.keyboards import main_menu_keyboard
             await context.bot.send_message(
                 chat_id=user_id,
-                text="https://bit.ly/promobetsafemagic",
+                text=self.settings.BETSAFE_PROMO_LINK,
                 reply_markup=main_menu_keyboard(),
             )
 
@@ -663,31 +667,21 @@ class CallbackHandlers:
         # Obtener link de invitación
         invite_link = await self._get_invite_link(context, tipo_servicio)
 
-        # Enviar confirmación al comprador
+        # Enviar registro a Betsafe
         from utils.keyboards import betsafe_promo_keyboard
-
         await context.bot.send_message(
             chat_id=user_id,
-            text="✅ *¡PAGO VALIDADO EXITOSAMENTE!*\n\nYa eres parte de la comunidad Magic 🔮",
+            text=(
+                "✅ *¡PAGO VALIDADO EXITOSAMENTE!*\n\n"
+                "Ya eres parte de la comunidad Magic 🔮"
+            ),
             parse_mode="Markdown",
         )
-
         if invite_link:
             await context.bot.send_message(
                 chat_id=user_id,
-                text=f"🚀 Aquí tienes tu enlace de invitación:\n{invite_link}",
+                text=f"🚀 Aquí tienes tu enlace de invitación mi gato, válido para un solo uso y expira en 24 horas:\n{invite_link}",
             )
-
-        # Enviar promoción Betsafe
-        await context.bot.send_photo(
-            chat_id=user_id,
-            photo=open("./imagenes_promocionales/betsafe_logo.jpeg", "rb"),
-        )
-        await context.bot.send_message(
-            chat_id=user_id,
-            text="🎁 ¡No olvides reclamar tus S/ 70 gratis!",
-            reply_markup=betsafe_promo_keyboard(),
-        )
 
         # Confirmar al validador
         user = self.user_service.get_user(user_id)
