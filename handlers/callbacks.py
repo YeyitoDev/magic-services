@@ -304,33 +304,43 @@ class CallbackHandlers:
     async def _send_service_pricing(self, update, context, user_id, tipo_servicio):
         query = update.callback_query
         if tipo_servicio in ("Stake", "stake"):
-            mensaje = (
-                "🎲 *STAKE DE MÁXIMA SEGURIDAD*\n\n"
-                "💰 *Precio: S/ 50.00*\n\n"
-                "Los números de cuenta son los siguientes mi hermano 🔮\n\n"
-                "Titular: José González Reategui\n"
-                "Yape/Plin: 952903700\n"
-                "BCP: 194020262033\n"
-                "SCOTIA: 1780142814\n\n"
-                "Solo envía la captura de tu transferencia por este medio 📲"
+            await context.bot.send_photo(
+                chat_id=user_id,
+                photo=open("./imagenes_promocionales/stake_3.jpeg", "rb"),
+                caption=(
+                    "🎲 <b>STAKE DE MÁXIMA SEGURIDAD</b>\n\n"
+                    "💰 <b>Precio: S/ 50.00</b>\n\n"
+                    "Los números de cuenta son los siguientes mi hermano 🔮\n\n"
+                    "Titular: José González Reategui\n"
+                    "Yape/Plin: 952903700\n"
+                    "BCP: 194020262033\n"
+                    "SCOTIA: 1780142814\n\n"
+                    "Solo envía la captura de tu transferencia por este medio 📲"
+                ),
+                parse_mode="HTML",
             )
         else:
-            mensaje = (
-                "💎 *GRUPO VIP*\n\n"
-                "🔥 *PRECIOS VIP*\n"
-                "* 1 Mes = S/. 100\n"
-                "* 2 Meses = S/. 150\n"
-                "* 3 Meses = S/. 200\n\n"
-                "Los números de cuenta son los siguientes mi hermano 🔮\n\n"
-                "Titular: José González Reategui\n"
-                "Yape/Plin: 952903700\n"
-                "BCP: 19402020623033\n"
-                "SCOTIA: 1780142814\n\n"
-                "Solo envía la captura de tu transferencia por este medio 📲"
+            await context.bot.send_photo(
+                chat_id=user_id,
+                photo=open("./imagenes_promocionales/vip_3.jpeg", "rb"),
+                caption=(
+                    "💎 <b>GRUPO VIP</b>\n\n"
+                    "🔥 <b>PRECIOS VIP</b>\n"
+                    "• 1 Mes = S/ 100\n"
+                    "• 2 Meses = S/ 150\n"
+                    "• 3 Meses = S/ 200\n\n"
+                    "Los números de cuenta son los siguientes mi hermano 🔮\n\n"
+                    "Titular: José González Reategui\n"
+                    "Yape/Plin: 952903700\n"
+                    "BCP: 19402020623033\n"
+                    "SCOTIA: 1780142814\n\n"
+                    "Solo envía la captura de tu transferencia por este medio 📲"
+                ),
+                parse_mode="HTML",
             )
         from utils.keyboards import buy_service_keyboard
         await query.edit_message_text(
-            text=mensaje, parse_mode="Markdown",
+            text="¿Deseas comprar este servicio?",
             reply_markup=buy_service_keyboard(tipo_servicio),
         )
 
@@ -349,62 +359,29 @@ class CallbackHandlers:
             "grupo_vip": {
                 "pregunta": "¿Qué es el Grupo VIP?",
                 "respuesta": (
-                    "El Grupo VIP es nuestra comunidad exclusiva donde recibes "
-                    "diariamente entre 3 a 4 pronósticos estadísticos con la más "
-                    "alta probabilidad de acierto. Incluye asesoría directa de "
-                    "nuestros analistas para colocar las jugadas."
+                    "En el grupo VIP recibirás diariamente entre 3 a 4 pronósticos "
+                    "estadísticos con la probabilidad más alta de ganar."
                 ),
                 "video": "./videos_promocionales/GRUPO_VIP_EXPLICACION.mp4",
             },
             "stake": {
                 "pregunta": "¿Qué es el Stake?",
                 "respuesta": (
-                    "El Stake de Máxima Seguridad es una apuesta única con más "
-                    "del 96% de probabilidad de acierto. Entramos con S/ 20,000 "
-                    "a esta jugada. ¡Garantizada!"
+                    "El Stake de Máxima Seguridad es una apuesta con más del 96% "
+                    "de probabilidad de acierto."
                 ),
                 "video": "./videos_promocionales/STAKE_MAXIMA_SEGURIDAD_EXPLICACION.mp4",
             },
-            "como_pagar": {
-                "pregunta": "¿Cómo pagar?",
-                "respuesta": (
-                    "Puedes pagar mediante Yape, Plin o transferencia bancaria:\n"
-                    "• Yape/Plin: 952903700\n"
-                    "• BCP: 19402020623033\n"
-                    "• SCOTIA: 1780142814\n"
-                    "Envía la captura de tu transferencia a este chat y será "
-                    "validada en minutos."
-                ),
-            },
-            "link": {
-                "pregunta": "¿Cómo recibo el link?",
-                "respuesta": (
-                    "Después de que tu pago sea validado, recibirás automáticamente "
-                    "el link de invitación al grupo privado. El link es de un solo "
-                    "uso y expira en 24 horas."
-                ),
-            },
         }
-
         if action in faq_respuestas:
             info = faq_respuestas[action]
-            # Send video explanation if available
-            if "video" in info:
-                import os
-                if os.path.exists(info["video"]):
-                    await context.bot.send_video(
-                        chat_id=query.from_user.id,
-                        video=open(info["video"], "rb"),
-                        caption=f"*{info['pregunta']}*\n\n{info['respuesta']}",
-                        parse_mode="Markdown",
-                    )
-            from utils.keyboards import faq_video_keyboard
-
-            await query.edit_message_text(
-                text=f"*{info['pregunta']}*\n\n{info['respuesta']}",
-                parse_mode="Markdown",
-                reply_markup=faq_video_keyboard(action),
-            )
+            if os.path.exists(info["video"]):
+                await context.bot.send_video(
+                    chat_id=query.from_user.id,
+                    video=open(info["video"], "rb"),
+                    caption=f"<b>{info['pregunta']}</b>\n\n{info['respuesta']}",
+                    parse_mode="HTML",
+                )
         else:
             from utils.keyboards import faq_keyboard
             await query.edit_message_text(
@@ -667,16 +644,28 @@ class CallbackHandlers:
         # Obtener link de invitación
         invite_link = await self._get_invite_link(context, tipo_servicio)
 
-        # Enviar registro a Betsafe
-        from utils.keyboards import betsafe_promo_keyboard
+        # Betsafe registration
+        await context.bot.send_photo(
+            chat_id=user_id,
+            photo=open("./imagenes_promocionales/betsafe_logo.jpeg", "rb"),
+            caption=(
+                "¡IMPORTANTE! Antes de empezar, "
+                "regístrate en BETSAFE con el link de abajo. "
+                "Solo disponible para nuevos usuarios y mayores de 18 años."
+            ),
+        )
         await context.bot.send_message(
             chat_id=user_id,
             text=(
-                "✅ *¡PAGO VALIDADO EXITOSAMENTE!*\n\n"
-                "Ya eres parte de la comunidad Magic 🔮"
+                "💰 <b>¡TE REGALO 70 SOLES GRATIS!</b>\n\n"
+                "1️⃣ Regístrate con el link exclusivo de abajo\n"
+                "2️⃣ Recarga mínimo S/ 40 (Solo new users)\n"
+                "3️⃣ Recibe S/ 70 soles gratis para jugar AHORA\n\n"
+                f"<a href='{self.settings.BETSAFE_PROMO_LINK}'>👉 REGISTRATE AQUI Y RECLAMA TUS S/ 70 GRATIS 👈</a>"
             ),
-            parse_mode="Markdown",
+            parse_mode="HTML",
         )
+        # Invite link
         if invite_link:
             await context.bot.send_message(
                 chat_id=user_id,
