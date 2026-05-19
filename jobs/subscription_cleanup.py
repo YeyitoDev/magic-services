@@ -126,22 +126,31 @@ class SubscriptionCleanupJob:
         }
 
         try:
-            # Get all subscriptions
-            all_subs = session.query(Subscription).all()
-            all_users = {u.telegram_id: u for u in session.query(User).all()}
+            # Count total unique users with subscriptions (single query)
+            from sqlalchemy import func, distinct
+            total = session.query(func.count(distinct(Subscription.user_telegram_id))).scalar()
+            stats["total"] = total or 0
 
-            # Get unique user IDs from subscriptions
-            sub_user_ids = set(s.user_telegram_id for s in all_subs)
-            stats["total"] = len(sub_user_ids)
+            # Get ONLY expired subscriptions (SQL filter, not Python)
+            expired_subs = session.query(Subscription).filter(
+                Subscription.end_date < today
+            ).all()
 
-            # Classify
-            expired_subs = []
-            for sub in all_subs:
-                if sub.end_date < today:
-                    expired_subs.append(sub)
-
-            stats["expired"] = len(set(s.user_telegram_id for s in expired_subs))
+            # Count unique expired users
+            expired_count = session.query(func.count(distinct(Subscription.user_telegram_id))).filter(
+                Subscription.end_date < today
+            ).scalar()
+            stats["expired"] = expired_count or 0
             stats["active"] = stats["total"] - stats["expired"]
+
+            # Load users only for expired subscriptions (not all users)
+            expired_user_ids = list(set(s.user_telegram_id for s in expired_subs))
+            all_users = {}
+            if expired_user_ids:
+                users = session.query(User).filter(
+                    User.telegram_id.in_(expired_user_ids)
+                ).all()
+                all_users = {u.telegram_id: u for u in users}
 
             # Users with no subscription are "special clients" - can't detect without Telegram
 
