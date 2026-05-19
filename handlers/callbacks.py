@@ -339,7 +339,8 @@ class CallbackHandlers:
                 parse_mode="HTML",
             )
         from utils.keyboards import buy_service_keyboard
-        await query.edit_message_text(
+        await self._safe_edit_message(
+            query,
             text="¿Deseas comprar este servicio?",
             reply_markup=buy_service_keyboard(tipo_servicio),
         )
