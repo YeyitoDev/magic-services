@@ -26,8 +26,6 @@ Uso:
 """
 
 import logging
-import os
-import time
 from datetime import datetime
 from typing import Any
 
@@ -108,7 +106,6 @@ class ReminderService:
         Solo para usuarios que seleccionaron servicio pero no compraron.
         """
         from services.telegram_api import TelegramAPIService
-        from config.settings import settings
 
         api = TelegramAPIService()
         stats = {"total": 0, "fase1": 0, "fase2": 0, "fase3": 0, "deleted": 0, "errors": []}
@@ -173,7 +170,7 @@ class ReminderService:
                             try:
                                 self._selected_repo.delete_by_user(user_id)
                                 stats["deleted"] += 1
-                            except:
+                            except Exception:
                                 pass
 
                 # Cleanup: if > 6 hours, delete without sending
@@ -186,69 +183,6 @@ class ReminderService:
             logger.error(f"Error en process_pending_reminders: {e}")
 
         return stats
-
-    # ------------------------------------------------------------------
-    # Envío de recordatorios individuales
-    # ------------------------------------------------------------------
-
-    def _send_phase1_reminder(self, user_id: int) -> None:
-        """
-        Envía el recordatorio de fase 1: imágenes + precios.
-
-        Args:
-            user_id: ID de Telegram del usuario.
-        """
-        from services.telegram_api import TelegramAPIService
-
-        api = TelegramAPIService()
-
-        # Enviar primera imagen (recordatorio ganadores)
-        if os.path.exists(RECORDATORIO_GANADORES_IMG):
-            api.send_photo(
-                chat_id=user_id,
-                photo=RECORDATORIO_GANADORES_IMG,
-                caption=RECORDATORIO_10_MINUTOS,
-            )
-
-        # Enviar segunda imagen (grupo VIP + precios)
-        if os.path.exists(GRUPO_VIP_IMG):
-            api.send_photo(
-                chat_id=user_id,
-                photo=GRUPO_VIP_IMG,
-                caption=RECORDATORIO_PRECIOS_CAPTION,
-            )
-
-        logger.debug(f"Fase 1 completada para user={user_id}")
-
-    def _send_phase2_reminder(self, user_id: int) -> None:
-        """
-        Envía el recordatorio de fase 2: video.
-
-        Args:
-            user_id: ID de Telegram del usuario.
-        """
-        from services.telegram_api import TelegramAPIService
-
-        api = TelegramAPIService()
-
-        if os.path.exists(RECORDATORIO_VIDEO):
-            api.send_video(
-                chat_id=user_id,
-                video=RECORDATORIO_VIDEO,
-                caption=RECORDATORIO_24_HORAS,
-            )
-        else:
-            # Fallback: enviar mensaje de texto si no hay video
-            logger.warning(
-                f"Video de recordatorio no encontrado en {RECORDATORIO_VIDEO}. "
-                f"Enviando texto en su lugar."
-            )
-            api.send_message(
-                chat_id=user_id,
-                text=RECORDATORIO_24_HORAS,
-            )
-
-        logger.debug(f"Fase 2 completada para user={user_id}")
 
     # ------------------------------------------------------------------
     # Mensajes de suscripción vencida
