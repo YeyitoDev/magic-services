@@ -177,31 +177,39 @@ class SubscriptionCleanupJob:
 
                 for sub in expired_subs:
                     user_id = int(sub.user_telegram_id)
-                    # 1. Skip message (users must have messaged the bot first)
                     print(f"  ⋯ Procesando {user_id}...")
 
+                    # Reconnect DB if needed
+                    if not session.is_active:
+                        session = MakeSession()
+
+                    kicked = False
                     try:
-                        # Reconnect DB if needed
-                        if not session.is_active:
-                            session = MakeSession()
-                        # 2. Kick from group + unban
+                        # 1. Kick from group
                         result = api.remove_user_allow_rejoin(chat_id=chat_id, user_id=user_id)
                         if result.get("kick_success"):
-                            print(f"  ✓ Usuario {user_id} expulsado del grupo")
+                            print(f"  ✓ Kick {user_id}")
+                            kicked = True
                             stats["removed"] += 1
-                        # Commit every 50 users to avoid losing progress
-                        if stats["removed"] % 50 == 0:
-                            session.commit()
-                            print(f"  💾 Commit parcial: {stats['removed']} usuarios procesados")
-                        else:
-                            print(f"  ✗ No se pudo expulsar a {user_id}: {result}")
                     except Exception as e:
                         print(f"  ✗ Error kick {user_id}: {e}")
 
                     try:
+                        # 2. Try to send re-subscription message (after unban, non-blocking)
+                        if kicked:
+                            api.send_message(
+                                chat_id=user_id,
+                                text="🔮 *Tu suscripción ha expirado*\\n\\nPara seguir disfrutando del Grupo VIP, renová tu suscripción enviando un mensaje a @magic_peru 📲",
+                                parse_mode="Markdown"
+                            )
+                            print(f"  ✓ Mensaje enviado a {user_id}")
+                    except Exception:
+                        pass  # Message is optional, don't block
+
+                    try:
                         # 3. Delete subscription from DB
                         session.delete(sub)
-                        print(f"  ✓ Suscripción eliminada de BD para {user_id}")
+                        print(f"  ✓ Sub eliminada de BD para {user_id}")
                     except Exception as e:
                         print(f"  ✗ Error BD {user_id}: {e}")
 
