@@ -2,7 +2,7 @@ name: "🧹 Limpieza de Suscripciones"
 
 on:
   schedule:
-    - cron: "0 1 * * *" # Diario 1am UTC = 8pm Lima
+    - cron: "0 12 * * *" # Diario 12pm UTC = 7am Lima
   workflow_dispatch:
     inputs:
       environment:

@@ -112,8 +112,9 @@ class SubscriptionCleanupJob:
 
         session = MakeSession()
         # Keep connection alive during long operations
-        session.execute("SET SESSION wait_timeout=28800")
-        session.execute("SET SESSION interactive_timeout=28800")
+        from sqlalchemy import text
+        session.execute(text("SET SESSION wait_timeout=28800"))
+        session.execute(text("SET SESSION interactive_timeout=28800"))
         today = date.today()
 
         stats = {
