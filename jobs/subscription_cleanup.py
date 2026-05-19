@@ -158,7 +158,13 @@ class SubscriptionCleanupJob:
             from config.settings import settings
             admin_ids = set(int(uid) for uid in settings.TELEGRAM_VALIDATOR_IDS)
             # Also protect known admin IDs
-            admin_ids.update([1555885694, 1707092473, 5849492872, 6475885611, 7754941523])  # + bot
+            admin_ids.update([
+                1555885694, 1707092473, 5849492872, 6475885611,  # admins
+                7754941523,  # @elmagopagos_bot
+                5624304267,  # @PremiumPay_realbot
+                7639865090,  # @Premiumpay_real2bot
+                734284134,   # @deljoinbot
+            ])
 
             # Remove admins from expired list
             expired_subs = [s for s in expired_subs if s.user_telegram_id not in admin_ids]
