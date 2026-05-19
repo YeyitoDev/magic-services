@@ -154,6 +154,16 @@ class SubscriptionCleanupJob:
 
             # Users with no subscription are "special clients" - can't detect without Telegram
 
+            # ---- PROTECT ADMINS - Never kick admins ----
+            from config.settings import settings
+            admin_ids = set(int(uid) for uid in settings.TELEGRAM_VALIDATOR_IDS)
+            # Also protect known admin IDs
+            admin_ids.update([1555885694, 1707092473, 5849492872, 6475885611])
+
+            # Remove admins from expired list
+            expired_subs = [s for s in expired_subs if s.user_telegram_id not in admin_ids]
+            print(f"🛡️ Protegidos {len(admin_ids)} admins. Expirados restantes: {len(expired_subs)}")
+
             if mode == "eliminar":
                 from services.telegram_api import TelegramAPIService
                 api = TelegramAPIService()
