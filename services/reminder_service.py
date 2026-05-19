@@ -41,17 +41,6 @@ logger = logging.getLogger(__name__)
 # Templates de mensajes
 # ---------------------------------------------------------------------------
 
-RECORDATORIO_10_MINUTOS = (
-    "¿QUIERES GANAR CÓMO MIS CLIENTES?\n"
-    "Las mejores fijas estadísticas de todo el Perú, "
-    "simplemente selecciona que servicios deseas y unete! 🔮✅"
-)
-
-RECORDATORIO_24_HORAS = (
-    "¡LA ÚNICA COMUNIDAD RENTABLE DE TODO EL PERÚ!\n"
-    "Que esperas para unirte mi hermano 🔥"
-)
-
 MENSAJE_SUSCRIPCION_VENCIDA_TEMPLATE = """¿QUIERES GANAR CÓMO MIS CLIENTES?
 
 🔴 *SUSCRIPCIÓN VENCIDA*
@@ -74,39 +63,6 @@ Contáctame directamente: @magic_peru 📲
 Estoy aquí para ayudarte 24/7 💬
 
 ¡Esperamos verte pronto! 🔮✨"""
-
-
-# ---------------------------------------------------------------------------
-# Recordatorios de precios
-# ---------------------------------------------------------------------------
-
-RECORDATORIO_PRECIOS_CAPTION = """
-HERMANO SOLO POR HOY TE DOY S/. 10 DE DESCUENTO EN EL GRUPO VIP!
-
-Nuevos Precios VIP ✅
-* 1 Mes = S/. 90
-* 2 Meses = S/. 140
-* 3 Meses = S/. 190
-
-Los números de cuenta son los siguiente mi hermano 🔮
-
-Titular: José González Reategui
-Yape/Plin: 952903700
-BCP: 19402020623033
-SCOTIA: 1780142814
-
-Solo envía la captura de tu transferencia por este medio 📲
-"""
-
-
-# ---------------------------------------------------------------------------
-# Rutas de archivos multimedia
-# ---------------------------------------------------------------------------
-
-IMAGENES_DIR = "./imagenes_promocionales"
-RECORDATORIO_GANADORES_IMG = os.path.join(IMAGENES_DIR, "recordatorio_ganadores.jpeg")
-GRUPO_VIP_IMG = os.path.join(IMAGENES_DIR, "grupo_vip_1.jpg")
-RECORDATORIO_VIDEO = os.path.join(IMAGENES_DIR, "recordatorio_video.mp4")
 
 
 # ---------------------------------------------------------------------------
@@ -148,129 +104,86 @@ class ReminderService:
 
     def process_pending_reminders(self) -> dict[str, Any]:
         """
-        Procesa todos los recordatorios pendientes del sistema.
-
-        Itera sobre todos los registros de SelectedService y aplica
-        la lógica de recordatorios según el contador `reminder` y
-        el tiempo transcurrido desde la selección.
-
-        Lógica por fase:
-        - Fase 1: reminder=0 y 1min ≤ tiempo < 24h → envía foto + precios.
-        - Fase 2: reminder=1 y tiempo ≥ 24h → envía video recordatorio.
-        - Fase 3: reminder≥2 o tiempo > 24h con ambos enviados → elimina registro.
-
-        Returns:
-            Diccionario con estadísticas del procesamiento:
-            - total_processed: Total de registros procesados.
-            - phase1_sent: Recordatorios fase 1 enviados.
-            - phase2_sent: Recordatorios fase 2 enviados.
-            - deleted: Registros eliminados.
-            - errors: Lista de errores encontrados.
+        Procesa recordatorios: 3 mensajes de texto, cada 1 hora.
+        Solo para usuarios que seleccionaron servicio pero no compraron.
         """
-        stats = {
-            "total_processed": 0,
-            "phase1_sent": 0,
-            "phase2_sent": 0,
-            "deleted": 0,
-            "errors": [],
-        }
+        from services.telegram_api import TelegramAPIService
+        from config.settings import settings
+
+        api = TelegramAPIService()
+        stats = {"total": 0, "fase1": 0, "fase2": 0, "fase3": 0, "deleted": 0, "errors": []}
 
         try:
-            pending_services = self._selected_repo.get_all()
-            stats["total_processed"] = len(pending_services)
+            pending = self._selected_repo.get_all()
+            stats["total"] = len(pending)
+            now = datetime.now()
 
-            logger.info(
-                f"Procesando {len(pending_services)} recordatorios pendientes..."
-            )
-
-            for selected in pending_services:
+            for selected in pending:
                 user_id = selected.user_telegram_id
-                selected_date = selected.selected_date
+                elapsed_minutes = int((now - selected.selected_date).total_seconds() / 60)
                 reminder = selected.reminder
-                current_time = datetime.now()
 
-                # Calcular tiempo transcurrido en minutos
-                time_diff = current_time - selected_date
-                minutes_elapsed = int(time_diff.total_seconds() / 60)
-
-                logger.debug(
-                    f"User {user_id}: reminder={reminder}, "
-                    f"elapsed={minutes_elapsed}min"
-                )
-
-                # --- Fase 1: Recordatorio a los ~10 minutos ---
-                if reminder == 0 and 1 <= minutes_elapsed < (24 * 60):
-                    logger.info(
-                        f"FASE 1: Enviando recordatorio 1 a user={user_id}"
-                    )
+                # Fase 1: reminder=0, 1 hora después → mensaje 1
+                if reminder == 0 and elapsed_minutes >= 60:
                     try:
-                        self._send_phase1_reminder(user_id)
+                        api.send_message(
+                            chat_id=user_id,
+                            text="¿QUIERES GANAR CÓMO MIS CLIENTES?\n"
+                                 "Las mejores fijas estadísticas de todo el Perú, "
+                                 "simplemente selecciona que servicios deseas y unete! 🔮✅"
+                        )
                         self._selected_repo.increment_reminder(user_id)
-                        stats["phase1_sent"] += 1
-                        logger.info(
-                            f"Recordatorio fase 1 enviado a user={user_id}"
-                        )
+                        stats["fase1"] += 1
+                        logger.info(f"Recordatorio fase 1 enviado a {user_id}")
                     except Exception as e:
-                        error_msg = f"Error fase 1 user={user_id}: {e}"
-                        logger.error(error_msg)
-                        stats["errors"].append(error_msg)
+                        stats["errors"].append(f"fase1:{user_id}:{e}")
 
-                # --- Fase 2: Recordatorio a las ~24 horas ---
-                elif reminder == 1 and minutes_elapsed >= (24 * 60):
-                    logger.info(
-                        f"FASE 2: Enviando recordatorio 2 a user={user_id}"
-                    )
+                # Fase 2: reminder=1, 2 horas después → mensaje 2
+                elif reminder == 1 and elapsed_minutes >= 120:
                     try:
-                        self._send_phase2_reminder(user_id)
-                        self._selected_repo.delete_by_user(user_id)
-                        stats["phase2_sent"] += 1
-                        logger.info(
-                            f"Recordatorio fase 2 enviado y registro eliminado "
-                            f"para user={user_id}"
+                        api.send_message(
+                            chat_id=user_id,
+                            text="¡LA ÚNICA COMUNIDAD RENTABLE DE TODO EL PERÚ!\n"
+                                 "Que esperas para unirte mi hermano 🔥"
                         )
+                        self._selected_repo.increment_reminder(user_id)
+                        stats["fase2"] += 1
+                        logger.info(f"Recordatorio fase 2 enviado a {user_id}")
                     except Exception as e:
-                        error_msg = f"Error fase 2 user={user_id}: {e}"
-                        logger.error(error_msg)
-                        stats["errors"].append(error_msg)
+                        stats["errors"].append(f"fase2:{user_id}:{e}")
 
-                # --- Fase 3: Limpieza ---
-                elif reminder >= 2 or (
-                    reminder >= 1 and minutes_elapsed >= (48 * 60)
-                ):
-                    logger.info(
-                        f"FASE 3: Eliminando selección expirada de user={user_id}"
-                    )
+                # Fase 3: reminder=2, 3 horas después → mensaje 3 + eliminar
+                elif reminder == 2 and elapsed_minutes >= 180:
                     try:
-                        self._selected_repo.delete_by_user(user_id)
-                        stats["deleted"] += 1
-                        logger.info(
-                            f"Selección expirada eliminada para user={user_id}"
+                        api.send_message(
+                            chat_id=user_id,
+                            text="🔥 *ÚLTIMA OPORTUNIDAD* 🔥\n\n"
+                                 "Los precios del Grupo VIP van a subir pronto. "
+                                 "Aprovecha ahora y asegura tu acceso a los mejores "
+                                 "pronósticos deportivos del Perú.\n\n"
+                                 "Habla con @magic_peru para unirte hoy mismo 📲"
                         )
+                        self._selected_repo.delete_by_user(user_id)
+                        stats["fase3"] += 1
+                        logger.info(f"Recordatorio fase 3 enviado y registro eliminado para {user_id}")
                     except Exception as e:
-                        error_msg = f"Error al eliminar selección user={user_id}: {e}"
-                        logger.error(error_msg)
-                        stats["errors"].append(error_msg)
+                        stats["errors"].append(f"fase3:{user_id}:{e}")
+                        # Delete anyway if too old
+                        if elapsed_minutes > 360:  # 6 hours max
+                            try:
+                                self._selected_repo.delete_by_user(user_id)
+                                stats["deleted"] += 1
+                            except:
+                                pass
 
-                else:
-                    # No aplica ninguna fase aún (muy pronto, o estado intermedio)
-                    logger.debug(
-                        f"User {user_id}: sin acciones pendientes "
-                        f"(reminder={reminder}, elapsed={minutes_elapsed}min)"
-                    )
-
-                # Pequeña pausa entre usuarios para no saturar la API
-                time.sleep(0.5)
+                # Cleanup: if > 6 hours, delete without sending
+                elif elapsed_minutes > 360:
+                    self._selected_repo.delete_by_user(user_id)
+                    stats["deleted"] += 1
 
         except Exception as e:
-            error_msg = f"Error general en process_pending_reminders: {e}"
-            logger.error(error_msg, exc_info=True)
-            stats["errors"].append(error_msg)
-
-        logger.info(
-            f"Procesamiento de recordatorios completado: "
-            f"fase1={stats['phase1_sent']}, fase2={stats['phase2_sent']}, "
-            f"deleted={stats['deleted']}, errors={len(stats['errors'])}"
-        )
+            stats["errors"].append(f"general:{e}")
+            logger.error(f"Error en process_pending_reminders: {e}")
 
         return stats
 

@@ -2,7 +2,7 @@ name: "⏰ Recordatorios"
 
 on:
   schedule:
-    - cron: "*/10 * * * *" # Cada 10 minutos
+    - cron: "0 * * * *" # Cada hora
   workflow_dispatch:
     inputs:
       environment:
