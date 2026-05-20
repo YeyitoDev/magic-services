@@ -338,12 +338,6 @@ class CallbackHandlers:
                 ),
                 parse_mode="HTML",
             )
-        from utils.keyboards import buy_service_keyboard
-        await self._safe_edit_message(
-            query,
-            text="¿Deseas comprar este servicio?",
-            reply_markup=buy_service_keyboard(tipo_servicio),
-        )
 
     # ------------------------------------------------------------------
     # FAQ
@@ -437,14 +431,11 @@ class CallbackHandlers:
                 )
             else:
                 # No ha enviado captura: mostrar precios
-                await self._send_service_pricing(
-                    update, context, user_id, tipo_servicio
-                )
+                await self._send_service_pricing(update, context, user_id, tipo_servicio)
 
-                # Guardar selección
-                from core.database import SessionLocal
+                # Guardar selección (like production)
                 from repositories.selected_service_repo import SelectedServiceRepository
-
+                from core.database import SessionLocal
                 session = SessionLocal()
                 try:
                     repo = SelectedServiceRepository(session)
