@@ -302,7 +302,6 @@ class CallbackHandlers:
             session.close()
 
     async def _send_service_pricing(self, update, context, user_id, tipo_servicio):
-        query = update.callback_query
         if tipo_servicio in ("Stake", "stake"):
             await context.bot.send_photo(
                 chat_id=user_id,
@@ -434,8 +433,8 @@ class CallbackHandlers:
                 await self._send_service_pricing(update, context, user_id, tipo_servicio)
 
                 # Guardar selección (like production)
-                from repositories.selected_service_repo import SelectedServiceRepository
                 from core.database import SessionLocal
+                from repositories.selected_service_repo import SelectedServiceRepository
                 session = SessionLocal()
                 try:
                     repo = SelectedServiceRepository(session)
