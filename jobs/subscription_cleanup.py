@@ -127,7 +127,7 @@ class SubscriptionCleanupJob:
 
         try:
             # Count total unique users with subscriptions (single query)
-            from sqlalchemy import func, distinct
+            from sqlalchemy import distinct, func
             total = session.query(func.count(distinct(Subscription.user_telegram_id))).scalar()
             stats["total"] = total or 0
 

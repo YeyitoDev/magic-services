@@ -21,6 +21,8 @@ on:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     environment: ${{ github.event.inputs.environment || 'testing' }}
 
     steps:

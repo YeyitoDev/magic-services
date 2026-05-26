@@ -302,7 +302,6 @@ class CallbackHandlers:
             session.close()
 
     async def _send_service_pricing(self, update, context, user_id, tipo_servicio):
-        query = update.callback_query
         if tipo_servicio in ("Stake", "stake"):
             await context.bot.send_photo(
                 chat_id=user_id,
@@ -338,11 +337,6 @@ class CallbackHandlers:
                 ),
                 parse_mode="HTML",
             )
-        from utils.keyboards import buy_service_keyboard
-        await query.edit_message_text(
-            text="¿Deseas comprar este servicio?",
-            reply_markup=buy_service_keyboard(tipo_servicio),
-        )
 
     # ------------------------------------------------------------------
     # FAQ
@@ -436,14 +430,11 @@ class CallbackHandlers:
                 )
             else:
                 # No ha enviado captura: mostrar precios
-                await self._send_service_pricing(
-                    update, context, user_id, tipo_servicio
-                )
+                await self._send_service_pricing(update, context, user_id, tipo_servicio)
 
-                # Guardar selección
+                # Guardar selección (like production)
                 from core.database import SessionLocal
                 from repositories.selected_service_repo import SelectedServiceRepository
-
                 session = SessionLocal()
                 try:
                     repo = SelectedServiceRepository(session)
