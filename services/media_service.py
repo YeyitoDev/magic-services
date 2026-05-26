@@ -19,7 +19,6 @@ Usage:
 import json
 import logging
 import os
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ class MediaService:
                 return json.load(f)
         return {"photos": {}, "videos": {}, "updated_at": None}
 
-    def _get_file_id(self, name: str, media_type: str = "photos") -> Optional[str]:
+    def _get_file_id(self, name: str, media_type: str = "photos") -> str | None:
         return self._config.get(media_type, {}).get(name)
 
     async def send_photo(self, context, chat_id: str, name: str, caption: str = "", parse_mode: str = "HTML") -> bool:
