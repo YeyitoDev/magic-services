@@ -30,6 +30,8 @@ from datetime import datetime
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from services.media_service import media_service
+
 logger = logging.getLogger(__name__)
 
 
@@ -207,10 +209,8 @@ class CallbackHandlers:
                 "Nosotros estamos entrando con S/. 20,000 a esta jugada. "
                 "GARANTIZADA DE VICTORIA."
             )
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=open("./imagenes_promocionales/stake_maximo.png", "rb"),
-                caption=mensaje,
+            await media_service.send_photo(
+                context, user_id, "stake_maximo", caption=mensaje
             )
 
         elif action == "grupo_vip" or action == "Grupo VIP":
@@ -221,14 +221,11 @@ class CallbackHandlers:
                 "nuestros analistas donde también tendrás asesoría directa por "
                 "ellos para colocar las jugadas."
             )
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=open("./imagenes_promocionales/grupo_vip_1.jpg", "rb"),
+            await media_service.send_photo(
+                context, user_id, "grupo_vip_1"
             )
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=open("./imagenes_promocionales/grupo_vip_2.jpg", "rb"),
-                caption=mensaje,
+            await media_service.send_photo(
+                context, user_id, "grupo_vip_2", caption=mensaje
             )
 
         elif action == "general":
@@ -262,19 +259,16 @@ class CallbackHandlers:
 
         # Send service images FIRST (like original code)
         if tipo_servicio in ("Stake", "stake"):
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=open("./imagenes_promocionales/stake_maximo.png", "rb"),
+            await media_service.send_photo(
+                context, user_id, "stake_maximo",
                 caption="El stake de máxima seguridad consta de una apuesta con una probabilidad de acierto mayor al 96% en el partido indicado. Nosotros estamos entrando con S/. 20,000 a esta jugada. GARANTIZADA DE VICTORIA."
             )
         elif tipo_servicio in ("Grupo VIP", "grupo_vip"):
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=open("./imagenes_promocionales/grupo_vip_1.jpg", "rb"),
+            await media_service.send_photo(
+                context, user_id, "grupo_vip_1"
             )
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=open("./imagenes_promocionales/grupo_vip_2.jpg", "rb"),
+            await media_service.send_photo(
+                context, user_id, "grupo_vip_2",
                 caption="En el grupo VIP recibirás diariamente entre 3 a 4 pronósticos estadísticos con la probabilidad más alta de ganar. En este grupo solo realizamos apuestas 100% estadísticas seleccionadas por nuestros analistas donde también tendrás asesoría directa por ellos para colocar las jugadas."
             )
 
@@ -302,10 +296,10 @@ class CallbackHandlers:
             session.close()
 
     async def _send_service_pricing(self, update, context, user_id, tipo_servicio):
+        """Envía info de precios usando file_id (sin archivos locales)."""
         if tipo_servicio in ("Stake", "stake"):
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=open("./imagenes_promocionales/stake_3.jpeg", "rb"),
+            await media_service.send_photo(
+                context, user_id, "stake_pricing",
                 caption=(
                     "🎲 <b>STAKE DE MÁXIMA SEGURIDAD</b>\n\n"
                     "💰 <b>Precio: S/ 50.00</b>\n\n"
@@ -316,12 +310,10 @@ class CallbackHandlers:
                     "SCOTIA: 1780142814\n\n"
                     "Solo envía la captura de tu transferencia por este medio 📲"
                 ),
-                parse_mode="HTML",
             )
         else:
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=open("./imagenes_promocionales/vip_3.jpeg", "rb"),
+            await media_service.send_photo(
+                context, user_id, "vip_pricing",
                 caption=(
                     "💎 <b>GRUPO VIP</b>\n\n"
                     "🔥 <b>PRECIOS VIP</b>\n"
@@ -335,7 +327,6 @@ class CallbackHandlers:
                     "SCOTIA: 1780142814\n\n"
                     "Solo envía la captura de tu transferencia por este medio 📲"
                 ),
-                parse_mode="HTML",
             )
 
     # ------------------------------------------------------------------
@@ -454,9 +445,8 @@ class CallbackHandlers:
                     "de S/ 40 en la mejor casa de apuestas del mundo"
                 )
             )
-            await context.bot.send_photo(
-                chat_id=user_id,
-                photo=open("./imagenes_promocionales/betsafe_logo.jpeg", "rb"),
+            await media_service.send_photo(
+                context, user_id, "betsafe_logo"
             )
             from utils.keyboards import main_menu_keyboard
             await context.bot.send_message(
@@ -636,9 +626,8 @@ class CallbackHandlers:
         invite_link = await self._get_invite_link(context, tipo_servicio)
 
         # Betsafe registration
-        await context.bot.send_photo(
-            chat_id=user_id,
-            photo=open("./imagenes_promocionales/betsafe_logo.jpeg", "rb"),
+        await media_service.send_photo(
+            context, user_id, "betsafe_logo",
             caption=(
                 "¡IMPORTANTE! Antes de empezar, "
                 "regístrate en BETSAFE con el link de abajo. "
