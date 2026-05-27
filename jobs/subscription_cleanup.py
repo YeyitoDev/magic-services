@@ -123,6 +123,7 @@ class SubscriptionCleanupJob:
             "expired": 0,
             "special": 0,
             "removed": 0,
+            "repaired": 0,
         }
 
         try:
@@ -209,6 +210,7 @@ class SubscriptionCleanupJob:
                         print(f"  ✓ Suscripción creada para {uid}")
 
                 session.commit()
+                stats["repaired"] = len(missing_ids)
                 print(f"  ✅ Reparación completada: {len(missing_ids)} suscripciones creadas")
             else:
                 print("\n✅ Todos los compradores VIP ya tienen suscripción")
@@ -300,6 +302,31 @@ class SubscriptionCleanupJob:
 
         finally:
             session.close()
+
+        # ---- Notify admins of cleanup results ----
+        try:
+            from services.telegram_api import TelegramAPIService
+            api = TelegramAPIService()
+            admin_ids = [1555885694, 1707092473, 5849492872, 6475885611]
+
+            summary = (
+                f"📊 *Resumen de Limpieza*\n"
+                f"├ 🗓️ Fecha: {today}\n"
+                f"├ 🔧 Reparados: {stats['repaired']}\n"
+                f"├ 👥 Total: {stats['total']}\n"
+                f"├ ✅ Activos: {stats['active']}\n"
+                f"├ ❌ Expirados: {stats['expired']}\n"
+                f"└ 🚫 Eliminados: {stats['removed']}"
+            )
+
+            for aid in admin_ids:
+                try:
+                    api.send_message(chat_id=aid, text=summary, parse_mode="Markdown")
+                except Exception:
+                    pass
+            print(f"📱 Notificación enviada a {len(admin_ids)} admins")
+        except Exception as e:
+            print(f"⚠️ No se pudo notificar: {e}")
 
         return stats
 
