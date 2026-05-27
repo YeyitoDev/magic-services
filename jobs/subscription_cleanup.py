@@ -160,7 +160,7 @@ class SubscriptionCleanupJob:
             admin_ids = set(int(uid) for uid in settings.TELEGRAM_VALIDATOR_IDS)
             # Admins + bots - NEVER removed
             admin_ids.update([
-                1555885694, 1707092473, 5849492872, 6475885611,  # admins
+                1555885694, 6475885611,  # Sergio + Martin
                 7754941523,  # @elmagopagos_bot
                 5624304267,  # @PremiumPay_realbot
                 7639865090,  # @Premiumpay_real2bot
@@ -307,7 +307,7 @@ class SubscriptionCleanupJob:
         try:
             from services.telegram_api import TelegramAPIService
             api = TelegramAPIService()
-            admin_ids = [1555885694, 1707092473, 5849492872, 6475885611]
+            admin_ids = [1555885694, 6475885611]  # Sergio + Martin
 
             summary = (
                 f"📊 *Resumen de Limpieza*\n"

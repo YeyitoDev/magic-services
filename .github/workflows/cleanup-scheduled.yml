@@ -107,5 +107,6 @@ jobs:
           🕐 $(date +'%Y-%m-%d %H:%M')"
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=6475885611" \
-            -d "text=${MSG}"
+            -d "chat_id=1555885694" -d "text=${MSG}"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=6475885611" -d "text=${MSG}"
