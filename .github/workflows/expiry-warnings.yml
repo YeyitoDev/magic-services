@@ -1,0 +1,80 @@
+name: "⚠️ Avisos de Vencimiento"
+
+on:
+  schedule:
+    - cron: '0 13 * * *'  # 1pm UTC = 8am Lima
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Ambiente'
+        required: true
+        default: 'testing'
+        type: choice
+        options: ['testing', 'production']
+      days:
+        description: 'Días antes del vencimiento'
+        required: true
+        default: '3'
+        type: choice
+        options: ['1', '3', '5', '7']
+
+jobs:
+  expiry-warning:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'testing' }}
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with: { python-version: '3.12' }
+    - run: pip install -r requirements.txt
+
+    - name: Create .env
+      run: |
+        cat > .env << EOF
+        ENVIRONMENT=${{ github.event.inputs.environment || 'testing' }}
+        TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+        DB_ENGINE=mysql+pymysql
+        DB_USER=${{ secrets.DB_USER }}
+        DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+        DB_HOST=${{ secrets.DB_HOST }}
+        DB_NAME=${{ secrets.DB_NAME }}
+        DB_PORT=3306
+        TIMEZONE=America/Lima
+        EOF
+
+    - name: Send expiry warnings
+      run: |
+        DAYS="${{ github.event.inputs.days || '3' }}"
+        python -c "
+        from core.database import SessionLocal
+        from models.subscription import Subscription
+        from datetime import date, timedelta
+
+        session = SessionLocal()
+        today = date.today()
+        deadline = today + timedelta(days=int($DAYS))
+
+        expiring = session.query(Subscription).filter(
+            Subscription.end_date >= today,
+            Subscription.end_date <= deadline,
+            Subscription.service_id == 2  # VIP only
+        ).all()
+
+        print(f'⚠️ {len(expiring)} suscripciones vencen en {int($DAYS)} días')
+
+        for sub in expiring[:50]:  # Max 50 per run to avoid spam
+            days_left = (sub.end_date - today).days
+            print(f'  Usuario {sub.user_telegram_id}: vence en {days_left} días ({sub.end_date})')
+
+        session.close()
+        "
+
+    - name: Save report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: expiry-warnings-${{ github.run_id }}
+        path: output/
+        retention-days: 7
