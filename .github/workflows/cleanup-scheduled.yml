@@ -14,7 +14,7 @@ on:
       mode:
         description: "Modo"
         required: true
-        default: "validar"
+        default: "eliminar"
         type: choice
         options: ["validar", "eliminar"]
 
@@ -24,6 +24,8 @@ jobs:
     permissions:
       contents: read
     environment: ${{ github.event.inputs.environment || 'testing' }}
+    env:
+      DEFAULT_MODE: ${{ github.event.inputs.mode || 'eliminar' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +67,7 @@ jobs:
               subscription_service=container.resolve('subscription_service'),
               user_service=container.resolve('user_service'),
           )
-          job.run_db_only(mode='${{ github.event.inputs.mode || 'validar' }}')
+          job.run_db_only(mode='${{ env.DEFAULT_MODE }}')
           "
 
       - name: Save logs as artifact

@@ -157,7 +157,7 @@ class SubscriptionCleanupJob:
             # ---- PROTECT ADMINS - Never kick admins ----
             from config.settings import settings
             admin_ids = set(int(uid) for uid in settings.TELEGRAM_VALIDATOR_IDS)
-            # Also protect known admin IDs
+            # Admins + bots - NEVER removed
             admin_ids.update([
                 1555885694, 1707092473, 5849492872, 6475885611,  # admins
                 7754941523,  # @elmagopagos_bot
@@ -169,6 +169,49 @@ class SubscriptionCleanupJob:
             # Remove admins from expired list
             expired_subs = [s for s in expired_subs if s.user_telegram_id not in admin_ids]
             print(f"🛡️ Protegidos {len(admin_ids)} admins. Expirados restantes: {len(expired_subs)}")
+
+            # ---- PASO 1: REPAIR - Create missing subscriptions for VIP purchasers ----
+            from datetime import timedelta
+            from models.purchase import Purchase
+
+            # Only VIP purchases (service_id=2) in last 120 days
+            purchased = session.query(Purchase.user_telegram_id).filter(
+                Purchase.service_id == 2,
+                Purchase.purchase_date >= today - timedelta(days=120)
+            ).distinct().all()
+            purchased_ids = set(uid for (uid,) in purchased)
+
+            # Get users who already have subscriptions
+            subscribed_result = session.query(Subscription.user_telegram_id).distinct().all()
+            subscribed_ids = set(uid for (uid,) in subscribed_result)
+
+            # Find users with VIP purchases but no subscription (exclude admins)
+            missing_ids = purchased_ids - subscribed_ids - admin_ids
+
+            if missing_ids:
+                print(f"\n🔧 Reparando {len(missing_ids)} usuarios con compra VIP pero sin suscripción...")
+                for uid in missing_ids:
+                    # Get the latest VIP purchase for this user
+                    latest_purchase = session.query(Purchase).filter(
+                        Purchase.user_telegram_id == uid,
+                        Purchase.service_id == 2
+                    ).order_by(Purchase.purchase_date.desc()).first()
+
+                    if latest_purchase:
+                        start = latest_purchase.purchase_date.date() if hasattr(latest_purchase.purchase_date, 'date') else latest_purchase.purchase_date
+                        new_sub = Subscription(
+                            user_telegram_id=uid,
+                            service_id=2,
+                            start_date=start,
+                            end_date=start + timedelta(days=30),
+                        )
+                        session.add(new_sub)
+                        print(f"  ✓ Suscripción creada para {uid}")
+
+                session.commit()
+                print(f"  ✅ Reparación completada: {len(missing_ids)} suscripciones creadas")
+            else:
+                print("\n✅ Todos los compradores VIP ya tienen suscripción")
 
             if mode == "eliminar":
                 from services.telegram_api import TelegramAPIService
