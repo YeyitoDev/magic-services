@@ -593,6 +593,8 @@ Ejemplos:
                 debug=settings.DEBUG,
             )
         else:
+            from health_server import start_health_server
+            start_health_server()
             run_polling(app)
 
         return
@@ -626,6 +628,8 @@ Ejemplos:
         )
     else:
         # Modo polling (default)
+        from health_server import start_health_server
+        start_health_server()
         run_polling(app)
 
     logger.info("👋 Magic Chatbot v2 finalizado. ¡Hasta pronto!")
