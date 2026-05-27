@@ -40,14 +40,13 @@ def get_google_credentials() -> dict[str, Any]:
     creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
     if creds_json:
         try:
-            # Fix: Fly.io secrets may escape newlines as \\n
+            # Fix: Fly.io/newlines in private key break JSON
             if "\\n" in creds_json:
                 creds_json = creds_json.replace("\\n", "\n")
             creds = json.loads(creds_json)
             logger.info("Google credentials loaded from GOOGLE_CREDENTIALS_JSON env var")
             return creds
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            # Maybe it's base64 encoded
+        except json.JSONDecodeError:
             try:
                 import base64
                 decoded = base64.b64decode(creds_json).decode("utf-8")
@@ -55,6 +54,14 @@ def get_google_credentials() -> dict[str, Any]:
                 logger.info("Google credentials loaded from GOOGLE_CREDENTIALS_JSON (base64 decoded)")
                 return creds
             except Exception:
+                # Last resort: write to file and try again
+                try:
+                    os.makedirs("credentials", exist_ok=True)
+                    with open("credentials/google.json", "w") as f:
+                        f.write(creds_json)
+                    logger.info("Wrote raw GOOGLE_CREDENTIALS_JSON to credentials/google.json")
+                except Exception:
+                    pass
                 logger.warning("GOOGLE_CREDENTIALS_JSON has invalid JSON. Trying file...")
 
     # 2. Archivo en GOOGLE_CREDENTIALS_PATH
