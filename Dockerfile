@@ -9,5 +9,4 @@ COPY . .
 
 RUN mkdir -p images output logs csv estados credentials
 
-COPY startup.py .
-CMD python startup.py && python main.py
+CMD python main.py

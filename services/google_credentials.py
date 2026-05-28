@@ -21,74 +21,73 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-def get_google_credentials() -> dict[str, Any]:
-    """
-    Obtiene las credenciales de Google Cloud desde:
-    1. Variable de entorno GOOGLE_CREDENTIALS_JSON (prod/CI)
-    2. Archivo JSON en GOOGLE_CREDENTIALS_PATH (dev local)
-    3. Archivo por defecto: credentials/google.json (PythonAnywhere)
-
-    Returns:
-        Diccionario con las credenciales de la service account.
-
-    Raises:
-        FileNotFoundError: Si no se encuentran credenciales en ninguna fuente.
-    """
+def get_google_credentials() -> dict:
     from config.settings import settings
 
-    # 1. Variable de entorno GOOGLE_CREDENTIALS_JSON
     creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
-    if creds_json:
+
+    # Helper: try to parse, repairing newlines if needed
+    def try_parse(raw: str) -> dict | None:
         try:
-            # Fix: Fly.io/newlines in private key break JSON
-            if "\\n" in creds_json:
-                creds_json = creds_json.replace("\\n", "\n")
-            creds = json.loads(creds_json)
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            pass
+        # Repair: fix literal newlines in private key
+        try:
+            import re
+            fixed = re.sub(r'(?<="private_key": ")(.+?)(?=",)',
+                          lambda m: m.group(1).replace('\n', '\\n'),
+                          raw, flags=re.DOTALL)
+            return json.loads(fixed)
+        except Exception:
+            pass
+        # Try base64
+        try:
+            import base64
+            return json.loads(base64.b64decode(raw).decode("utf-8"))
+        except Exception:
+            pass
+        return None
+
+    # 1. Try env var
+    if creds_json:
+        creds = try_parse(creds_json)
+        if creds:
+            # Save repaired version to file for next time
+            try:
+                os.makedirs("credentials", exist_ok=True)
+                with open("credentials/google.json", "w") as f:
+                    json.dump(creds, f)
+            except Exception:
+                pass
             logger.info("Google credentials loaded from GOOGLE_CREDENTIALS_JSON env var")
             return creds
-        except json.JSONDecodeError:
-            try:
-                import base64
-                decoded = base64.b64decode(creds_json).decode("utf-8")
-                creds = json.loads(decoded)
-                logger.info("Google credentials loaded from GOOGLE_CREDENTIALS_JSON (base64 decoded)")
-                return creds
-            except Exception:
-                # Last resort: write to file and try again
-                try:
-                    os.makedirs("credentials", exist_ok=True)
-                    with open("credentials/google.json", "w") as f:
-                        f.write(creds_json)
-                    logger.info("Wrote raw GOOGLE_CREDENTIALS_JSON to credentials/google.json")
-                except Exception:
-                    pass
-                logger.warning("GOOGLE_CREDENTIALS_JSON has invalid JSON. Trying file...")
+        logger.warning("GOOGLE_CREDENTIALS_JSON has invalid JSON. Trying file...")
 
-    # 2. Archivo en GOOGLE_CREDENTIALS_PATH
+    # 2. Try GOOGLE_CREDENTIALS_PATH file
     creds_path = settings.GOOGLE_CREDENTIALS_PATH
     if creds_path and os.path.exists(creds_path):
         try:
-            with open(creds_path) as f:
+            with open(creds_path, 'r') as f:
                 creds = json.load(f)
             logger.info(f"Google credentials loaded from file: {creds_path}")
             return creds
-        except (json.JSONDecodeError, FileNotFoundError) as e:
-            logger.warning(f"Failed to load from {creds_path}: {e}. Trying default...")
+        except Exception:
+            pass
 
-    # 3. Archivo por defecto: credentials/google.json
+    # 3. Try default file
     default_path = "./credentials/google.json"
     if os.path.exists(default_path):
         try:
-            with open(default_path) as f:
+            with open(default_path, 'r') as f:
                 creds = json.load(f)
             logger.info(f"Google credentials loaded from default file: {default_path}")
             return creds
-        except (json.JSONDecodeError, FileNotFoundError) as e:
-            logger.warning(f"Failed to load from {default_path}: {e}")
+        except Exception:
+            pass
 
     raise FileNotFoundError(
-        "Google credentials not found. Set GOOGLE_CREDENTIALS_JSON env var "
-        "or create credentials/google.json with valid JSON."
+        "Google credentials not found. Set GOOGLE_CREDENTIALS_JSON env var."
     )
 
 
