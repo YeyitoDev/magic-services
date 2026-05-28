@@ -1,6 +1,7 @@
 """Tiny HTTP health server for Fly.io health checks."""
-from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
 
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
