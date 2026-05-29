@@ -94,18 +94,14 @@ class MessageHandlers:
     def subscription_service(self):
         """Obtiene SubscriptionService del contenedor (lazy)."""
         if self._subscription_service is None:
-            self._subscription_service = self._container.resolve(
-                "subscription_service"
-            )
+            self._subscription_service = self._container.resolve("subscription_service")
         return self._subscription_service
 
     @property
     def selected_service_repo(self):
         """Obtiene SelectedServiceRepository del contenedor (lazy)."""
         if self._selected_service_repo is None:
-            self._selected_service_repo = self._container.resolve(
-                "selected_service_repository"
-            )
+            self._selected_service_repo = self._container.resolve("selected_service_repository")
         return self._selected_service_repo
 
     @property
@@ -113,6 +109,7 @@ class MessageHandlers:
         """Obtiene TelegramAPIService del contenedor (lazy)."""
         if self._telegram_api is None:
             from services.telegram_api import TelegramAPIService
+
             self._telegram_api = TelegramAPIService()
         return self._telegram_api
 
@@ -120,9 +117,7 @@ class MessageHandlers:
     # Handler de texto genérico (eco)
     # ------------------------------------------------------------------
 
-    async def echo(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> None:
+    async def echo(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         Maneja mensajes de texto que no son comandos en chats privados.
 
@@ -164,9 +159,7 @@ class MessageHandlers:
             self._promotion_service.register_user(str(user_id))
             logger.debug(f"Usuario {user_id} registrado en pipeline de promociones")
         except Exception as e:
-            logger.warning(
-                f"No se pudo registrar usuario {user_id} en DynamoDB: {e}"
-            )
+            logger.warning(f"No se pudo registrar usuario {user_id} en DynamoDB: {e}")
 
         # Mostrar menú principal
         await self._send_main_menu(update, context, user_id)
@@ -175,9 +168,7 @@ class MessageHandlers:
     # Handler de imágenes (comprobantes de pago)
     # ------------------------------------------------------------------
 
-    async def handle_image(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> None:
+    async def handle_image(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         Procesa una imagen enviada por el usuario (comprobante de transferencia).
 
@@ -205,9 +196,7 @@ class MessageHandlers:
         user_id = int(update.message.from_user.id)
         user_name = update.message.chat.first_name or "Usuario"
 
-        logger.info(
-            f"Imagen recibida de usuario {user_id} ({user_name})"
-        )
+        logger.info(f"Imagen recibida de usuario {user_id} ({user_name})")
 
         # --- Paso 1: Obtener file_id y bytes de la imagen (sin guardar en disco) ---
         file_id = update.message.photo[-1].file_id
@@ -220,9 +209,7 @@ class MessageHandlers:
 
         # --- Paso 2: OCR con Google Vision (desde bytes, sin archivo local) ---
         try:
-            detected_text = self._vision_service.detect_text_from_bytes(
-                bytes(image_bytes)
-            )
+            detected_text = self._vision_service.detect_text_from_bytes(bytes(image_bytes))
             logger.debug(f"Texto detectado: {detected_text[:200]}...")
         except Exception as e:
             logger.error(f"Error en OCR para user={user_id}: {e}")
@@ -240,9 +227,7 @@ class MessageHandlers:
         fecha_extraida = extract_date(detected_text)
 
         if monto_extraido is None:
-            logger.warning(
-                f"No se pudo extraer monto del comprobante de user={user_id}"
-            )
+            logger.warning(f"No se pudo extraer monto del comprobante de user={user_id}")
             await update.message.reply_text(
                 "❌ No pude identificar el monto en tu comprobante. "
                 "Asegúrate de que la imagen sea clara y muestre el monto de la transferencia.\n\n"
@@ -260,8 +245,7 @@ class MessageHandlers:
         # --- Paso 4: Verificar duplicados ---
         if self._payment_service.check_duplicate_payment(user_id, monto_extraido):
             logger.info(
-                f"Compra duplicada detectada para user={user_id}, "
-                f"monto=S/ {monto_extraido:.2f}"
+                f"Compra duplicada detectada para user={user_id}, monto=S/ {monto_extraido:.2f}"
             )
             await self._handle_duplicate_payment(
                 update, context, user_id, user_name, monto_extraido
@@ -281,17 +265,13 @@ class MessageHandlers:
 
         # --- Paso 6: Confirmar al usuario ---
         await update.message.reply_text(
-            "✅ Recibí tu comprobante de pago. "
-            "En un momento procederé a validar tu pago."
+            "✅ Recibí tu comprobante de pago. En un momento procederé a validar tu pago."
         )
         await update.message.reply_text(
-            "📲 Para cualquier duda, consulta o problema, "
-            "contáctate con @magic_peru"
+            "📲 Para cualquier duda, consulta o problema, contáctate con @magic_peru"
         )
 
-        logger.info(
-            f"Comprobante de user={user_id} enviado al validador para revisión."
-        )
+        logger.info(f"Comprobante de user={user_id} enviado al validador para revisión.")
 
     # ------------------------------------------------------------------
     # Métodos auxiliares privados
@@ -316,11 +296,19 @@ class MessageHandlers:
         await context.bot.send_message(
             chat_id=user_id,
             text=(
-                "🔥 <b>¡BIENVENIDO A MAGIC BET!</b> 🔮\n\n"
-                "Somos la comunidad de apuestas deportivas más rentable del Perú. "
-                "Selecciona una opción para comenzar:"
+                "¡Hola, mi gato! 🔥\n\n"
+                "Soy <b>Don Gato</b>, el Bot Asistente Virtual de <b>Magic Apuestas</b> 🐱.\n\n"
+                "¿Deseas más información sobre nuestros servicios?\n\n"
+                "¡Haz clic en la opción que prefieras! 👇"
             ),
             reply_markup=main_menu_don_gato_keyboard(),
+            parse_mode="HTML",
+        )
+
+        # Follow-up message (parte del mensaje_inicial_don_gato original)
+        await context.bot.send_message(
+            chat_id=user_id,
+            text="<strong>OJO SI HAS REALIZADO TU PAGO SIMPLEMENTE ENVÍAMELO ACÁ</strong> 📲",
             parse_mode="HTML",
         )
 
@@ -378,14 +366,9 @@ class MessageHandlers:
                     reply_markup=reply_markup,
                     parse_mode="HTML",
                 )
-                logger.info(
-                    f"Comprobante enviado al validador {validator_id} "
-                    f"para user={user_id}"
-                )
+                logger.info(f"Comprobante enviado al validador {validator_id} para user={user_id}")
             except Exception as e:
-                logger.error(
-                    f"Error al enviar comprobante al validador {validator_id}: {e}"
-                )
+                logger.error(f"Error al enviar comprobante al validador {validator_id}: {e}")
 
     async def _handle_duplicate_payment(
         self,
@@ -430,6 +413,7 @@ class MessageHandlers:
         try:
             if service_name == "Grupo VIP":
                 from config.settings import settings
+
                 chat_id = int(settings.TELEGRAM_VIP_GROUP_ID)
                 invite_link = self.telegram_api.create_invite_link(
                     chat_id=chat_id,
@@ -438,8 +422,11 @@ class MessageHandlers:
                 )
             elif service_name == "Stake":
                 # Para Stake, obtener el ID del grupo desde Google Sheets
-                sheets_service = self._container.resolve("google_sheets_service") \
-                    if self._container.is_registered("google_sheets_service") else None
+                sheets_service = (
+                    self._container.resolve("google_sheets_service")
+                    if self._container.is_registered("google_sheets_service")
+                    else None
+                )
                 if sheets_service:
                     group_id = sheets_service.get_service_group_id("Stake")
                     if group_id:
@@ -453,8 +440,11 @@ class MessageHandlers:
 
         # Formatear la fecha de compra
         from utils.datetime_utils import format_date_spanish
+
         purchase_date = purchase_info.get("purchase_date")
-        formatted_date = format_date_spanish(purchase_date) if purchase_date else "fecha desconocida"
+        formatted_date = (
+            format_date_spanish(purchase_date) if purchase_date else "fecha desconocida"
+        )
 
         # Notificar al usuario
         from utils.keyboards import duplicate_purchase_restriction_keyboard
@@ -495,9 +485,7 @@ class MessageHandlers:
 
         # Verificar que quien ejecuta el comando sea un validador autorizado
         if not self._payment_service.is_validator_authorized(business_user_id):
-            await update.message.reply_text(
-                "⛔ No estás autorizado para validar pagos."
-            )
+            await update.message.reply_text("⛔ No estás autorizado para validar pagos.")
             return
 
         message_text = update.message.text
@@ -527,18 +515,19 @@ class MessageHandlers:
         fecha_extraida = parts[4] if len(parts) >= 5 else None
 
         # Verificar duplicados
-        if self._payment_service.check_duplicate_payment(
-            target_user_id, corrected_amount
-        ):
+        if self._payment_service.check_duplicate_payment(target_user_id, corrected_amount):
             purchase_info = self._payment_service.get_recent_purchase_info(
                 telegram_id=target_user_id,
                 amount=corrected_amount,
             )
             if purchase_info:
                 from utils.datetime_utils import format_date_spanish
-                formatted_date = format_date_spanish(
-                    purchase_info.get("purchase_date")
-                ) if purchase_info.get("purchase_date") else "fecha desconocida"
+
+                formatted_date = (
+                    format_date_spanish(purchase_info.get("purchase_date"))
+                    if purchase_info.get("purchase_date")
+                    else "fecha desconocida"
+                )
 
                 await update.message.reply_text(
                     f"⚠️ Este usuario ya tiene una compra registrada por "
@@ -570,8 +559,7 @@ class MessageHandlers:
             )
         else:
             await update.message.reply_text(
-                f"❌ No se pudo validar el pago para {target_user_id}:\n"
-                f"{result.message}"
+                f"❌ No se pudo validar el pago para {target_user_id}:\n{result.message}"
             )
 
     async def _notify_purchase_success(
@@ -605,9 +593,11 @@ class MessageHandlers:
             elif service_type == "stake":
                 # Para Stake, obtener el ID del grupo desde Google Sheets
                 try:
-                    sheets_service = self._container.resolve(
-                        "google_sheets_service"
-                    ) if self._container.is_registered("google_sheets_service") else None
+                    sheets_service = (
+                        self._container.resolve("google_sheets_service")
+                        if self._container.is_registered("google_sheets_service")
+                        else None
+                    )
                     if sheets_service:
                         group_id = sheets_service.get_service_group_id("Stake")
                         if group_id:
@@ -643,19 +633,17 @@ class MessageHandlers:
 
             # Enviar mensaje de registro a Betsafe
             from config.settings import settings
+
             await context.bot.send_message(
                 chat_id=user_id,
                 text=(
-                    "🎁 <b>¡TE REGALO 70 SOLES GRATIS!</b>\n\n"
-                    "Regístrate en Betsafe con este link exclusivo, "
-                    "haz tu primer depósito de mínimo S/ 40 y recibe "
-                    "<b>S/ 70 totalmente gratis</b> para apostar."
+                    "<b>¡TE REGALO 70 LUCAS MI KING!</b>\n\n"
+                    "Regístrate con el link exclusivo, haz tu primer depósito "
+                    "de mínimo S/. 40 y listo tendrás 70 soles gratis.\n\n"
+                    f"<a href='{settings.BETSAFE_PROMO_LINK}'>"
+                    "👉 OBTÉN TUS 70 SOLES GRATIS 👈</a>"
                 ),
                 parse_mode="HTML",
-            )
-            await context.bot.send_message(
-                chat_id=user_id,
-                text=settings.BETSAFE_PROMO_LINK,
             )
 
             # Limpiar servicio seleccionado

@@ -83,6 +83,7 @@ class CallbackHandlers:
 
         if settings is None:
             from config.settings import settings as s
+
             self.settings = s
         else:
             self.settings = settings
@@ -96,7 +97,10 @@ class CallbackHandlers:
                 await query.edit_message_text(text=text, reply_markup=reply_markup)
         except Exception as e:
             error_msg = str(e)
-            if "not modified" in error_msg.lower() or "message is not modified" in error_msg.lower():
+            if (
+                "not modified" in error_msg.lower()
+                or "message is not modified" in error_msg.lower()
+            ):
                 logger.debug(f"Mensaje no modificado (ignorado): {e}")
                 return  # Not an error, content is the same
             logger.warning(f"No se pudo editar mensaje: {e}")
@@ -105,9 +109,7 @@ class CallbackHandlers:
     # Router principal de callbacks
     # ------------------------------------------------------------------
 
-    async def handle_button(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> None:
+    async def handle_button(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         Router principal de callbacks. Despacha según el prefijo del callback_data.
 
@@ -129,10 +131,7 @@ class CallbackHandlers:
         user_id = int(query.from_user.id)
         nombre_usuario = query.from_user.first_name or "Usuario"
 
-        logger.debug(
-            f"Callback recibido: button={context_button}, user={user_id}, "
-            f"data={data}"
-        )
+        logger.debug(f"Callback recibido: button={context_button}, user={user_id}, data={data}")
 
         # Registrar interacción del usuario
         await self._register_user_interaction(user_id, nombre_usuario)
@@ -171,23 +170,24 @@ class CallbackHandlers:
                 pass  # Callback ignorado intencionalmente
 
             else:
-                logger.warning(
-                    f"Callback no reconocido: {context_button}"
-                )
+                logger.warning(f"Callback no reconocido: {context_button}")
                 await query.edit_message_text(
                     text="Opción no reconocida. Usa /start para volver al menú."
                 )
 
         except Exception as e:
             error_msg = str(e)
-            if "not modified" in error_msg.lower() or "message is not modified" in error_msg.lower():
+            if (
+                "not modified" in error_msg.lower()
+                or "message is not modified" in error_msg.lower()
+            ):
                 logger.debug(f"Mensaje no modificado: {e}")
                 return  # Ignore, content didn't change
             logger.error(f"Error en callback '{context_button}': {e}", exc_info=True)
             await self._safe_edit_message(
                 query,
                 text="Ocurrió un error procesando tu solicitud. "
-                "Intenta de nuevo o contacta a @magic_peru."
+                "Intenta de nuevo o contacta a @magic_peru.",
             )
 
     # ------------------------------------------------------------------
@@ -209,9 +209,7 @@ class CallbackHandlers:
                 "Nosotros estamos entrando con S/. 20,000 a esta jugada. "
                 "GARANTIZADA DE VICTORIA."
             )
-            await media_service.send_photo(
-                context, user_id, "stake_maximo", caption=mensaje
-            )
+            await media_service.send_photo(context, user_id, "stake_maximo", caption=mensaje)
 
         elif action == "grupo_vip" or action == "Grupo VIP":
             mensaje = (
@@ -221,23 +219,20 @@ class CallbackHandlers:
                 "nuestros analistas donde también tendrás asesoría directa por "
                 "ellos para colocar las jugadas."
             )
-            await media_service.send_photo(
-                context, user_id, "grupo_vip_1"
-            )
-            await media_service.send_photo(
-                context, user_id, "grupo_vip_2", caption=mensaje
-            )
+            await media_service.send_photo(context, user_id, "grupo_vip_1")
+            await media_service.send_photo(context, user_id, "grupo_vip_2", caption=mensaje)
 
         elif action == "general":
             from utils.keyboards import service_info_keyboard
+
             await query.edit_message_text(
                 text=(
-                    "📋 *Nuestros Servicios*\n\n"
-                    "🎯 *Grupo VIP*: Pronósticos diarios premium con asesoría directa.\n"
-                    "🎲 *Stake*: Apuesta de máxima seguridad con >96% de acierto.\n\n"
+                    "<b>📋 Nuestros Servicios</b>\n\n"
+                    "<b>🎯 Grupo VIP:</b> Pronósticos diarios premium con asesoría directa.\n"
+                    "<b>🎲 Stake:</b> Apuesta de máxima seguridad con &gt;96% de acierto.\n\n"
                     "Selecciona uno para más información:"
                 ),
-                parse_mode="Markdown",
+                parse_mode="HTML",
                 reply_markup=service_info_keyboard("general"),
             )
 
@@ -260,16 +255,18 @@ class CallbackHandlers:
         # Send service images FIRST (like original code)
         if tipo_servicio in ("Stake", "stake"):
             await media_service.send_photo(
-                context, user_id, "stake_maximo",
-                caption="El stake de máxima seguridad consta de una apuesta con una probabilidad de acierto mayor al 96% en el partido indicado. Nosotros estamos entrando con S/. 20,000 a esta jugada. GARANTIZADA DE VICTORIA."
+                context,
+                user_id,
+                "stake_maximo",
+                caption="El stake de máxima seguridad consta de una apuesta con una probabilidad de acierto mayor al 96% en el partido indicado. Nosotros estamos entrando con S/. 20,000 a esta jugada. GARANTIZADA DE VICTORIA.",
             )
         elif tipo_servicio in ("Grupo VIP", "grupo_vip"):
+            await media_service.send_photo(context, user_id, "grupo_vip_1")
             await media_service.send_photo(
-                context, user_id, "grupo_vip_1"
-            )
-            await media_service.send_photo(
-                context, user_id, "grupo_vip_2",
-                caption="En el grupo VIP recibirás diariamente entre 3 a 4 pronósticos estadísticos con la probabilidad más alta de ganar. En este grupo solo realizamos apuestas 100% estadísticas seleccionadas por nuestros analistas donde también tendrás asesoría directa por ellos para colocar las jugadas."
+                context,
+                user_id,
+                "grupo_vip_2",
+                caption="En el grupo VIP recibirás diariamente entre 3 a 4 pronósticos estadísticos con la probabilidad más alta de ganar. En este grupo solo realizamos apuestas 100% estadísticas seleccionadas por nuestros analistas donde también tendrás asesoría directa por ellos para colocar las jugadas.",
             )
 
         # Then show pricing message with dynamic prices
@@ -296,38 +293,37 @@ class CallbackHandlers:
             session.close()
 
     async def _send_service_pricing(self, update, context, user_id, tipo_servicio):
-        """Envía info de precios usando file_id (sin archivos locales)."""
+        """Envía info de precios usando precios dinámicos desde BD y file_id."""
+        # Obtener PricingService del contenedor
+        from core.container import container as app_container
+
+        pricing = app_container.resolve("pricing_service")
+
+        # Determinar service_id
         if tipo_servicio in ("Stake", "stake"):
-            await media_service.send_photo(
-                context, user_id, "stake_pricing",
-                caption=(
-                    "🎲 <b>STAKE DE MÁXIMA SEGURIDAD</b>\n\n"
-                    "💰 <b>Precio: S/ 50.00</b>\n\n"
-                    "Los números de cuenta son los siguientes mi hermano 🔮\n\n"
-                    "Titular: José González Reategui\n"
-                    "Yape/Plin: 952903700\n"
-                    "BCP: 194020262033\n"
-                    "SCOTIA: 1780142814\n\n"
-                    "Solo envía la captura de tu transferencia por este medio 📲"
-                ),
-            )
+            service_id = 1
+            photo_key = "stake_pricing"
         else:
-            await media_service.send_photo(
-                context, user_id, "vip_pricing",
-                caption=(
-                    "💎 <b>GRUPO VIP</b>\n\n"
-                    "🔥 <b>PRECIOS VIP</b>\n"
-                    "• 1 Mes = S/ 100\n"
-                    "• 2 Meses = S/ 150\n"
-                    "• 3 Meses = S/ 200\n\n"
-                    "Los números de cuenta son los siguientes mi hermano 🔮\n\n"
-                    "Titular: José González Reategui\n"
-                    "Yape/Plin: 952903700\n"
-                    "BCP: 19402020623033\n"
-                    "SCOTIA: 1780142814\n\n"
-                    "Solo envía la captura de tu transferencia por este medio 📲"
-                ),
-            )
+            service_id = 2
+            photo_key = "vip_pricing"
+
+        # Generar mensaje dinámico desde BD
+        mensaje = pricing.generate_pricing_message(service_id)
+
+        await media_service.send_photo(
+            context,
+            user_id,
+            photo_key,
+            caption=mensaje,
+            parse_mode="HTML",
+        )
+
+        # Follow-up message (igual que en mensaje_inicial_don_gato original)
+        await context.bot.send_message(
+            chat_id=user_id,
+            text="<strong>OJO SI HAS REALIZADO TU PAGO SIMPLEMENTE ENVÍAMELO ACÁ</strong> 📲",
+            parse_mode="HTML",
+        )
 
     # ------------------------------------------------------------------
     # FAQ
@@ -342,36 +338,42 @@ class CallbackHandlers:
 
         faq_respuestas = {
             "grupo_vip": {
-                "pregunta": "¿Qué es el Grupo VIP?",
-                "respuesta": (
-                    "En el grupo VIP recibirás diariamente entre 3 a 4 pronósticos "
-                    "estadísticos con la probabilidad más alta de ganar."
+                "caption": (
+                    "<b>¿Qué es el Grupo VIP?</b> 🔥\n\n"
+                    "👉 Acá te lo explico.\n\n"
+                    "<b>Aprieta el botón y adquiere tu suscripción VIP</b>"
                 ),
                 "video": "./videos_promocionales/GRUPO_VIP_EXPLICACION.mp4",
+                "service": "Grupo VIP",
             },
             "stake": {
-                "pregunta": "¿Qué es el Stake?",
-                "respuesta": (
-                    "El Stake de Máxima Seguridad es una apuesta con más del 96% "
-                    "de probabilidad de acierto."
+                "caption": (
+                    "<b>¿Qué es el Stake Máximo?</b> 🔥\n\n"
+                    "👉 Acá te lo explico.\n\n"
+                    "<b>Aprieta el botón y adquiere tu stake</b>"
                 ),
                 "video": "./videos_promocionales/STAKE_MAXIMA_SEGURIDAD_EXPLICACION.mp4",
+                "service": "Stake",
             },
         }
         if action in faq_respuestas:
             info = faq_respuestas[action]
             if os.path.exists(info["video"]):
+                from utils.keyboards import faq_video_keyboard
+
                 await context.bot.send_video(
                     chat_id=query.from_user.id,
                     video=open(info["video"], "rb"),
-                    caption=f"<b>{info['pregunta']}</b>\n\n{info['respuesta']}",
+                    caption=info["caption"],
                     parse_mode="HTML",
+                    reply_markup=faq_video_keyboard(info["service"]),
                 )
         else:
             from utils.keyboards import faq_keyboard
+
             await query.edit_message_text(
-                text="*❓ Preguntas Frecuentes*\n\nSelecciona una categoría:",
-                parse_mode="Markdown",
+                text="Selecciona el servicio que deseas consultar",
+                parse_mode="HTML",
                 reply_markup=faq_keyboard(),
             )
 
@@ -383,18 +385,18 @@ class CallbackHandlers:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE, data: list
     ) -> None:
         """Retorna al usuario al menú principal."""
-        from utils.keyboards import main_menu_keyboard
+        from utils.keyboards import main_menu_don_gato_keyboard
 
         query = update.callback_query
         await query.edit_message_text(
             text=(
-                "🔮 *¡BIENVENIDO A MAGIC!* 🔮\n\n"
-                "Selecciona una opción mi hermano:\n\n"
-                "💎 *Grupo VIP* - Pronósticos exclusivos diarios\n"
-                "🎲 *Stake* - Apuesta de máxima seguridad"
+                "¡Hola, mi gato! 🔥\n\n"
+                "Soy <b>Don Gato</b>, el Bot Asistente Virtual de <b>Magic Apuestas</b> 🐱.\n\n"
+                "¿Deseas más información sobre nuestros servicios?\n\n"
+                "¡Haz clic en la opción que prefieras! 👇"
             ),
-            parse_mode="Markdown",
-            reply_markup=main_menu_keyboard(),
+            parse_mode="HTML",
+            reply_markup=main_menu_don_gato_keyboard(),
         )
 
     # ------------------------------------------------------------------
@@ -427,10 +429,15 @@ class CallbackHandlers:
                 # Guardar selección (like production)
                 from core.database import SessionLocal
                 from repositories.selected_service_repo import SelectedServiceRepository
+
                 session = SessionLocal()
                 try:
                     repo = SelectedServiceRepository(session)
-                    service_name = "Grupo VIP" if tipo_servicio in ("Grupo VIP", "grupo_vip") else tipo_servicio
+                    service_name = (
+                        "Grupo VIP"
+                        if tipo_servicio in ("Grupo VIP", "grupo_vip")
+                        else tipo_servicio
+                    )
                     service = self.subscription_service._service_repo.get_by_name(service_name)
                     if service:
                         repo.upsert(user_telegram_id=user_id, service_id=service.service_id)
@@ -444,12 +451,11 @@ class CallbackHandlers:
                     "Seguro la próxima te animas mi gato, te recomiendo seguir jugando "
                     "las apuestas gratis que enviamos por el grupo y te regalo un bono "
                     "de S/ 40 en la mejor casa de apuestas del mundo"
-                )
+                ),
             )
-            await media_service.send_photo(
-                context, user_id, "betsafe_logo"
-            )
+            await media_service.send_photo(context, user_id, "betsafe_logo")
             from utils.keyboards import main_menu_keyboard
+
             await context.bot.send_message(
                 chat_id=user_id,
                 text=self.settings.BETSAFE_PROMO_LINK,
@@ -463,8 +469,8 @@ class CallbackHandlers:
 
         await context.bot.send_message(
             chat_id=user_id,
-            text="<strong>Recibi tu voucher de pago, en un minuto procedere a validar tu pago ✅</strong>",
-            parse_mode="html",
+            text="<strong>Recibí tu voucher de pago, en un minuto procederé a validar tu pago ✅</strong>",
+            parse_mode="HTML",
         )
 
         # Extraer texto de la imagen desde file_id (sin archivo local)
@@ -473,14 +479,13 @@ class CallbackHandlers:
             try:
                 photo_file = await context.bot.get_file(file_id)
                 image_bytes = await photo_file.download_as_bytearray()
-                texto_extraido = self.vision_service.detect_text_from_bytes(
-                    bytes(image_bytes)
-                )
+                texto_extraido = self.vision_service.detect_text_from_bytes(bytes(image_bytes))
             except Exception as e:
                 logger.warning(f"No se pudo hacer OCR desde file_id: {e}")
 
         # Extraer monto y fecha
         from utils.text_parser import extract_amount, extract_date
+
         monto = extract_amount(texto_extraido) or 0.0
         fecha = extract_date(texto_extraido)
 
@@ -497,16 +502,17 @@ class CallbackHandlers:
             dup_info = self.payment_service.get_recent_purchase_info(user_id, monto)
             if dup_info:
                 from utils.datetime_utils import format_date_spanish
+
                 fecha_compra = format_date_spanish(dup_info["purchase_date"])
                 from utils.keyboards import duplicate_purchase_restriction_keyboard
 
                 await context.bot.send_message(
                     chat_id=user_id,
                     text=(
-                        f"Ya tienes una compra registrada el *{fecha_compra}*.\n"
+                        f"Ya tienes una compra registrada el <b>{fecha_compra}</b>.\n"
                         f"Si tienes problemas contacta a @magic_peru."
                     ),
-                    parse_mode="Markdown",
+                    parse_mode="HTML",
                     reply_markup=duplicate_purchase_restriction_keyboard(tipo_servicio),
                 )
                 return
@@ -570,6 +576,7 @@ class CallbackHandlers:
             dup_info = self.payment_service.get_recent_purchase_info(target_user_id, monto)
             if dup_info:
                 from utils.datetime_utils import format_date_spanish
+
                 fecha_compra = format_date_spanish(dup_info["purchase_date"])
                 service_id = dup_info["service_id"]
                 service_name = "Stake" if service_id == 1 else "Grupo VIP"
@@ -601,9 +608,7 @@ class CallbackHandlers:
                 update, context, query, target_user_id, monto, source, message_id
             )
 
-    async def _process_valid_payment(
-        self, update, context, query, user_id, monto, source, extra
-    ):
+    async def _process_valid_payment(self, update, context, query, user_id, monto, source, extra):
         """Procesa un pago validado exitosamente."""
         await self._safe_edit_message(query, text="✅ ¡Venta validada con éxito!")
 
@@ -627,8 +632,8 @@ class CallbackHandlers:
             return
 
         # Determinar tipo de servicio
-        tipo_servicio = result.service_type if result.service_type else (
-            "grupo_vip" if monto > 50 else "stake"
+        tipo_servicio = (
+            result.service_type if result.service_type else ("grupo_vip" if monto > 50 else "stake")
         )
 
         # Obtener link de invitación
@@ -636,21 +641,28 @@ class CallbackHandlers:
 
         # Betsafe registration
         await media_service.send_photo(
-            context, user_id, "betsafe_logo",
+            context,
+            user_id,
+            "betsafe_logo",
             caption=(
-                "¡IMPORTANTE! Antes de empezar, "
-                "regístrate en BETSAFE con el link de abajo. "
-                "Solo disponible para nuevos usuarios y mayores de 18 años."
+                "<b>INFORMACIÓN ULTRA IMPORTANTE 🆘</b>\n\n"
+                "Todas nuestras apuestas estadísticas son realizadas en Betsafe, "
+                "la única casa en el mundo que nos da las mejores opciones "
+                "estadísticas en todas las ligas de fútbol.\n\n"
+                "Regístrate con el link de abajo para que tu cuenta "
+                "jamás sea bloqueada o limitada.\n\n"
+                f"<b>LINK EXCLUSIVO DE BETSAFE ⤵️</b>\n{self.settings.BETSAFE_PROMO_LINK}"
             ),
+            parse_mode="HTML",
         )
         await context.bot.send_message(
             chat_id=user_id,
             text=(
-                "💰 <b>¡TE REGALO 70 SOLES GRATIS!</b>\n\n"
-                "1️⃣ Regístrate con el link exclusivo de abajo\n"
-                "2️⃣ Recarga mínimo S/ 40 (Solo new users)\n"
-                "3️⃣ Recibe S/ 70 soles gratis para jugar AHORA\n\n"
-                f"<a href='{self.settings.BETSAFE_PROMO_LINK}'>👉 REGISTRATE AQUI Y RECLAMA TUS S/ 70 GRATIS 👈</a>"
+                "<b>¡TE REGALO 70 LUCAS MI KING!</b>\n\n"
+                "Regístrate con el link exclusivo, haz tu primer depósito "
+                "de mínimo S/. 40 y listo tendrás 70 soles gratis.\n\n"
+                f"<a href='{self.settings.BETSAFE_PROMO_LINK}'>"
+                "👉 OBTÉN TUS 70 SOLES GRATIS 👈</a>"
             ),
             parse_mode="HTML",
         )
@@ -688,9 +700,7 @@ class CallbackHandlers:
 
         # Sin archivo local que eliminar: las imágenes fluyen por file_id de Telegram
 
-    async def _process_rejected_payment(
-        self, update, context, query, user_id, monto, message_id
-    ):
+    async def _process_rejected_payment(self, update, context, query, user_id, monto, message_id):
         """Procesa un pago rechazado."""
         user = self.user_service.get_user(user_id)
         user_name = user.telegram_name if user else str(user_id)
@@ -699,10 +709,7 @@ class CallbackHandlers:
 
         await context.bot.send_message(
             chat_id=query.from_user.id,
-            text=(
-                f"❌ No se validó el pago de {user_name} ({user_id}) "
-                f"con monto S/ {monto:.2f}"
-            ),
+            text=(f"❌ No se validó el pago de {user_name} ({user_id}) con monto S/ {monto:.2f}"),
             reply_to_message_id=message_id,
         )
 
@@ -726,16 +733,20 @@ class CallbackHandlers:
             from utils.datetime_utils import get_lima_time_formatted
 
             # Get PricingService from container for dynamic keyboard
-            container = getattr(context, 'container', None)
+            container = getattr(context, "container", None)
             if container is None:
                 from core.container import container
-            pricing = container.resolve("pricing_service") if container.is_registered("pricing_service") else None
+            pricing = (
+                container.resolve("pricing_service")
+                if container.is_registered("pricing_service")
+                else None
+            )
 
             fecha_correcta = get_lima_time_formatted()["ddmmyyyy"]
 
             mensaje = (
                 f"🔍 <b>CONFIRMACIÓN DE PAGO</b>\n\n"
-                f"👤 <a href=\"tg://user?id={user_id}\">{user_name}</a>\n"
+                f'👤 <a href="tg://user?id={user_id}">{user_name}</a>\n'
                 f"💵 <b>Monto detectado:</b> S/ {monto:.2f}\n\n"
                 f"<b>✏️ Editar:</b> <code>/vm {user_id} {message_id} [monto] [fecha]</code>\n"
                 f"<b>💡 Ej:</b> <code>/vm {user_id} {message_id} 125 {fecha_correcta}</code>\n\n"
@@ -747,6 +758,7 @@ class CallbackHandlers:
                 reply_markup = pricing.generate_confirmation_keyboard(user_id=user_id, amount=monto)
             else:
                 from utils.keyboards import service_confirmation_keyboard
+
                 reply_markup = service_confirmation_keyboard(
                     user_id=user_id, monto=monto, message_id=message_id, source=source
                 )
@@ -788,8 +800,7 @@ class CallbackHandlers:
         if action == "valid":
             # Procesar como pago validado
             await self._process_valid_payment(
-                update, context, query, target_user_id, monto,
-                "telegram", ""
+                update, context, query, target_user_id, monto, "telegram", ""
             )
 
         elif action == "cancel":
@@ -826,6 +837,7 @@ class CallbackHandlers:
         action = data[0]  # cal_prev, cal_next, cal_select, cal_today, cal_cancel
 
         from utils.keyboards import CalendarKeyboard
+
         cal = CalendarKeyboard()
 
         if action in ("cal_prev", "cal_next"):
@@ -841,8 +853,10 @@ class CallbackHandlers:
 
             await query.edit_message_reply_markup(
                 reply_markup=cal.crear_calendario(
-                    year=year, month=month,
-                    user_id=user_id, message_id=message_id,
+                    year=year,
+                    month=month,
+                    user_id=user_id,
+                    message_id=message_id,
                 )
             )
 
@@ -854,16 +868,13 @@ class CallbackHandlers:
             message_id = int(data[5]) if data[5] != "None" else None
 
             fecha_seleccionada = f"{day:02d}/{month:02d}/{year}"
-            await query.edit_message_text(
-                text=f"📅 Fecha seleccionada: {fecha_seleccionada}"
-            )
+            await query.edit_message_text(text=f"📅 Fecha seleccionada: {fecha_seleccionada}")
 
         elif action == "cal_today":
             from utils.datetime_utils import get_lima_time_formatted
+
             fecha = get_lima_time_formatted()["dd/mm/yyyy"]
-            await query.edit_message_text(
-                text=f"📅 Fecha de hoy: {fecha}"
-            )
+            await query.edit_message_text(text=f"📅 Fecha de hoy: {fecha}")
 
         elif action == "cal_cancel":
             await query.edit_message_text(text="❌ Selección de fecha cancelada.")
@@ -872,9 +883,7 @@ class CallbackHandlers:
     # Helpers
     # ------------------------------------------------------------------
 
-    async def _register_user_interaction(
-        self, user_id: int, user_name: str
-    ) -> None:
+    async def _register_user_interaction(self, user_id: int, user_name: str) -> None:
         """Registra la interacción del usuario (get-or-create)."""
         try:
             self.user_service.get_or_create_user(user_id, user_name)

@@ -6,14 +6,14 @@ con caché en JSON para evitar consultas repetitivas a la BD.
 
 Principios:
 - Single Source of Truth: la tabla service_prices es la única fuente.
-- Caché inteligente: carga inicial desde BD → JSON, se refresca cada 30 min.
+- Caché inteligente: carga inicial desde BD → JSON, se refresca cada 24h.
 - Generación dinámica: mensajes de precios y teclados se arman desde los datos.
 - Fail-safe: si la BD falla, usa el caché JSON.
 
 Flujo:
 1. Al iniciar → carga precios desde BD → guarda en pricing_cache.json
 2. En cada consulta → sirve desde RAM (caché en memoria)
-3. Cada 30 min → refresca desde BD
+3. Cada 24h → refresca desde BD
 4. Si BD falla → usa caché JSON como fallback
 
 Para agregar un nuevo plan solo se necesita:
@@ -41,7 +41,7 @@ from models.service import ServicePrice
 logger = logging.getLogger(__name__)
 
 CACHE_FILE = "pricing_cache.json"
-CACHE_TTL_SECONDS = 1800  # 30 minutos
+CACHE_TTL_SECONDS = 86400  # 24 horas (1 día)
 
 
 class PricingService:
@@ -234,7 +234,7 @@ class PricingService:
             service_id: ID del servicio (1=Stake, 2=Grupo VIP).
 
         Returns:
-            Mensaje formateado con precios y cuentas bancarias.
+            Mensaje formateado en HTML con precios y cuentas bancarias.
         """
         prices = sorted(
             self.get_prices_for_service(service_id),
@@ -242,45 +242,53 @@ class PricingService:
         )
 
         if not prices:
-            return "Precios no disponibles. Contacta a @magic_peru."
+            return "<b>Precios no disponibles.</b> Contacta a @magic_peru."
+
+        # --- Cuentas bancarias (compartidas) ---
+        cuentas = (
+            "<b>📲 DATOS DE PAGO:</b>\n"
+            "• <b>Titular:</b> José González Reategui\n"
+            "• <b>Yape/Plin:</b> 952903700\n"
+            "• <b>BCP:</b> 19402020623033\n"
+            "• <b>SCOTIA:</b> 1780142814"
+        )
 
         if service_id == 1:  # Stake
+            stake_price = int(prices[0].price)
             return (
-                "🎲 *STAKE DE MÁXIMA SEGURIDAD*\n\n"
-                f"💰 *Precio: S/ {prices[0].price:.0f}*\n\n"
-                "Los números de cuenta son los siguientes mi hermano 🔮\n\n"
-                "Titular: José González Reategui\n"
-                "Yape/Plin: 952903700\n"
-                "BCP: 19402020623033\n"
-                "SCOTIA: 1780142814\n\n"
-                "Solo envía la captura de tu transferencia por este medio 📲"
+                "<b>✅ STAKE MÁXIMA SEGURIDAD ✅</b>\n\n"
+                "• El stake de máxima seguridad consta de una fija con una probabilidad "
+                "de victoria mayor al 96% en el partido indicado.\n\n"
+                "• Nosotros estamos entrando con S/. 20,000 a esta jugada "
+                "<b>GARANTIZADA DE VICTORIA</b>.\n\n"
+                f"<b>💰 EL COSTO DEL STAKE ES DE S/. {stake_price} 💰</b>\n\n"
+                f"{cuentas}\n\n"
+                "<b>🔥 Realiza tu depósito y envíalo a este chat 🔥</b>"
             )
         else:  # Grupo VIP
-            lines = ["💎 *GRUPO VIP - PRECIOS EXCLUSIVOS*\n"]
+            lines = [
+                "<b>📈 GRUPO VIP ESTADÍSTICO 📈</b>\n\n"
+                "• El único VIP del mundo con un sistema estadístico que nos permite "
+                "obtener las jugadas con la mayor probabilidad de acierto.\n\n"
+                "• Recibe de 3 a 4 jugadas diarias.\n\n"
+                "<b>🌟 BENEFICIOS:</b>\n"
+                "• ✅ Asesores personalizados 24/7\n"
+                "• ✅ Jugadas revisadas por algoritmos y expertos\n"
+                "• ✅ Manejamos Bank\n\n"
+                "<b>💰 COSTO MEMBRESÍAS VIP:</b>"
+            ]
 
             for p in prices:
                 months = p.duration_months
                 price = int(p.price)
-                discount = int(p.discount)
-                effective = price - discount
-
-                if discount > 0:
-                    lines.append(
-                        f"🔥 *{months} mes(es)* = S/ {price} "
-                        f"→ *S/ {effective}* (¡ahorra S/ {discount}!)"
-                    )
-                else:
-                    lines.append(f"• *{months} mes(es)* = S/ {price}")
+                lines.append(f"• ⚪ S/. {price} - {months} {'MES' if months == 1 else 'MESES'}")
 
             lines.append("")
-            lines.append("Los números de cuenta son los siguientes mi hermano 🔮")
+            lines.append(cuentas)
             lines.append("")
-            lines.append("Titular: José González Reategui")
-            lines.append("Yape/Plin: 952903700")
-            lines.append("BCP: 19402020623033")
-            lines.append("SCOTIA: 1780142814")
-            lines.append("")
-            lines.append("Solo envía la captura de tu transferencia por este medio 📲")
+            lines.append(
+                "<b>🔥 Realiza tu depósito, envíamelo a este chat y listo estás dentro 🔥</b>"
+            )
 
             return "\n".join(lines)
 
@@ -305,34 +313,38 @@ class PricingService:
         # Precios de Stake (service_id=1)
         stake_prices = self.get_prices_for_service(1)
         for p in stake_prices:
-            keyboard.append([
-                InlineKeyboardButton(
-                    f"🎯 STAKE (S/ {int(p.price)})",
-                    callback_data=f"buttom_validar_monto:valid:{user_id}:{int(p.price)}",
-                )
-            ])
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        f"🎯 STAKE (S/ {int(p.price)})",
+                        callback_data=f"buttom_validar_monto:valid:{user_id}:{int(p.price)}",
+                    )
+                ]
+            )
 
         # Precios de VIP (service_id=2)
-        vip_prices = sorted(
-            self.get_prices_for_service(2), key=lambda p: p.duration_months
-        )
+        vip_prices = sorted(self.get_prices_for_service(2), key=lambda p: p.duration_months)
         for p in vip_prices:
             months = p.duration_months
             vip_price = int(p.price)  # Show original price, not discounted
-            keyboard.append([
-                InlineKeyboardButton(
-                    f"💎 VIP {months} {'Mes' if months == 1 else 'Meses'} (S/ {vip_price})",
-                    callback_data=f"buttom_validar_monto:valid:{user_id}:{vip_price}",
-                )
-            ])
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        f"💎 VIP {months} {'Mes' if months == 1 else 'Meses'} (S/ {vip_price})",
+                        callback_data=f"buttom_validar_monto:valid:{user_id}:{vip_price}",
+                    )
+                ]
+            )
 
         # Botón cancelar
-        keyboard.append([
-            InlineKeyboardButton(
-                "❌ CANCELAR",
-                callback_data=f"buttom_validar_monto:cancel:{user_id}",
-            )
-        ])
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    "❌ CANCELAR",
+                    callback_data=f"buttom_validar_monto:cancel:{user_id}",
+                )
+            ]
+        )
 
         return InlineKeyboardMarkup(keyboard)
 

@@ -56,6 +56,7 @@ SERVICES_NAMES_BY_ID = {
 # Command Handlers
 # ============================================================================
 
+
 class CommandHandlers:
     """
     Handlers para todos los comandos del bot de Telegram.
@@ -103,9 +104,7 @@ class CommandHandlers:
     # /start
     # ==================================================================
 
-    async def start(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> None:
+    async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         Comando /start - Registra al usuario y muestra el menú principal.
 
@@ -138,9 +137,7 @@ class CommandHandlers:
             try:
                 self._promotion_service.register_user(str(user_id))
             except Exception as e:
-                logger.warning(
-                    f"No se pudo registrar promo para {user_id}: {e}"
-                )
+                logger.warning(f"No se pudo registrar promo para {user_id}: {e}")
 
         # 3. Mostrar menú principal estilo Don Gato
         from utils.keyboards import main_menu_don_gato_keyboard
@@ -148,12 +145,20 @@ class CommandHandlers:
         await context.bot.send_message(
             chat_id=user_id,
             text=(
-                "🐱 <b>¡BIENVENIDO AL CHAT DEL GATO!</b> 🐱\n\n"
-                "Somos la comunidad de apuestas más rentable de todo el Perú 🇵🇪\n\n"
-                "Selecciona lo que deseas hacer:"
+                "¡Hola, mi gato! 🔥\n\n"
+                "Soy <b>Don Gato</b>, el Bot Asistente Virtual de <b>Magic Apuestas</b> 🐱.\n\n"
+                "¿Deseas más información sobre nuestros servicios?\n\n"
+                "¡Haz clic en la opción que prefieras! 👇"
             ),
             parse_mode="HTML",
             reply_markup=main_menu_don_gato_keyboard(),
+        )
+
+        # Follow-up message (parte del mensaje_inicial_don_gato original)
+        await context.bot.send_message(
+            chat_id=user_id,
+            text="<strong>OJO SI HAS REALIZADO TU PAGO SIMPLEMENTE ENVÍAMELO ACÁ</strong> 📲",
+            parse_mode="HTML",
         )
 
         logger.info(f"Usuario {user_id} recibió menú principal.")
@@ -182,14 +187,11 @@ class CommandHandlers:
             parse_mode="HTML",
         )
 
-
     # ==================================================================
     # /vm - Validar monto (corregir monto manualmente)
     # ==================================================================
 
-    async def validar_monto(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> None:
+    async def validar_monto(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         Comando /vm - Permite al validador corregir manualmente el monto
         de un pago y registrarlo.
@@ -224,9 +226,7 @@ class CommandHandlers:
 
             # Verificar si el validador está autorizado
             if not self._payment_service.is_validator_authorized(business_user_id):
-                await update.message.reply_text(
-                    "No estás autorizado para validar pagos."
-                )
+                await update.message.reply_text("No estás autorizado para validar pagos.")
                 return
 
             if len(data) == 5:
@@ -241,9 +241,7 @@ class CommandHandlers:
             )
 
             # Verificar duplicados
-            if self._payment_service.check_duplicate_payment(
-                user_id, monto_correcto
-            ):
+            if self._payment_service.check_duplicate_payment(user_id, monto_correcto):
                 recent_info = self._payment_service.get_recent_purchase_info(
                     user_id, monto_correcto
                 )
@@ -257,9 +255,7 @@ class CommandHandlers:
             # Si el pago viene de WhatsApp, actualizar estado en Sheets
             if canal_procedencia == "wsp" and self._sheets_service:
                 try:
-                    self._sheets_service.update_wsp_payment_review_status(
-                        telegram_id=user_id
-                    )
+                    self._sheets_service.update_wsp_payment_review_status(telegram_id=user_id)
                     logger.info(f"Revisión WSP actualizada para user={user_id}")
                 except Exception as e:
                     logger.error(f"Error al actualizar revisión WSP: {e}")
@@ -354,9 +350,7 @@ class CommandHandlers:
             )
         except Exception as e:
             logger.error(f"Error inesperado en /vm: {e}", exc_info=True)
-            await update.message.reply_text(
-                f"Ocurrió un error al procesar la validación: {str(e)}"
-            )
+            await update.message.reply_text(f"Ocurrió un error al procesar la validación: {str(e)}")
 
     # ==================================================================
     # /wsp - Registrar usuario desde WhatsApp
@@ -389,9 +383,7 @@ class CommandHandlers:
         args = message_text.split(" ")
 
         if len(args) != 2 or args[0] != "/wsp":
-            await update.message.reply_text(
-                "Formato incorrecto. Usar: /wsp {codigo_whatsapp}"
-            )
+            await update.message.reply_text("Formato incorrecto. Usar: /wsp {codigo_whatsapp}")
             return
 
         wsp_user_id = args[1]
@@ -419,11 +411,13 @@ class CommandHandlers:
         # Registrar en Google Sheets
         if self._sheets_service:
             try:
-                self._sheets_service.register_new_user([
-                    user_id,
-                    nombre_usuario,
-                    fecha_hora["yyyy-mm-dd"],
-                ])
+                self._sheets_service.register_new_user(
+                    [
+                        user_id,
+                        nombre_usuario,
+                        fecha_hora["yyyy-mm-dd"],
+                    ]
+                )
                 logger.info(f"Usuario {user_id} registrado en Google Sheets.")
             except Exception as e:
                 logger.error(f"Error al registrar en Sheets: {e}")
@@ -433,11 +427,9 @@ class CommandHandlers:
         tipo_servicio = None
 
         if self._sheets_service:
-            url_transferencia, tipo_servicio = (
-                self._sheets_service.get_wsp_transfer_data(
-                    wsp_id=wsp_user_id,
-                    telegram_id=user_id,
-                )
+            url_transferencia, tipo_servicio = self._sheets_service.get_wsp_transfer_data(
+                wsp_id=wsp_user_id,
+                telegram_id=user_id,
             )
 
         if not url_transferencia:
@@ -447,9 +439,7 @@ class CommandHandlers:
             )
             return
 
-        logger.info(
-            f"WSP: user={user_id}, url={url_transferencia}, tipo={tipo_servicio}"
-        )
+        logger.info(f"WSP: user={user_id}, url={url_transferencia}, tipo={tipo_servicio}")
 
         # Descargar imagen de la transferencia
         import requests
@@ -461,18 +451,14 @@ class CommandHandlers:
                     f.write(response.content)
                 logger.info(f"Imagen descargada: {image_path}")
             else:
-                logger.error(
-                    f"Error al descargar imagen: HTTP {response.status_code}"
-                )
+                logger.error(f"Error al descargar imagen: HTTP {response.status_code}")
                 await update.message.reply_text(
                     "No se pudo descargar la imagen de la transferencia."
                 )
                 return
         except Exception as e:
             logger.error(f"Error al descargar imagen: {e}")
-            await update.message.reply_text(
-                "Error al descargar la imagen de la transferencia."
-            )
+            await update.message.reply_text("Error al descargar la imagen de la transferencia.")
             return
 
         # Aplicar OCR para extraer monto
@@ -544,30 +530,22 @@ class CommandHandlers:
         args = message_text.split(" ")
 
         if len(args) != 2 or args[0] != "/valid":
-            await update.message.reply_text(
-                "Formato incorrecto. Usar: /valid {codigo_generado}"
-            )
+            await update.message.reply_text("Formato incorrecto. Usar: /valid {codigo_generado}")
             return
 
         id_a_buscar = args[1]
 
         # Leer CSV de pagos de la API
         if not os.path.exists(CSV_SERVICES_PAYMENTS):
-            await update.message.reply_text(
-                "Error: No se encuentra el archivo de pagos de la API."
-            )
+            await update.message.reply_text("Error: No se encuentra el archivo de pagos de la API.")
             return
 
         try:
             df_services_payments = pd.read_csv(CSV_SERVICES_PAYMENTS)
-            row = df_services_payments[
-                df_services_payments["id"] == id_a_buscar
-            ]
+            row = df_services_payments[df_services_payments["id"] == id_a_buscar]
 
             if row.empty:
-                await update.message.reply_text(
-                    "Error: El ID no se encuentra registrado."
-                )
+                await update.message.reply_text("Error: El ID no se encuentra registrado.")
                 return
 
             if row["claimed"].values[0]:
@@ -579,9 +557,7 @@ class CommandHandlers:
             amount = float(row["amount"].values[0])
             service = row["service"].values[0]
 
-            logger.info(
-                f"API validation: user={telegram_id}, amount={amount}, service={service}"
-            )
+            logger.info(f"API validation: user={telegram_id}, amount={amount}, service={service}")
 
             # Procesar compra
             result = self._subscription_service.process_purchase(
@@ -591,9 +567,7 @@ class CommandHandlers:
             )
 
             if not result.success:
-                await update.message.reply_text(
-                    f"Error al procesar la compra: {result.message}"
-                )
+                await update.message.reply_text(f"Error al procesar la compra: {result.message}")
                 return
 
             # Obtener link de invitación
@@ -622,20 +596,14 @@ class CommandHandlers:
                 )
 
             # Marcar como reclamado en el CSV
-            df_services_payments.loc[
-                df_services_payments["id"] == id_a_buscar, "claimed"
-            ] = True
+            df_services_payments.loc[df_services_payments["id"] == id_a_buscar, "claimed"] = True
             df_services_payments.to_csv(CSV_SERVICES_PAYMENTS, index=False)
 
-            logger.info(
-                f"API validation completada: user={telegram_id}, service={service}"
-            )
+            logger.info(f"API validation completada: user={telegram_id}, service={service}")
 
         except Exception as e:
             logger.error(f"Error en /valid: {e}", exc_info=True)
-            await update.message.reply_text(
-                f"Error al procesar la validación: {str(e)}"
-            )
+            await update.message.reply_text(f"Error al procesar la validación: {str(e)}")
 
     # ==================================================================
     # /id - Mostrar ID del usuario validador
@@ -714,17 +682,13 @@ class CommandHandlers:
             await update.message.reply_text("El ID de usuario debe ser un número.")
         except Exception as e:
             logger.error(f"Error al enviar recordatorio: {e}", exc_info=True)
-            await update.message.reply_text(
-                f"Error al enviar el recordatorio: {str(e)}"
-            )
+            await update.message.reply_text(f"Error al enviar el recordatorio: {str(e)}")
 
     # ==================================================================
     # /servicio_id - Mostrar ID de grupo para un tipo de servicio
     # ==================================================================
 
-    async def servicio_id(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> None:
+    async def servicio_id(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         Comando /servicio_id - Obtiene y muestra el ID del grupo de Telegram
         para un tipo de servicio.
@@ -753,10 +717,7 @@ class CommandHandlers:
             if group_id:
                 await context.bot.send_message(
                     chat_id=user_id,
-                    text=(
-                        f"ID del grupo para <b>{tipo_servicio}</b>: "
-                        f"<code>{group_id}</code>"
-                    ),
+                    text=(f"ID del grupo para <b>{tipo_servicio}</b>: <code>{group_id}</code>"),
                     parse_mode="HTML",
                 )
             else:
@@ -764,9 +725,7 @@ class CommandHandlers:
                     f"No se encontró grupo para el servicio: {tipo_servicio}"
                 )
         else:
-            await update.message.reply_text(
-                "Servicio de Google Sheets no está disponible."
-            )
+            await update.message.reply_text("Servicio de Google Sheets no está disponible.")
 
     # ==================================================================
     # /generar_link - Generar link de invitación
@@ -800,18 +759,13 @@ class CommandHandlers:
 
             await context.bot.send_message(
                 chat_id=user_id,
-                text=(
-                    f"Link de invitación generado para <b>{tipo_servicio}</b>:\n"
-                    f"{invite_link}"
-                ),
+                text=(f"Link de invitación generado para <b>{tipo_servicio}</b>:\n{invite_link}"),
                 parse_mode="HTML",
             )
             logger.info(f"Link generado para {tipo_servicio}: {invite_link}")
         except Exception as e:
             logger.error(f"Error al generar link: {e}", exc_info=True)
-            await update.message.reply_text(
-                f"Error al generar el link: {str(e)}"
-            )
+            await update.message.reply_text(f"Error al generar el link: {str(e)}")
 
     # ==================================================================
     # Métodos auxiliares
@@ -858,9 +812,7 @@ class CommandHandlers:
                 return invite_link
 
             except Exception as e:
-                logger.error(
-                    f"No se pudo generar link VIP, usando por defecto: {e}"
-                )
+                logger.error(f"No se pudo generar link VIP, usando por defecto: {e}")
                 return link_defecto_vip
         else:
             # Para Stake, obtener el ID del grupo desde Sheets
@@ -878,7 +830,6 @@ class CommandHandlers:
 
             # Fallback
             logger.warning(
-                f"No se pudo obtener link para {tipo_servicio}. "
-                f"Usando link por defecto."
+                f"No se pudo obtener link para {tipo_servicio}. Usando link por defecto."
             )
             return link_defecto_vip
