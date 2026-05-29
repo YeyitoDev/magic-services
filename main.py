@@ -193,17 +193,7 @@ def build_telegram_app(container):
     subscription_service = container.resolve("subscription_service")
     payment_service = container.resolve("payment_service")
 
-    # Servicios opcionales (pueden no estar disponibles si no hay credenciales)
-    vision_service = None
-    try:
-        vision_service = container.resolve("vision_service")
-    except (KeyError, FileNotFoundError, Exception):
-        try:
-            from services.google_vision import GoogleVisionService
-            vision_service = GoogleVisionService()
-        except (FileNotFoundError, Exception) as e:
-            logger.warning(f"Vision service no disponible: {e}")
-
+    # Servicios opcionales - Sheets first (repara creds de Google para Vision)
     sheets_service = None
     try:
         sheets_service = container.resolve("google_sheets_service")
@@ -213,6 +203,16 @@ def build_telegram_app(container):
             sheets_service = GoogleSheetsService()
         except (FileNotFoundError, Exception) as e:
             logger.warning(f"Sheets service no disponible: {e}")
+
+    vision_service = None
+    try:
+        vision_service = container.resolve("vision_service")
+    except (KeyError, FileNotFoundError, Exception):
+        try:
+            from services.google_vision import GoogleVisionService
+            vision_service = GoogleVisionService()
+        except (FileNotFoundError, Exception) as e:
+            logger.warning(f"Vision service no disponible: {e}")
 
     promotion_service = None
     try:
@@ -593,6 +593,8 @@ Ejemplos:
                 debug=settings.DEBUG,
             )
         else:
+            from health_server import start_health_server
+            start_health_server()
             run_polling(app)
 
         return
@@ -626,6 +628,8 @@ Ejemplos:
         )
     else:
         # Modo polling (default)
+        from health_server import start_health_server
+        start_health_server()
         run_polling(app)
 
     logger.info("👋 Magic Chatbot v2 finalizado. ¡Hasta pronto!")

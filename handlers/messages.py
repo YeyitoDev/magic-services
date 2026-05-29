@@ -33,7 +33,6 @@ Uso:
 """
 
 import logging
-import os
 
 from telegram import Chat, Update
 from telegram.ext import ContextTypes
@@ -210,19 +209,20 @@ class MessageHandlers:
             f"Imagen recibida de usuario {user_id} ({user_name})"
         )
 
-        # --- Paso 1: Descargar la imagen ---
-        photo = await update.message.photo[-1].get_file()
-        image_path = f"./images/trans_{user_id}.jpeg"
+        # --- Paso 1: Obtener file_id y bytes de la imagen (sin guardar en disco) ---
+        file_id = update.message.photo[-1].file_id
+        photo_file = await update.message.photo[-1].get_file()
+        image_bytes = await photo_file.download_as_bytearray()
+        logger.info(f"Imagen recibida: file_id={file_id}")
 
-        # Asegurar que el directorio existe
-        os.makedirs("./images", exist_ok=True)
+        # Guardar file_id en contexto para uso posterior (evita re-descarga)
+        context.user_data["pending_file_id"] = file_id
 
-        await photo.download_to_drive(image_path)
-        logger.info(f"Imagen guardada en: {image_path}")
-
-        # --- Paso 2: OCR con Google Vision ---
+        # --- Paso 2: OCR con Google Vision (desde bytes, sin archivo local) ---
         try:
-            detected_text = self._vision_service.detect_text(image_path)
+            detected_text = self._vision_service.detect_text_from_bytes(
+                bytes(image_bytes)
+            )
             logger.debug(f"Texto detectado: {detected_text[:200]}...")
         except Exception as e:
             logger.error(f"Error en OCR para user={user_id}: {e}")
@@ -276,7 +276,7 @@ class MessageHandlers:
             user_name=user_name,
             amount=monto_extraido,
             extracted_date=fecha_extraida or fecha_actual,
-            image_path=image_path,
+            file_id=file_id,
         )
 
         # --- Paso 6: Confirmar al usuario ---
@@ -332,7 +332,7 @@ class MessageHandlers:
         user_name: str,
         amount: float,
         extracted_date: str,
-        image_path: str,
+        file_id: str,
     ) -> None:
         """
         Envía la imagen del comprobante y los datos extraídos a todos
@@ -345,7 +345,7 @@ class MessageHandlers:
             user_name: Nombre del comprador.
             amount: Monto extraído del comprobante.
             extracted_date: Fecha extraída del comprobante.
-            image_path: Ruta local a la imagen del comprobante.
+            file_id: ID del archivo (file_id) de Telegram para la imagen.
         """
         from utils.keyboards import payment_validation_keyboard
 
@@ -373,7 +373,7 @@ class MessageHandlers:
             try:
                 await context.bot.send_photo(
                     chat_id=int(validator_id),
-                    photo=open(image_path, "rb"),
+                    photo=file_id,
                     caption=validation_message,
                     reply_markup=reply_markup,
                     parse_mode="HTML",
@@ -665,11 +665,7 @@ class MessageHandlers:
             except Exception as e:
                 logger.warning(f"No se pudo limpiar selección de user={user_id}: {e}")
 
-            # Eliminar imagen del comprobante
-            image_path = f"./images/trans_{user_id}.jpeg"
-            if os.path.exists(image_path):
-                os.remove(image_path)
-                logger.debug(f"Imagen eliminada: {image_path}")
+            # Sin archivo local que eliminar: las imágenes fluyen por file_id de Telegram
 
         except Exception as e:
             logger.error(

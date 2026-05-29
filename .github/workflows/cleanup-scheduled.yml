@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    environment: ${{ github.event.inputs.environment || 'testing' }}
+    environment: ${{ github.event_name == 'schedule' && 'production' || github.event.inputs.environment || 'production' }}
     env:
       DEFAULT_MODE: ${{ github.event.inputs.mode || 'eliminar' }}
 
@@ -40,7 +40,7 @@ jobs:
       - name: Create .env
         run: |
           cat > .env << EOF
-          ENVIRONMENT=${{ github.event.inputs.environment || 'testing' }}
+          ENVIRONMENT=${{ github.event_name == 'schedule' && 'production' || github.event.inputs.environment || 'production' }}
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_VALIDATOR_IDS=${{ secrets.TELEGRAM_VALIDATOR_IDS }}
           TELEGRAM_VIP_GROUP_ID=${{ secrets.TELEGRAM_VIP_GROUP_ID }}
@@ -83,8 +83,8 @@ jobs:
       - name: Notify Telegram with results
         if: always()
         run: |
-          ENV="${{ github.event.inputs.environment || 'testing' }}"
-          MODE="${{ github.event.inputs.mode || 'validar' }}"
+          ENV="${{ github.event_name == 'schedule' && 'production' || github.event.inputs.environment || 'production' }}"
+          MODE="${{ github.event.inputs.mode || 'eliminar' }}"
 
           # Parse output from DB-only cleanup
           RAW=$(grep -E "Total|Active|Expired|Removed" output/*/resumen_*.txt 2>/dev/null || echo "")

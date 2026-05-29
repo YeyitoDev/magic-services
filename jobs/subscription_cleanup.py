@@ -173,6 +173,7 @@ class SubscriptionCleanupJob:
 
             # ---- PASO 1: REPAIR - Create missing subscriptions for VIP purchasers ----
             from datetime import timedelta
+
             from models.purchase import Purchase
 
             # Only VIP purchases (service_id=2) in last 120 days

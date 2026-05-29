@@ -6,11 +6,20 @@ app = "magic-services"
 [env]
   ENVIRONMENT = "testing"
   PYTHONUNBUFFERED = "1"
+  GOOGLE_CREDENTIALS_PATH = "./credentials/google.json"
 
 [[vm]]
   memory = "512mb"
   cpu_kind = "shared"
   cpus = 1
 
-[processes]
-  app = "python main.py"
+[http_service]
+  internal_port = 8080
+  force_https = false
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "get"
+    path = "/"

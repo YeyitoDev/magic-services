@@ -411,13 +411,14 @@ class CallbackHandlers:
         respuesta_compra = data[1] if len(data) > 1 else "no"
         tipo_servicio = data[2] if len(data) > 2 else ""
 
-        image_path = f"./images/trans_{user_id}.jpeg"
+        # Recuperar file_id de la imagen pendiente (guardado en handle_image)
+        pending_file_id = context.user_data.pop("pending_file_id", None)
 
         if respuesta_compra == "si":
-            if os.path.exists(image_path):
-                # Ya envió captura: reenviar al validador
+            if pending_file_id:
+                # Ya envió captura: reenviar al validador usando file_id
                 await self._process_existing_image(
-                    update, context, user_id, nombre_usuario, tipo_servicio, image_path
+                    update, context, user_id, nombre_usuario, tipo_servicio, pending_file_id
                 )
             else:
                 # No ha enviado captura: mostrar precios
@@ -456,9 +457,9 @@ class CallbackHandlers:
             )
 
     async def _process_existing_image(
-        self, update, context, user_id, nombre_usuario, tipo_servicio, image_path
+        self, update, context, user_id, nombre_usuario, tipo_servicio, file_id
     ):
-        """Procesa una imagen de comprobante ya existente."""
+        """Procesa una imagen de comprobante ya existente usando file_id."""
 
         await context.bot.send_message(
             chat_id=user_id,
@@ -466,10 +467,17 @@ class CallbackHandlers:
             parse_mode="html",
         )
 
-        # Extraer texto de la imagen
+        # Extraer texto de la imagen desde file_id (sin archivo local)
         texto_extraido = ""
         if self.vision_service:
-            texto_extraido = self.vision_service.detect_text(image_path)
+            try:
+                photo_file = await context.bot.get_file(file_id)
+                image_bytes = await photo_file.download_as_bytearray()
+                texto_extraido = self.vision_service.detect_text_from_bytes(
+                    bytes(image_bytes)
+                )
+            except Exception as e:
+                logger.warning(f"No se pudo hacer OCR desde file_id: {e}")
 
         # Extraer monto y fecha
         from utils.text_parser import extract_amount, extract_date
@@ -514,7 +522,7 @@ class CallbackHandlers:
             try:
                 await context.bot.send_photo(
                     chat_id=int(validator_id),
-                    photo=open(image_path, "rb"),
+                    photo=file_id,
                     caption=mensaje,
                     reply_markup=reply_markup,
                     parse_mode="HTML",
@@ -549,7 +557,8 @@ class CallbackHandlers:
         monto = float(data[3]) if len(data) > 3 else 0.0
         extra = data[4] if len(data) > 4 else ""
         source = data[5] if len(data) > 5 else "telegram"
-        image_path = f"./images/trans_{target_user_id}.jpeg"
+
+        # Obtener file_id del mensaje de foto (sin archivo local)
 
         logger.info(
             f"Validación: action={action}, validator={validator_id}, "
@@ -581,11 +590,11 @@ class CallbackHandlers:
 
         if action == "valid":
             await self._process_valid_payment(
-                update, context, query, target_user_id, monto, source, extra, image_path
+                update, context, query, target_user_id, monto, source, extra
             )
         elif action == "not_valid":
             await self._process_rejected_payment(
-                update, context, query, target_user_id, monto, image_path, message_id
+                update, context, query, target_user_id, monto, message_id
             )
         elif action == "monto_no_reconocido":
             await self._process_incorrect_amount(
@@ -593,7 +602,7 @@ class CallbackHandlers:
             )
 
     async def _process_valid_payment(
-        self, update, context, query, user_id, monto, source, extra, image_path
+        self, update, context, query, user_id, monto, source, extra
     ):
         """Procesa un pago validado exitosamente."""
         await self._safe_edit_message(query, text="✅ ¡Venta validada con éxito!")
@@ -677,12 +686,10 @@ class CallbackHandlers:
         finally:
             session.close()
 
-        if os.path.exists(image_path):
-            os.remove(image_path)
-            logger.debug(f"Imagen {image_path} eliminada.")
+        # Sin archivo local que eliminar: las imágenes fluyen por file_id de Telegram
 
     async def _process_rejected_payment(
-        self, update, context, query, user_id, monto, image_path, message_id
+        self, update, context, query, user_id, monto, message_id
     ):
         """Procesa un pago rechazado."""
         user = self.user_service.get_user(user_id)
@@ -705,9 +712,7 @@ class CallbackHandlers:
             text=self.payment_service.build_rejection_message(user_id),
         )
 
-        # Limpiar imagen
-        if os.path.exists(image_path):
-            os.remove(image_path)
+        # Sin archivo local que eliminar: las imágenes fluyen por file_id de Telegram
 
     async def _process_incorrect_amount(
         self, update, context, query, user_id, monto, source, message_id
@@ -716,8 +721,6 @@ class CallbackHandlers:
         user = self.user_service.get_user(user_id)
         user_name = user.telegram_name if user else str(user_id)
         validator_id = query.from_user.id
-
-        image_path = f"./images/trans_{user_id}.jpeg"
 
         if source == "telegram":
             from utils.datetime_utils import get_lima_time_formatted
@@ -748,14 +751,9 @@ class CallbackHandlers:
                     user_id=user_id, monto=monto, message_id=message_id, source=source
                 )
 
-            if os.path.exists(image_path):
-                await context.bot.send_photo(
-                    chat_id=validator_id,
-                    photo=open(image_path, "rb"),
-                    caption=mensaje,
-                    reply_markup=reply_markup,
-                    parse_mode="HTML",
-                )
+            # Editar el caption del mensaje de foto existente (sin reenviar desde disco)
+            await self._safe_edit_message(query, mensaje, reply_markup)
+            return
 
         elif source == "wsp":
             await context.bot.send_message(
@@ -789,15 +787,13 @@ class CallbackHandlers:
 
         if action == "valid":
             # Procesar como pago validado
-            image_path = f"./images/trans_{target_user_id}.jpeg"
             await self._process_valid_payment(
                 update, context, query, target_user_id, monto,
-                "telegram", "", image_path
+                "telegram", ""
             )
 
         elif action == "cancel":
             # Cancelar validación
-            image_path = f"./images/trans_{target_user_id}.jpeg"
             user = self.user_service.get_user(target_user_id)
             user_name = user.telegram_name if user else str(target_user_id)
 
@@ -816,8 +812,7 @@ class CallbackHandlers:
                 text=self.payment_service.build_rejection_message(target_user_id),
             )
 
-            if os.path.exists(image_path):
-                os.remove(image_path)
+            # Sin archivo local que eliminar: las imágenes fluyen por file_id de Telegram
 
     # ------------------------------------------------------------------
     # Calendario
