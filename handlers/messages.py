@@ -353,11 +353,15 @@ class MessageHandlers:
             extra_data=extracted_date,
         )
 
-        # Obtener lista de validadores
+        # Obtener lista de validadores (excluir al remitente)
         validator_ids = self._payment_service.get_validator_ids()
 
-        # Enviar a cada validador
+        user_id_str = str(user_id)
         for validator_id in validator_ids:
+            if validator_id == user_id_str:
+                logger.warning(f"Validador {validator_id} es el propio remitente, saltando auto-validación")
+                continue
+
             try:
                 await context.bot.send_photo(
                     chat_id=int(validator_id),

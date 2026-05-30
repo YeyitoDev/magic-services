@@ -566,6 +566,12 @@ class CallbackHandlers:
 
         # Obtener file_id del mensaje de foto (sin archivo local)
 
+        # Prevenir auto-validación del propio pago
+        if validator_id == target_user_id:
+            await query.answer("No puedes validar tu propio pago.", show_alert=True)
+            logger.warning(f"Auto-validación bloqueada: validator={validator_id} intentó validar su propio pago")
+            return
+
         logger.info(
             f"Validación: action={action}, validator={validator_id}, "
             f"target={target_user_id}, monto={monto}, source={source}"
