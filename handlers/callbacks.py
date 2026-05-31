@@ -561,8 +561,17 @@ class CallbackHandlers:
         action = data[1] if len(data) > 1 else ""
         target_user_id = int(data[2]) if len(data) > 2 else 0
         monto = float(data[3]) if len(data) > 3 else 0.0
-        extra = data[4] if len(data) > 4 else ""
-        source = data[5] if len(data) > 5 else "telegram"
+
+        # El 5to segmento (data[4]) puede ser el marcador de canal "wsp"
+        # o la fecha extraída (ddmmyyyy). Distinguir ambos casos para no
+        # perder la detección del canal WhatsApp.
+        raw_extra = data[4] if len(data) > 4 else ""
+        if raw_extra == "wsp":
+            source = "wsp"
+            extra = ""
+        else:
+            extra = raw_extra
+            source = data[5] if len(data) > 5 else "telegram"
 
         # Obtener file_id del mensaje de foto (sin archivo local)
 
@@ -917,7 +926,18 @@ class CallbackHandlers:
                 logger.error(f"Error al crear invite link VIP: {e}")
                 return "https://t.me/+VllSzEZ2smk2MTk5"  # Link por defecto
         else:
-            # Stake: obtener link del grupo desde Google Sheets
+            # Stake: obtener el ID del grupo desde Google Sheets y exportar
+            # el enlace real de invitación (no devolver el chat_id crudo).
             if self.sheets_service:
-                return self.sheets_service.get_service_group_id(tipo_servicio)
+                chat_id = self.sheets_service.get_service_group_id(tipo_servicio)
+                if chat_id:
+                    try:
+                        return await context.bot.export_chat_invite_link(
+                            chat_id=int(chat_id)
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Error al exportar link de invitación para "
+                            f"{tipo_servicio}: {e}"
+                        )
             return None
