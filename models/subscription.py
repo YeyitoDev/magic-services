@@ -42,7 +42,11 @@ class Subscription(BaseModel):
 
     __tablename__ = "subscriptions"
 
-    subscription_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    subscription_id = Column(
+        BigInteger().with_variant(Integer(), "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     user_telegram_id = Column(
         BigInteger, ForeignKey("users.telegram_id"), nullable=False
     )

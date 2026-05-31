@@ -75,20 +75,19 @@ def db_session(engine, tables) -> Generator[Session, None, None]:
 
     Scope: function - se ejecuta para cada test individual.
     """
-    test_session_factory = sessionmaker(bind=engine)
-    session = test_session_factory()
+    # SQLite :memory: comparte una única conexión (SingletonThreadPool), por
+    # lo que los commit() de servicios/repositorios persisten. Para aislar
+    # cada test, se reinicia el esquema (drop + create) al iniciar.
+    from models.base import Base
 
-    # Iniciar una transacción que se hará rollback al final
-    connection = engine.connect()
-    transaction = connection.begin()
-    session.begin_nested()
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
-    yield session
-
-    # Rollback automático: los datos no se persisten entre tests
-    session.close()
-    transaction.rollback()
-    connection.close()
+    session = Session(bind=engine)
+    try:
+        yield session
+    finally:
+        session.close()
 
 
 # ---------------------------------------------------------------------------
