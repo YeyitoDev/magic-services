@@ -30,6 +30,10 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# IDs de servicio (consistentes con la tabla services)
+STAKE_SERVICE_ID = 1
+VIP_SERVICE_ID = 2
+
 
 # ---------------------------------------------------------------------------
 # Value Objects
@@ -149,6 +153,25 @@ class PaymentService:
             )
             return True
 
+    def _resolve_service_id(self, amount: float) -> int | None:
+        """
+        Resuelve el ID de servicio correspondiente a un monto vía catalogo.
+
+        Returns:
+            service_id (1=Stake, 2=Grupo VIP) o None si no se puede resolver
+            (sin PricingService o monto no definido).
+        """
+        if self._pricing_service is None:
+            return None
+        try:
+            plan = self._pricing_service.match_price(amount)
+            return plan.service_id if plan else None
+        except Exception as e:
+            logger.warning(
+                f"No se pudo resolver el servicio para el monto S/ {amount:.2f}: {e}"
+            )
+            return None
+
     # ------------------------------------------------------------------
     # Validación de pago
     # ------------------------------------------------------------------
@@ -207,16 +230,27 @@ class PaymentService:
                 errors=["undefined_price"],
             )
 
-        # Validación 4: Verificar duplicados
+        # Validación 4: Reglas de frecuencia de compra
+        #   - Stake: máximo 1 por día.
+        #   - VIP: ilimitado (cada compra renueva/extiende la suscripción).
         if self.check_duplicate_payment(telegram_id, amount):
-            return ValidationResult(
-                success=False,
-                message=(
+            if self._resolve_service_id(amount) == STAKE_SERVICE_ID:
+                message = (
+                    "Solo se permite comprar 1 Stake por día. Este usuario ya "
+                    "registró una compra de Stake en las últimas 24 horas."
+                )
+                errors = ["stake_daily_limit"]
+            else:
+                message = (
                     f"Ya existe una compra registrada para el usuario {telegram_id} "
                     f"con monto S/ {amount:.2f} en las últimas 24 horas."
-                ),
+                )
+                errors = ["duplicate_payment"]
+            return ValidationResult(
+                success=False,
+                message=message,
                 is_duplicate=True,
-                errors=["duplicate_payment"],
+                errors=errors,
             )
 
         # Validación 4: Procesar la compra
@@ -276,8 +310,31 @@ class PaymentService:
             hours: Ventana de tiempo en horas (default: 24).
 
         Returns:
-            True si existe un duplicado, False si no.
+            True si existe un duplicado/límite alcanzado, False si no.
         """
+        service_id = self._resolve_service_id(amount)
+
+        # VIP: ilimitado. Cada compra renueva/extiende la suscripción,
+        # por lo que nunca se considera duplicado.
+        if service_id == VIP_SERVICE_ID:
+            return False
+
+        # Stake: máximo 1 por día (por service_id, sin importar el monto).
+        if service_id == STAKE_SERVICE_ID:
+            purchases = self._purchase_repo.get_recent_purchases_for_service(
+                user_id=telegram_id,
+                service_id=STAKE_SERVICE_ID,
+                hours=hours,
+            )
+            if purchases:
+                logger.info(
+                    f"Límite diario de Stake alcanzado: user={telegram_id}, "
+                    f"compras_encontradas={len(purchases)}"
+                )
+                return True
+            return False
+
+        # Sin catálogo / servicio desconocido: fallback legacy por monto exacto.
         purchases = self._purchase_repo.get_recent_purchases(
             user_id=telegram_id,
             amount=amount,
@@ -309,11 +366,22 @@ class PaymentService:
         Returns:
             Diccionario con info de la compra duplicada, o None si no existe.
         """
-        purchases = self._purchase_repo.get_recent_purchases(
-            user_id=telegram_id,
-            amount=amount,
-            hours=24,
-        )
+        service_id = self._resolve_service_id(amount)
+
+        # Para Stake usamos la búsqueda por servicio (consistente con el
+        # límite diario); en otros casos, por monto exacto.
+        if service_id == STAKE_SERVICE_ID:
+            purchases = self._purchase_repo.get_recent_purchases_for_service(
+                user_id=telegram_id,
+                service_id=STAKE_SERVICE_ID,
+                hours=24,
+            )
+        else:
+            purchases = self._purchase_repo.get_recent_purchases(
+                user_id=telegram_id,
+                amount=amount,
+                hours=24,
+            )
         if not purchases:
             return None
 

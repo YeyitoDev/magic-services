@@ -107,6 +107,39 @@ class PurchaseRepository(BaseRepository):
             .all()
         )
 
+    def get_recent_purchases_for_service(
+        self,
+        user_id: int,
+        service_id: int,
+        hours: int = 24,
+    ) -> list[Purchase]:
+        """
+        Busca compras recientes de un usuario para un servicio específico.
+
+        A diferencia de `get_recent_purchases` (que filtra por monto exacto),
+        esta consulta filtra por `service_id`, independientemente del monto.
+        Se usa para aplicar el límite de 1 compra de Stake por día.
+
+        Args:
+            user_id: ID de Telegram del usuario.
+            service_id: ID del servicio a buscar (1=Stake, 2=Grupo VIP).
+            hours: Ventana de tiempo hacia atrás en horas (default 24).
+
+        Returns:
+            Lista de compras del servicio en la ventana (vacía si no hay).
+        """
+        cutoff = get_lima_time() - timedelta(hours=hours)
+        return (
+            self._session.query(Purchase)
+            .filter(
+                Purchase.user_telegram_id == user_id,
+                Purchase.service_id == service_id,
+                Purchase.purchase_date >= cutoff,
+            )
+            .order_by(desc(Purchase.purchase_date))
+            .all()
+        )
+
     def has_recent_purchase(
         self,
         user_id: int,

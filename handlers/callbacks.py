@@ -596,10 +596,20 @@ class CallbackHandlers:
                 service_id = dup_info["service_id"]
                 service_name = "Stake" if service_id == 1 else "Grupo VIP"
 
+                if service_id == 1:
+                    encabezado = (
+                        "⚠️ Límite diario de Stake alcanzado "
+                        "(solo 1 Stake por día):"
+                    )
+                    edit_text = "⚠️ Límite: 1 Stake por día."
+                else:
+                    encabezado = "⚠️ Compra duplicada detectada:"
+                    edit_text = "⚠️ Compra duplicada."
+
                 await context.bot.send_message(
                     chat_id=validator_id,
                     text=(
-                        f"⚠️ Compra duplicada detectada:\n"
+                        f"{encabezado}\n"
                         f"Usuario: {target_user_id}\n"
                         f"Servicio: {service_name}\n"
                         f"Fecha: {fecha_compra}\n"
@@ -607,7 +617,7 @@ class CallbackHandlers:
                     ),
                     reply_to_message_id=message_id,
                 )
-                await self._safe_edit_message(query, text="⚠️ Compra duplicada.")
+                await self._safe_edit_message(query, text=edit_text)
                 return
 
         if action == "valid":
