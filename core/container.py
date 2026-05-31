@@ -239,6 +239,7 @@ class Container:
                 self.resolve("purchase_repository"),
                 self.resolve("subscription_service"),
                 self.resolve("user_repository"),
+                self.resolve("pricing_service"),
             ),
         )
         self.register_factory(

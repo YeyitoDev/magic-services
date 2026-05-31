@@ -625,13 +625,10 @@ class CallbackHandlers:
 
     async def _process_valid_payment(self, update, context, query, user_id, monto, source, extra):
         """Procesa un pago validado exitosamente."""
-        await self._safe_edit_message(query, text="✅ ¡Venta validada con éxito!")
+        message_id = query.message.message_id if query.message else None
 
-        # Actualizar WSP si corresponde
-        if source == "wsp" and self.sheets_service:
-            self.sheets_service.update_wsp_payment_review_status(telegram_id=user_id)
-
-        # Registrar la compra
+        # Registrar la compra. validate_payment verifica que el monto
+        # corresponda a un precio definido y que no sea duplicado.
         result = self.payment_service.validate_payment(
             telegram_id=user_id,
             amount=monto,
@@ -640,11 +637,37 @@ class CallbackHandlers:
         )
 
         if not result.success:
+            # Si el fallo es porque el monto no corresponde a un precio
+            # definido, insistir al validador para que ingrese el correcto
+            # (no se registra la venta).
+            invalid_amount_errors = {
+                "undefined_price",
+                "invalid_amount",
+                "invalid_vip_amount",
+            }
+            if any(e in invalid_amount_errors for e in (result.errors or [])):
+                logger.info(
+                    f"Monto S/ {monto:.2f} no corresponde a un precio definido; "
+                    f"se solicita corrección al validador {query.from_user.id}."
+                )
+                await self._process_incorrect_amount(
+                    update, context, query, user_id, monto, source, message_id
+                )
+                return
+
+            await self._safe_edit_message(query, text="❌ No se pudo registrar la venta.")
             await context.bot.send_message(
                 chat_id=query.from_user.id,
                 text=f"❌ Error al registrar compra: {result.message}",
             )
             return
+
+        # Registro exitoso: ahora sí marcar la venta como validada.
+        await self._safe_edit_message(query, text="✅ ¡Venta validada con éxito!")
+
+        # Actualizar WSP si corresponde
+        if source == "wsp" and self.sheets_service:
+            self.sheets_service.update_wsp_payment_review_status(telegram_id=user_id)
 
         # Determinar tipo de servicio
         tipo_servicio = (

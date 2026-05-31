@@ -102,7 +102,7 @@ class PaymentService:
         user_repo: UserRepository para búsqueda de usuarios.
     """
 
-    def __init__(self, purchase_repo, subscription_service, user_repo):
+    def __init__(self, purchase_repo, subscription_service, user_repo, pricing_service=None):
         """
         Inicializa el servicio con sus dependencias.
 
@@ -110,10 +110,44 @@ class PaymentService:
             purchase_repo: Repositorio de compras.
             subscription_service: Servicio de suscripciones/compra.
             user_repo: Repositorio de usuarios.
+            pricing_service: Servicio de precios dinámico (opcional). Si se
+                provee, se usa para validar que el monto corresponda a un
+                precio definido en el catálogo.
         """
         self._purchase_repo = purchase_repo
         self._subscription_service = subscription_service
         self._user_repo = user_repo
+        self._pricing_service = pricing_service
+
+    # ------------------------------------------------------------------
+    # Validación de monto contra el catálogo de precios
+    # ------------------------------------------------------------------
+
+    def is_defined_price(self, amount: float) -> bool:
+        """
+        Indica si el monto corresponde a un precio definido en el catálogo.
+
+        Si no hay PricingService configurado, no se puede restringir y se
+        asume válido (comportamiento legacy). Ante un error del catálogo,
+        también se asume válido (fail-safe) para no bloquear ventas legítimas.
+
+        Args:
+            amount: Monto a verificar.
+
+        Returns:
+            True si el monto está definido (o no se puede validar), False si
+            el catálogo existe y el monto no coincide con ningún precio.
+        """
+        if self._pricing_service is None:
+            return True
+        try:
+            return self._pricing_service.match_price(amount) is not None
+        except Exception as e:
+            logger.warning(
+                f"No se pudo validar el monto S/ {amount:.2f} contra el "
+                f"catálogo de precios: {e}"
+            )
+            return True
 
     # ------------------------------------------------------------------
     # Validación de pago
@@ -162,7 +196,18 @@ class PaymentService:
                 errors=["user_not_found"],
             )
 
-        # Validación 3: Verificar duplicados
+        # Validación 3: El monto debe corresponder a un precio definido
+        if not self.is_defined_price(amount):
+            return ValidationResult(
+                success=False,
+                message=(
+                    f"El monto S/ {amount:.2f} no corresponde a ningún precio "
+                    f"definido. Ingrese el monto correcto."
+                ),
+                errors=["undefined_price"],
+            )
+
+        # Validación 4: Verificar duplicados
         if self.check_duplicate_payment(telegram_id, amount):
             return ValidationResult(
                 success=False,

@@ -334,6 +334,21 @@ class CommandHandlers:
                     os.remove(image_path)
                     logger.info(f"Imagen eliminada: {image_path}")
 
+            elif "undefined_price" in (result.errors or []):
+                # El monto no corresponde a un precio definido: insistir al
+                # validador para que reingrese el monto correcto.
+                await context.bot.send_message(
+                    chat_id=business_user_id,
+                    text=(
+                        f"⚠️ El monto S/ {monto_correcto:.2f} no corresponde a "
+                        f"ningún precio definido.\n\n"
+                        f"Por favor, ingrese nuevamente el monto correcto:\n"
+                        f"<code>/vm {user_id} {message_id} [monto_correcto] [fecha]</code>"
+                    ),
+                    reply_to_message_id=int(message_id) if message_id.isdigit() else None,
+                    parse_mode="HTML",
+                )
+
             else:
                 # Notificar error al validador
                 await context.bot.send_message(
