@@ -40,7 +40,12 @@ from models.service import ServicePrice
 
 logger = logging.getLogger(__name__)
 
-CACHE_FILE = "pricing_cache.json"
+# Ruta absoluta anclada a la raíz del proyecto (v2_refactor/), independiente
+# del directorio de trabajo desde el que se ejecute el bot.
+CACHE_FILE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "pricing_cache.json",
+)
 CACHE_TTL_SECONDS = 86400  # 24 horas (1 día)
 
 
@@ -202,6 +207,25 @@ class PricingService:
             if abs(effective - amount) <= effective * 0.05:
                 return p
 
+        return None
+
+    def match_price_exact(self, amount: float) -> ServicePrice | None:
+        """
+        Encuentra el plan cuyo precio coincide EXACTAMENTE con el monto.
+
+        A diferencia de `match_price`, no aplica tolerancia: el monto debe
+        ser igual al precio o al precio efectivo (price - discount). Se usa
+        para validar que un pago corresponde a un precio definido.
+
+        Args:
+            amount: Monto pagado por el usuario.
+
+        Returns:
+            ServicePrice que coincide exactamente, o None.
+        """
+        for p in self.get_all_prices():
+            if p.price == amount or (p.price - p.discount) == amount:
+                return p
         return None
 
     def get_service_type(self, amount: float) -> str | None:

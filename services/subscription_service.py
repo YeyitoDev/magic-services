@@ -191,7 +191,10 @@ class SubscriptionService:
             duration_days = plan["duration_days"]
             is_subscription = True
 
-        # --- Paso 4: Registrar la compra ---
+        # --- Pasos 4 y 5: Registrar compra y suscripción de forma ATÓMICA ---
+        # La compra y la suscripción comparten la misma sesión y se confirman
+        # en un único commit. Si la suscripción falla, se revierte también la
+        # compra (no quedan compras "huérfanas" sin suscripción).
         try:
             self._purchase_repo.create_purchase(
                 user_telegram_id=telegram_id,
@@ -199,57 +202,55 @@ class SubscriptionService:
                 price=price,
                 from_channel=from_channel,
                 purchase_date=purchase_dt,
-            )
-            logger.info(
-                f"Compra registrada: user={telegram_id}, "
-                f"service={service_type}, price={price}, "
-                f"channel={from_channel}"
-            )
-        except Exception as e:
-            logger.error(f"Error al registrar compra para user={telegram_id}: {e}")
-            return PurchaseResult(
-                success=False,
-                message=f"Error al registrar la compra: {str(e)}",
-                errors=["purchase_creation_failed", str(e)],
+                commit=False,
             )
 
-        # --- Paso 5: Gestionar suscripción (solo para Grupo VIP) ---
-        if is_subscription:
-            try:
+            if is_subscription:
                 subscription = self._create_or_extend_subscription(
                     telegram_id=telegram_id,
                     service_id=service_id,
                     purchase_date=purchase_dt,
                     duration_days=duration_days,
+                    commit=False,
                 )
                 end_date = subscription.end_date
+                was_created = (
+                    subscription.start_date
+                    == subscription.end_date - timedelta(days=duration_days)
+                )
                 message = (
-                    f"Suscripción {service_type} {'creada' if subscription.start_date == subscription.end_date - timedelta(days=duration_days) else 'extendida'}. "
+                    f"Suscripción {service_type} "
+                    f"{'creada' if was_created else 'extendida'}. "
                     f"Fecha de vencimiento: {end_date.strftime('%d/%m/%Y')}."
                 )
-                logger.info(
-                    f"Suscripción actualizada: user={telegram_id}, "
-                    f"end_date={end_date}, duration_days={duration_days}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Error al gestionar suscripción para user={telegram_id}: {e}"
-                )
-                # La compra ya está registrada; el error de suscripción es grave
-                # pero la compra es válida. Notificar para revisión manual.
-                return PurchaseResult(
-                    success=False,
-                    message=(
-                        f"Compra registrada pero hubo error al crear la suscripción: {str(e)}. "
-                        f"Contactar a soporte para revisión manual."
-                    ),
-                    service_type=service_type,
-                    service_id=service_id,
-                    errors=["subscription_creation_failed", str(e)],
-                )
-        else:
-            # Stake: pago único, sin suscripción
-            message = f"Registro exitoso para {service_type} (pago único)."
+            else:
+                # Stake: pago único, sin suscripción
+                message = f"Registro exitoso para {service_type} (pago único)."
+
+            # Commit único: confirma compra (+ suscripción) atómicamente.
+            self._purchase_repo.commit()
+            logger.info(
+                f"Compra procesada (atómica): user={telegram_id}, "
+                f"service={service_type}, price={price}, channel={from_channel}, "
+                f"end_date={end_date}"
+            )
+        except Exception as e:
+            # Revertir TODO: ni compra ni suscripción quedan registradas.
+            self._purchase_repo.rollback()
+            logger.error(
+                f"Error atómico al procesar compra para user={telegram_id}: {e}",
+                exc_info=True,
+            )
+            return PurchaseResult(
+                success=False,
+                message=(
+                    f"Error al procesar la compra: {str(e)}. "
+                    f"No se registró ningún cambio."
+                ),
+                service_type=service_type,
+                service_id=service_id,
+                errors=["purchase_transaction_failed", str(e)],
+            )
 
         return PurchaseResult(
             success=True,
@@ -354,6 +355,7 @@ class SubscriptionService:
         service_id: int,
         purchase_date: datetime,
         duration_days: int,
+        commit: bool = True,
     ):
         """
         Crea una nueva suscripción o extiende una existente.
@@ -383,17 +385,18 @@ class SubscriptionService:
 
         if subscription:
             # Extender suscripción existente desde su end_date actual
-            new_end_date = subscription.end_date + timedelta(days=duration_days)
             subscription = self._subscription_repo.extend_subscription(
                 subscription=subscription,
                 additional_days=duration_days,
+                commit=False,
             )
             # Asegurar que is_active esté a True al extender
             subscription.is_active = True
-            self._subscription_repo.commit()
+            if commit:
+                self._subscription_repo.commit()
             logger.info(
                 f"Suscripción extendida: user={telegram_id}, "
-                f"service_id={service_id}, nueva end_date={new_end_date}"
+                f"service_id={service_id}, nueva end_date={subscription.end_date}"
             )
         else:
             # Crear nueva suscripción
@@ -407,7 +410,8 @@ class SubscriptionService:
                 is_active=True,
             )
             self._subscription_repo.add(subscription)
-            self._subscription_repo.commit()
+            if commit:
+                self._subscription_repo.commit()
             logger.info(
                 f"Suscripción creada: user={telegram_id}, "
                 f"service_id={service_id}, end_date={subscription.end_date}"

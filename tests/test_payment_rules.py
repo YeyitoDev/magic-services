@@ -198,3 +198,59 @@ class TestPurchaseRepoByService:
         )
         assert len(stake_recent) == 1
         assert vip_recent == []
+
+
+# ---------------------------------------------------------------------------
+# Regla: validación de precio ESTRICTA (sin tolerancia ±5%)
+# ---------------------------------------------------------------------------
+
+class TestStrictPriceValidation:
+    def test_near_but_inexact_amount_rejected(self, payment_service_dyn, buyer):
+        # VIP 1 mes: price=100, discount=10 → efectivo 90.
+        # 93 caía dentro del ±5% antiguo (85.5–94.5) pero NO es exacto.
+        assert payment_service_dyn.is_defined_price(93.0) is False
+        result = payment_service_dyn.validate_payment(
+            telegram_id=buyer.telegram_id, amount=93.0
+        )
+        assert result.success is False
+        assert "undefined_price" in result.errors
+
+    def test_effective_price_accepted(self, payment_service_dyn, buyer):
+        # El precio efectivo (price - discount = 90) sí es válido.
+        assert payment_service_dyn.is_defined_price(90.0) is True
+        result = payment_service_dyn.validate_payment(
+            telegram_id=buyer.telegram_id, amount=90.0
+        )
+        assert result.success is True
+        assert result.service_type == "grupo_vip"
+
+
+# ---------------------------------------------------------------------------
+# Atomicidad: si falla la suscripción, NO debe quedar compra registrada
+# ---------------------------------------------------------------------------
+
+class TestAtomicPurchase:
+    def test_subscription_failure_rolls_back_purchase(
+        self, payment_service_dyn, buyer, purchase_repo, monkeypatch
+    ):
+        def _boom(*args, **kwargs):
+            raise RuntimeError("fallo simulado al crear suscripción")
+
+        monkeypatch.setattr(
+            payment_service_dyn._subscription_service,
+            "_create_or_extend_subscription",
+            _boom,
+        )
+
+        result = payment_service_dyn.validate_payment(
+            telegram_id=buyer.telegram_id, amount=100.0
+        )
+
+        assert result.success is False
+        assert "purchase_transaction_failed" in result.errors
+
+        # La compra NO debe haber quedado registrada (rollback atómico).
+        vip_purchases = purchase_repo.get_recent_purchases_for_service(
+            buyer.telegram_id, service_id=2, hours=24
+        )
+        assert vip_purchases == []

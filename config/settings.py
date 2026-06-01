@@ -45,7 +45,7 @@ class Settings:
     DEBUG: bool = os.getenv("DEBUG", "true").lower() == "true"
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "MagoChatbot")
-    PROJECT_VERSION: str = os.getenv("PROJECT_VERSION", "2.3.1")
+    PROJECT_VERSION: str = os.getenv("PROJECT_VERSION", "2.3.2")
 
     # ============================================================
     # TELEGRAM
