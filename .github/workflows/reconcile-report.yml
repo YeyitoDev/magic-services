@@ -1,0 +1,54 @@
+name: "🔎 Reporte de Reconciliación (Grupo ↔ BD)"
+
+# Solo manual y de SOLO LECTURA: obtiene los miembros reales del grupo vía
+# Telethon y los cruza con la BD. No expulsa ni borra nada.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Ambiente"
+        required: true
+        default: "production"
+        type: choice
+        options: ["testing", "production"]
+
+jobs:
+  reconcile-report:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+
+      - name: Create .env
+        run: |
+          cat > .env << EOF
+          ENVIRONMENT=${{ github.event.inputs.environment || 'production' }}
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_VIP_GROUP_ID=${{ secrets.TELEGRAM_VIP_GROUP_ID }}
+          DB_ENGINE=mysql+pymysql
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_PORT=3306
+          TIMEZONE=America/Lima
+          TELETHON_API_ID=${{ secrets.TELETHON_API_ID }}
+          TELETHON_API_HASH=${{ secrets.TELETHON_API_HASH }}
+          TELETHON_SESSION=${{ secrets.TELETHON_SESSION }}
+          EOF
+
+      - name: Run reconciliation report
+        run: python -m jobs.reconcile_report
+
+      - name: Save report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reconcile-report-${{ github.run_id }}
+          path: output/
+          retention-days: 7

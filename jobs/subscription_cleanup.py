@@ -534,9 +534,11 @@ class SubscriptionCleanupJob:
         Obtiene los miembros actuales del grupo VIP usando Telethon.
 
         Returns:
-            DataFrame con columnas: user_telegram_id, username, first_name.
+            DataFrame con columnas: user_telegram_id, username, first_name,
+            is_bot.
         """
         try:
+            from telethon.sessions import StringSession
             from telethon.sync import TelegramClient
             from telethon.tl.functions.channels import GetParticipantsRequest
             from telethon.tl.types import ChannelParticipantsSearch
@@ -551,9 +553,16 @@ class SubscriptionCleanupJob:
                 )
                 return pd.DataFrame()
 
+            # Prefer a StringSession from env (works unattended in CI); fall
+            # back to the local file session for interactive/local runs.
+            session_str = os.getenv("TELETHON_SESSION", "")
+            session: Any = (
+                StringSession(session_str) if session_str else "my_user_session"
+            )
+
             members_list = []
 
-            async with TelegramClient('my_user_session', api_id, api_hash) as client:
+            async with TelegramClient(session, api_id, api_hash) as client:
                 if not await client.is_user_authorized():
                     logger.error(
                         "Cliente Telethon no autorizado. Ejecuta la autenticación manual."
@@ -581,6 +590,7 @@ class SubscriptionCleanupJob:
                             "user_telegram_id": user.id,
                             "username": getattr(user, 'username', ''),
                             "first_name": getattr(user, 'first_name', ''),
+                            "is_bot": bool(getattr(user, 'bot', False)),
                         })
 
                     offset += len(participants.users)
