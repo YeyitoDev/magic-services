@@ -111,10 +111,15 @@ class SubscriptionCleanupJob:
         from models.user import User
 
         session = MakeSession()
-        # Keep connection alive during long operations
+        # Keep connection alive during long operations (MySQL-specific; ignore
+        # if the backend doesn't support SET SESSION so cleanup never crashes).
         from sqlalchemy import text
-        session.execute(text("SET SESSION wait_timeout=28800"))
-        session.execute(text("SET SESSION interactive_timeout=28800"))
+        try:
+            session.execute(text("SET SESSION wait_timeout=28800"))
+            session.execute(text("SET SESSION interactive_timeout=28800"))
+        except Exception as e:  # noqa: BLE001
+            logger.debug(f"SET SESSION no soportado por el backend: {e}")
+            session.rollback()
         today = date.today()
 
         stats = {
@@ -171,6 +176,17 @@ class SubscriptionCleanupJob:
             expired_subs = [s for s in expired_subs if s.user_telegram_id not in admin_ids]
             print(f"🛡️ Protegidos {len(admin_ids)} admins. Expirados restantes: {len(expired_subs)}")
 
+            # Snapshot expired-user data for the report BEFORE any deletion, so
+            # the report is unaffected by objects detached/deleted in the loop.
+            expired_snapshot = [
+                {
+                    "user_id": s.user_telegram_id,
+                    "end_date": str(s.end_date),
+                    "name": all_users.get(s.user_telegram_id, User()).telegram_name,
+                }
+                for s in expired_subs
+            ]
+
             # ---- PASO 1: REPAIR - Create missing subscriptions for VIP purchasers ----
             from datetime import timedelta
 
@@ -221,7 +237,22 @@ class SubscriptionCleanupJob:
                 api = TelegramAPIService()
                 chat_id = int(self.vip_group_id)
 
-                for sub in expired_subs:
+                # Bound the work per run so the job finishes within the runner
+                # window. Oldest-expired subscriptions are processed first; any
+                # remainder is handled on the next scheduled run.
+                batch_limit = settings.CLEANUP_BATCH_LIMIT
+                expired_subs.sort(key=lambda s: s.end_date)
+                to_process = (
+                    expired_subs[:batch_limit] if batch_limit > 0 else expired_subs
+                )
+                pending = len(expired_subs) - len(to_process)
+                print(
+                    f"\n🚮 Procesando {len(to_process)} de {len(expired_subs)} "
+                    f"expirados (límite={batch_limit or '∞'}, pendientes={pending})"
+                )
+
+                processed = 0
+                for sub in to_process:
                     user_id = int(sub.user_telegram_id)
                     print(f"  ⋯ Procesando {user_id}...")
 
@@ -241,12 +272,15 @@ class SubscriptionCleanupJob:
                         print(f"  ✗ Error kick {user_id}: {e}")
 
                     try:
-                        # 2. Try to send re-subscription message (after unban, non-blocking)
+                        # 2. Try to send re-subscription message (after unban, non-blocking).
+                        # Bots cannot DM users who never started a chat, so 400s
+                        # are expected here; suppress the error logs to avoid spam.
                         if kicked:
                             api.send_message(
                                 chat_id=user_id,
                                 text="🔮 *Tu suscripción ha expirado*\\n\\nPara seguir disfrutando del Grupo VIP, renová tu suscripción enviando un mensaje a @magic_peru 📲",
-                                parse_mode="Markdown"
+                                parse_mode="Markdown",
+                                log_errors=False,
                             )
                             print(f"  ✓ Mensaje enviado a {user_id}")
                     except Exception:
@@ -259,9 +293,20 @@ class SubscriptionCleanupJob:
                     except Exception as e:
                         print(f"  ✗ Error BD {user_id}: {e}")
 
+                    # Commit incrementally so progress persists even if the run
+                    # is interrupted (e.g. runner shutdown) before completion.
+                    processed += 1
+                    if processed % 25 == 0:
+                        session.commit()
+                        print(f"  💾 Commit parcial ({processed} procesados)")
+
+                session.commit()
                 if stats["removed"] > 0:
-                    session.commit()
                     print(f"\n🚨 {stats['removed']} usuarios eliminados del grupo y BD")
+                if pending > 0:
+                    print(
+                        f"⏭️ Quedan {pending} expirados para la próxima ejecución"
+                    )
 
             # Save report
             import json
@@ -274,12 +319,7 @@ class SubscriptionCleanupJob:
                 "date": str(today),
                 "mode": mode,
                 "stats": stats,
-                "expired_users": [
-                    {"user_id": s.user_telegram_id,
-                     "end_date": str(s.end_date),
-                     "name": all_users.get(s.user_telegram_id, User()).telegram_name}
-                    for s in expired_subs
-                ]
+                "expired_users": expired_snapshot,
             }
 
             hora = datetime.now().strftime("%H%M%S")

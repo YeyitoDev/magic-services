@@ -87,6 +87,7 @@ class TelegramAPIService:
         data: dict[str, Any] | None = None,
         files: dict[str, Any] | None = None,
         timeout: int | None = None,
+        log_errors: bool = True,
     ) -> dict[str, Any]:
         """
         Realiza una petición HTTP a la API de Telegram.
@@ -118,21 +119,31 @@ class TelegramAPIService:
                 )
             response.raise_for_status()
         except requests.exceptions.Timeout:
-            logger.error(f"Timeout llamando a {endpoint} (>{timeout}s)")
+            logger.log(
+                logging.ERROR if log_errors else logging.DEBUG,
+                f"Timeout llamando a {endpoint} (>{timeout}s)",
+            )
             raise TelegramAPIError(f"Timeout en {endpoint}: >{timeout}s")
         except requests.exceptions.ConnectionError as e:
-            logger.error(f"Error de conexión en {endpoint}: {e}")
+            logger.log(
+                logging.ERROR if log_errors else logging.DEBUG,
+                f"Error de conexión en {endpoint}: {e}",
+            )
             raise TelegramAPIError(f"Error de conexión en {endpoint}: {e}")
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error HTTP en {endpoint}: {e}")
+            logger.log(
+                logging.ERROR if log_errors else logging.DEBUG,
+                f"Error HTTP en {endpoint}: {e}",
+            )
             raise TelegramAPIError(f"Error HTTP en {endpoint}: {e}")
 
         result = response.json()
 
         if not result.get("ok", False):
             error_desc = result.get("description", "Error desconocido")
-            logger.error(
-                f"Telegram API error en {endpoint}: {error_desc}"
+            logger.log(
+                logging.ERROR if log_errors else logging.DEBUG,
+                f"Telegram API error en {endpoint}: {error_desc}",
             )
             raise TelegramAPIError(f"Telegram API error: {error_desc}")
 
@@ -149,6 +160,7 @@ class TelegramAPIService:
         parse_mode: str = "HTML",
         reply_markup: Any | None = None,
         disable_notification: bool = False,
+        log_errors: bool = True,
     ) -> dict[str, Any]:
         """
         Envía un mensaje de texto a un chat.
@@ -180,7 +192,9 @@ class TelegramAPIService:
             else:
                 data["reply_markup"] = reply_markup
 
-        result = self._request("POST", "sendMessage", data=data)
+        result = self._request(
+            "POST", "sendMessage", data=data, log_errors=log_errors
+        )
         logger.debug(f"Mensaje enviado a {chat_id}: {text[:50]}...")
         return result
 
