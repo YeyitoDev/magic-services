@@ -118,11 +118,19 @@ def _build_excel(
     expired_not_in_group: list[int],
     db_info: dict[int, _UserDbInfo],
 ) -> None:
-    """Genera un archivo Excel con hojas para cada categoría."""
+    """Genera un único Excel con autofiltro y columna 'tipo' filtrable."""
 
-    def _row(user_id: int, username: str = "", first_name: str = "") -> dict[str, Any]:
+    def _row(
+        user_id: int,
+        tipo: str,
+        accion: str,
+        username: str = "",
+        first_name: str = "",
+    ) -> dict[str, Any]:
         info = db_info.get(user_id, _UserDbInfo())
         return {
+            "tipo": tipo,
+            "accion_recomendada": accion,
             "user_id": user_id,
             "username": f"@{username}" if username else "",
             "first_name": first_name,
@@ -133,66 +141,66 @@ def _build_excel(
             "last_purchase_price": info.last_purchase_price or "",
             "last_purchase_channel": info.last_purchase_channel,
             "total_purchases": info.total_purchases,
-            "estado": "",
-            "notas_revision": "",
         }
 
-    # ---- Hoja 1: Sin registro en BD (los 56 revisar) ----
-    df_unreg = pd.DataFrame(
-        [_row(m["user_id"], m.get("username", ""), m.get("first_name", "")) for m in unregistered_in_group]
-    )
-    df_unreg["estado"] = "SIN_REGISTRO"
-    df_unreg["notas_revision"] = "Revisar boleta de compra manualmente"
+    rows: list[dict[str, Any]] = []
 
-    # ---- Hoja 2: Vencidos en grupo (kick candidatos) ----
-    df_exp = pd.DataFrame(
-        [
-            {
-                **_row(m["user_id"], m.get("username", ""), m.get("first_name", "")),
-                "estado": "VENCIDO",
-                "notas_revision": "Expulsar del grupo",
-            }
-            for m in expired_in_group
-        ]
-    )
+    # Orden: problemáticos primero, OK al final
+    for m in unregistered_in_group:
+        rows.append(
+            _row(
+                m["user_id"],
+                "SIN_REGISTRO",
+                "Revisar boleta de compra manualmente",
+                m.get("username", ""),
+                m.get("first_name", ""),
+            )
+        )
+    for m in expired_in_group:
+        rows.append(
+            _row(
+                m["user_id"],
+                "VENCIDO_EN_GRUPO",
+                "Expulsar del grupo",
+                m.get("username", ""),
+                m.get("first_name", ""),
+            )
+        )
+    for uid in active_not_in_group:
+        rows.append(_row(uid, "ACTIVO_FUERA_GRUPO", "Re-invitar al grupo"))
+    for uid in expired_not_in_group:
+        rows.append(_row(uid, "VENCIDO_FUERA_GRUPO", "Borrar fila de BD"))
+    for m in active_in_group:
+        rows.append(
+            _row(
+                m["user_id"],
+                "OK",
+                "",
+                m.get("username", ""),
+                m.get("first_name", ""),
+            )
+        )
 
-    # ---- Hoja 3: Activos fuera del grupo (re-invitar) ----
-    df_active_out = pd.DataFrame(
-        [
-            {
-                **_row(uid),
-                "estado": "ACTIVO_FUERA_GRUPO",
-                "notas_revision": "Re-invitar al grupo",
-            }
-            for uid in active_not_in_group
-        ]
-    )
-
-    # ---- Hoja 4: Vencidos fuera del grupo (BD obsoleta) ----
-    df_expired_out = pd.DataFrame(
-        [
-            {
-                **_row(uid),
-                "estado": "BD_OBSOLETA",
-                "notas_revision": "Borrar fila de BD",
-            }
-            for uid in expired_not_in_group
-        ]
-    )
-
-    # ---- Hoja 5: Activos en grupo (OK) ----
-    df_active = pd.DataFrame(
-        [_row(m["user_id"], m.get("username", ""), m.get("first_name", "")) for m in active_in_group]
-    )
-    df_active["estado"] = "OK"
-    df_active["notas_revision"] = ""
+    df = pd.DataFrame(rows)
 
     with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
-        df_unreg.to_excel(writer, sheet_name="Sin registro BD", index=False)
-        df_exp.to_excel(writer, sheet_name="Vencidos en grupo", index=False)
-        df_active_out.to_excel(writer, sheet_name="Activos fuera grupo", index=False)
-        df_expired_out.to_excel(writer, sheet_name="Vencidos fuera grupo", index=False)
-        df_active.to_excel(writer, sheet_name="Activos OK", index=False)
+        df.to_excel(writer, sheet_name="Todos", index=False)
+        ws = writer.sheets["Todos"]
+        # Activar autofiltro en todas las columnas con datos
+        if len(df) > 0:
+            ws.auto_filter.ref = ws.dimensions
+        # Ajustar anchos de columna básicos
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                except Exception:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            ws.column_dimensions[column].width = adjusted_width
 
     logger.info(f"Excel guardado: {output_path}")
 
