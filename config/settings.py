@@ -150,6 +150,10 @@ class Settings:
         "JOB_SUBSCRIPTION_CHECK_HOUR", "0"
     )
     JOB_CLEANUP_HOUR: str = os.getenv("JOB_CLEANUP_HOUR", "3")
+    # Máximo de usuarios expirados a procesar por ejecución del cleanup.
+    # Acota la duración del job para que termine dentro de la ventana del runner
+    # (0 = sin límite).
+    CLEANUP_BATCH_LIMIT: int = int(os.getenv("CLEANUP_BATCH_LIMIT", "150"))
     ENABLE_JOBS: bool = os.getenv("ENABLE_JOBS", "false").lower() == "true"
     TIMEZONE: str = os.getenv("TIMEZONE", "America/Lima")
 

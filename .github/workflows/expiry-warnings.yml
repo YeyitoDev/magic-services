@@ -45,31 +45,7 @@ jobs:
           EOF
 
       - name: Send expiry warnings
-        run: |
-          DAYS="${{ github.event.inputs.days || '3' }}"
-          python -c "
-          from core.database import SessionLocal
-          from models.subscription import Subscription
-          from datetime import date, timedelta
-
-          session = SessionLocal()
-          today = date.today()
-          deadline = today + timedelta(days=int($DAYS))
-
-          expiring = session.query(Subscription).filter(
-              Subscription.end_date >= today,
-              Subscription.end_date <= deadline,
-              Subscription.service_id == 2  # VIP only
-          ).all()
-
-          print(f'⚠️ {len(expiring)} suscripciones vencen en {int($DAYS)} días')
-
-          for sub in expiring[:50]:  # Max 50 per run to avoid spam
-              days_left = (sub.end_date - today).days
-              print(f'  Usuario {sub.user_telegram_id}: vence en {days_left} días ({sub.end_date})')
-
-          session.close()
-          "
+        run: python -m jobs.expiry_warnings --days "${{ github.event.inputs.days || '3' }}"
 
       - name: Save report
         if: always()

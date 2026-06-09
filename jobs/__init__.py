@@ -14,6 +14,7 @@ Uso:
     from jobs.promotion_batch import run_promotion_pipeline, run_reminder_job
 """
 
+from jobs.expiry_warnings import run_expiry_warnings
 from jobs.promotion_batch import run_all_jobs, run_promotion_pipeline, run_reminder_job
 from jobs.scheduler import JobScheduler
 from jobs.subscription_cleanup import SubscriptionCleanupJob
@@ -24,4 +25,5 @@ __all__ = [
     "run_promotion_pipeline",
     "run_reminder_job",
     "run_all_jobs",
+    "run_expiry_warnings",
 ]
