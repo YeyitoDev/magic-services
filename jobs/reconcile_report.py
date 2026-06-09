@@ -167,6 +167,8 @@ def _build_excel(
                 m.get("first_name", ""),
             )
         )
+    for uid in active_not_in_group:
+        rows.append(_row(uid, "ACTIVO_FUERA_GRUPO", "Re-invitar al grupo"))
     for m in active_in_group:
         rows.append(
             _row(
