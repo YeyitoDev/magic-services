@@ -145,6 +145,7 @@ def _build_excel(
 
     rows: list[dict[str, Any]] = []
 
+    # Solo miembros ACTUALMENTE en el grupo (no saturar con BD obsoleta)
     # Orden: problemáticos primero, OK al final
     for m in unregistered_in_group:
         rows.append(
@@ -166,10 +167,6 @@ def _build_excel(
                 m.get("first_name", ""),
             )
         )
-    for uid in active_not_in_group:
-        rows.append(_row(uid, "ACTIVO_FUERA_GRUPO", "Re-invitar al grupo"))
-    for uid in expired_not_in_group:
-        rows.append(_row(uid, "VENCIDO_FUERA_GRUPO", "Borrar fila de BD"))
     for m in active_in_group:
         rows.append(
             _row(
