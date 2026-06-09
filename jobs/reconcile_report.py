@@ -27,7 +27,11 @@ import asyncio
 import json
 import os
 import sys
+from dataclasses import dataclass
 from datetime import date, datetime
+from typing import Any
+
+import pandas as pd
 
 from utils.logger import setup_logger
 
@@ -40,25 +44,157 @@ logger = setup_logger(
 ADMIN_IDS = [1555885694, 6475885611]  # Sergio + Martin
 
 
-def _latest_end_dates() -> dict[int, date]:
-    """Devuelve {user_telegram_id: end_date más reciente} de todas las subs."""
+@dataclass(frozen=True)
+class _UserDbInfo:
+    """Datos enriquecidos de un usuario desde la BD."""
+
+    end_date: date | None = None
+    last_purchase_date: datetime | None = None
+    last_purchase_price: float | None = None
+    last_purchase_channel: str = ""
+    total_purchases: int = 0
+
+
+def _fetch_db_snapshot() -> dict[int, _UserDbInfo]:
+    """Obtiene snapshot de suscripciones + compras por usuario."""
     from core.database import SessionLocal
+    from models.purchase import Purchase
     from models.subscription import Subscription
 
     session = SessionLocal()
     try:
-        rows = session.query(
-            Subscription.user_telegram_id, Subscription.end_date
-        ).all()
+        subs = session.query(Subscription.user_telegram_id, Subscription.end_date).all()
+        purchases = (
+            session.query(
+                Purchase.user_telegram_id,
+                Purchase.purchase_date,
+                Purchase.price,
+                Purchase.from_channel,
+            )
+            .order_by(Purchase.purchase_date.desc())
+            .all()
+        )
     finally:
         session.close()
 
-    latest: dict[int, date] = {}
-    for user_id, end_date in rows:
+    info: dict[int, _UserDbInfo] = {}
+    for user_id, end_date in subs:
         uid = int(user_id)
-        if uid not in latest or end_date > latest[uid]:
-            latest[uid] = end_date
-    return latest
+        info[uid] = _UserDbInfo(end_date=end_date)
+
+    # Enriquecer con compras
+    purchase_counts: dict[int, int] = {}
+    for user_id, pdate, price, channel in purchases:
+        uid = int(user_id)
+        purchase_counts[uid] = purchase_counts.get(uid, 0) + 1
+        existing = info.get(uid)
+        if existing is None or existing.last_purchase_date is None:
+            info[uid] = _UserDbInfo(
+                end_date=existing.end_date if existing else None,
+                last_purchase_date=pdate,
+                last_purchase_price=price,
+                last_purchase_channel=channel or "",
+                total_purchases=purchase_counts[uid],
+            )
+        else:
+            # Solo actualizar contador si ya tenemos la última compra
+            info[uid] = _UserDbInfo(
+                end_date=existing.end_date,
+                last_purchase_date=existing.last_purchase_date,
+                last_purchase_price=existing.last_purchase_price,
+                last_purchase_channel=existing.last_purchase_channel,
+                total_purchases=purchase_counts[uid],
+            )
+
+    return info
+
+
+def _build_excel(
+    output_path: str,
+    active_in_group: list[dict],
+    expired_in_group: list[dict],
+    unregistered_in_group: list[dict],
+    active_not_in_group: list[int],
+    expired_not_in_group: list[int],
+    db_info: dict[int, _UserDbInfo],
+) -> None:
+    """Genera un archivo Excel con hojas para cada categoría."""
+
+    def _row(user_id: int, username: str = "", first_name: str = "") -> dict[str, Any]:
+        info = db_info.get(user_id, _UserDbInfo())
+        return {
+            "user_id": user_id,
+            "username": f"@{username}" if username else "",
+            "first_name": first_name,
+            "sub_end_date": info.end_date.isoformat() if info.end_date else "",
+            "last_purchase_date": (
+                info.last_purchase_date.isoformat() if info.last_purchase_date else ""
+            ),
+            "last_purchase_price": info.last_purchase_price or "",
+            "last_purchase_channel": info.last_purchase_channel,
+            "total_purchases": info.total_purchases,
+            "estado": "",
+            "notas_revision": "",
+        }
+
+    # ---- Hoja 1: Sin registro en BD (los 56 revisar) ----
+    df_unreg = pd.DataFrame(
+        [_row(m["user_id"], m.get("username", ""), m.get("first_name", "")) for m in unregistered_in_group]
+    )
+    df_unreg["estado"] = "SIN_REGISTRO"
+    df_unreg["notas_revision"] = "Revisar boleta de compra manualmente"
+
+    # ---- Hoja 2: Vencidos en grupo (kick candidatos) ----
+    df_exp = pd.DataFrame(
+        [
+            {
+                **_row(m["user_id"], m.get("username", ""), m.get("first_name", "")),
+                "estado": "VENCIDO",
+                "notas_revision": "Expulsar del grupo",
+            }
+            for m in expired_in_group
+        ]
+    )
+
+    # ---- Hoja 3: Activos fuera del grupo (re-invitar) ----
+    df_active_out = pd.DataFrame(
+        [
+            {
+                **_row(uid),
+                "estado": "ACTIVO_FUERA_GRUPO",
+                "notas_revision": "Re-invitar al grupo",
+            }
+            for uid in active_not_in_group
+        ]
+    )
+
+    # ---- Hoja 4: Vencidos fuera del grupo (BD obsoleta) ----
+    df_expired_out = pd.DataFrame(
+        [
+            {
+                **_row(uid),
+                "estado": "BD_OBSOLETA",
+                "notas_revision": "Borrar fila de BD",
+            }
+            for uid in expired_not_in_group
+        ]
+    )
+
+    # ---- Hoja 5: Activos en grupo (OK) ----
+    df_active = pd.DataFrame(
+        [_row(m["user_id"], m.get("username", ""), m.get("first_name", "")) for m in active_in_group]
+    )
+    df_active["estado"] = "OK"
+    df_active["notas_revision"] = ""
+
+    with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
+        df_unreg.to_excel(writer, sheet_name="Sin registro BD", index=False)
+        df_exp.to_excel(writer, sheet_name="Vencidos en grupo", index=False)
+        df_active_out.to_excel(writer, sheet_name="Activos fuera grupo", index=False)
+        df_expired_out.to_excel(writer, sheet_name="Vencidos fuera grupo", index=False)
+        df_active.to_excel(writer, sheet_name="Activos OK", index=False)
+
+    logger.info(f"Excel guardado: {output_path}")
 
 
 async def run_reconcile_report() -> dict:
@@ -72,6 +208,13 @@ async def run_reconcile_report() -> dict:
         subscription_service=None,
         user_service=None,
     )
+
+    # ---- Carga BD ----
+    logger.info("Cargando snapshot de BD (subs + compras)...")
+    db_info = _fetch_db_snapshot()
+    latest = {uid: info.end_date for uid, info in db_info.items() if info.end_date}
+    active_db = {uid for uid, ed in latest.items() if ed >= today}
+    expired_db = {uid for uid, ed in latest.items() if ed < today}
 
     # ---- Lado Telegram ----
     admins = await job._get_group_admins()
@@ -87,7 +230,7 @@ async def run_reconcile_report() -> dict:
 
     member_ids: set[int] = set()
     bots = 0
-    members_real: list[dict] = []  # miembros humanos no-admin
+    members_real: list[dict] = []
     for _, m in members_df.iterrows():
         uid = int(m["user_telegram_id"])
         member_ids.add(uid)
@@ -103,11 +246,6 @@ async def run_reconcile_report() -> dict:
                 "first_name": m.get("first_name", ""),
             }
         )
-
-    # ---- Lado BD ----
-    latest = _latest_end_dates()
-    active_db = {uid for uid, ed in latest.items() if ed >= today}
-    expired_db = {uid for uid, ed in latest.items() if ed < today}
 
     # ---- Cruce: lado grupo ----
     active_in_group, expired_in_group, unregistered_in_group = [], [], []
@@ -145,10 +283,12 @@ async def run_reconcile_report() -> dict:
 
     logger.info(f"Reconciliación: {json.dumps(stats, ensure_ascii=False)}")
 
-    # ---- Guardar reporte ----
+    # ---- Guardar reportes ----
     output_dir = os.path.join("output", today.strftime("%Y-%m-%d"))
     os.makedirs(output_dir, exist_ok=True)
     hora = datetime.now().strftime("%H%M%S")
+
+    # JSON legacy
     report = {
         **stats,
         "detalle": {
@@ -158,10 +298,22 @@ async def run_reconcile_report() -> dict:
             "vencidos_fuera_grupo": expired_not_in_group[:500],
         },
     }
-    report_path = os.path.join(output_dir, f"reconciliacion_{hora}.json")
-    with open(report_path, "w") as f:
+    json_path = os.path.join(output_dir, f"reconciliacion_{hora}.json")
+    with open(json_path, "w") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
-    logger.info(f"Reporte guardado: {report_path}")
+    logger.info(f"JSON guardado: {json_path}")
+
+    # Excel detallado para revisión manual
+    excel_path = os.path.join(output_dir, f"reconciliacion_{hora}.xlsx")
+    _build_excel(
+        excel_path,
+        active_in_group,
+        expired_in_group,
+        unregistered_in_group,
+        active_not_in_group,
+        expired_not_in_group,
+        db_info,
+    )
 
     # ---- Resumen a administradores ----
     g, b = stats["grupo"], stats["bd"]

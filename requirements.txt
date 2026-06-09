@@ -11,6 +11,7 @@ pymysql>=1.0.2
 
 # Data Processing
 pandas>=2.0.0
+openpyxl>=3.0.0
 pytz>=2023.3
 
 # HTTP / API
