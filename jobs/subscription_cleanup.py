@@ -543,19 +543,25 @@ class SubscriptionCleanupJob:
             from telethon.tl.functions.channels import GetParticipantsRequest
             from telethon.tl.types import ChannelParticipantsSearch
 
-            api_id = int(os.getenv("TELETHON_API_ID", "0"))
-            api_hash = os.getenv("TELETHON_API_HASH", "")
+            api_id_raw = (os.getenv("TELETHON_API_ID") or "").strip()
+            api_hash = (os.getenv("TELETHON_API_HASH") or "").strip()
 
-            if not api_id or not api_hash:
+            if not api_id_raw or not api_hash:
                 logger.error(
-                    "TELETHON_API_ID y TELETHON_API_HASH no configurados. "
+                    "TELETHON_API_ID y/o TELETHON_API_HASH vacíos o ausentes. "
                     "No se pueden obtener miembros de Telegram."
                 )
                 return pd.DataFrame()
 
+            try:
+                api_id = int(api_id_raw)
+            except ValueError:
+                logger.error(f"TELETHON_API_ID no es un número válido: {api_id_raw!r}")
+                return pd.DataFrame()
+
             # Prefer a StringSession from env (works unattended in CI); fall
             # back to the local file session for interactive/local runs.
-            session_str = os.getenv("TELETHON_SESSION", "")
+            session_str = (os.getenv("TELETHON_SESSION") or "").strip()
             session: Any = (
                 StringSession(session_str) if session_str else "my_user_session"
             )
