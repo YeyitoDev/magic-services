@@ -1,7 +1,6 @@
 name: "🔎 Reporte de Reconciliación (Grupo ↔ BD)"
 
-# Solo manual y de SOLO LECTURA: obtiene los miembros reales del grupo vía
-# Telethon y los cruza con la BD. No expulsa ni borra nada.
+# Solo manual. Modo reporte = solo lectura. Modo eliminar = expulsa sin registro + vencidos.
 on:
   workflow_dispatch:
     inputs:
@@ -11,6 +10,12 @@ on:
         default: "production"
         type: choice
         options: ["testing", "production"]
+      mode:
+        description: "Modo"
+        required: true
+        default: "reporte"
+        type: choice
+        options: ["reporte", "eliminar"]
 
 jobs:
   reconcile-report:
@@ -29,6 +34,7 @@ jobs:
           cat > .env << EOF
           ENVIRONMENT=${{ github.event.inputs.environment || 'production' }}
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_VALIDATOR_IDS=${{ secrets.TELEGRAM_VALIDATOR_IDS }}
           TELEGRAM_VIP_GROUP_ID=${{ secrets.TELEGRAM_VIP_GROUP_ID }}
           DB_ENGINE=mysql+pymysql
           DB_USER=${{ secrets.DB_USER }}
@@ -43,7 +49,27 @@ jobs:
           EOF
 
       - name: Run reconciliation report
+        if: github.event.inputs.mode == 'reporte'
         run: python -m jobs.reconcile_report
+
+      - name: Run cleanup (expulsar sin registro + vencidos)
+        if: github.event.inputs.mode == 'eliminar'
+        run: |
+          python -c "
+          import asyncio
+          from core.container import container
+          from services.telegram_api import TelegramAPIService
+          from jobs.subscription_cleanup import SubscriptionCleanupJob
+
+          container.initialize_defaults()
+          job = SubscriptionCleanupJob(
+              telegram_api=TelegramAPIService(),
+              subscription_service=container.resolve('subscription_service'),
+              user_service=container.resolve('user_service'),
+          )
+          result = asyncio.run(job.run(mode='eliminar', validate_special_clients=False))
+          print(result)
+          "
 
       - name: Save report
         if: always()
