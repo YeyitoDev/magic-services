@@ -126,6 +126,7 @@ def _build_excel(
         accion: str,
         username: str = "",
         first_name: str = "",
+        joined_date: str = "",
     ) -> dict[str, Any]:
         info = db_info.get(user_id, _UserDbInfo())
         return {
@@ -134,6 +135,7 @@ def _build_excel(
             "user_id": user_id,
             "username": f"@{username}" if username else "",
             "first_name": first_name,
+            "joined_date": joined_date,
             "sub_end_date": info.end_date.isoformat() if info.end_date else "",
             "last_purchase_date": (
                 info.last_purchase_date.isoformat() if info.last_purchase_date else ""
@@ -155,6 +157,7 @@ def _build_excel(
                 "Revisar boleta de compra manualmente",
                 m.get("username", ""),
                 m.get("first_name", ""),
+                m.get("joined_date", ""),
             )
         )
     for m in expired_in_group:
@@ -165,6 +168,7 @@ def _build_excel(
                 "Expulsar del grupo",
                 m.get("username", ""),
                 m.get("first_name", ""),
+                m.get("joined_date", ""),
             )
         )
     for uid in active_not_in_group:
@@ -177,6 +181,7 @@ def _build_excel(
                 "",
                 m.get("username", ""),
                 m.get("first_name", ""),
+                m.get("joined_date", ""),
             )
         )
 
@@ -251,6 +256,7 @@ async def run_reconcile_report() -> dict:
                 "user_id": uid,
                 "username": m.get("username", ""),
                 "first_name": m.get("first_name", ""),
+                "joined_date": m.get("joined_date", ""),
             }
         )
 

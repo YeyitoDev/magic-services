@@ -535,7 +535,7 @@ class SubscriptionCleanupJob:
 
         Returns:
             DataFrame con columnas: user_telegram_id, username, first_name,
-            is_bot.
+            is_bot, joined_date (ISO 8601 si está disponible).
         """
         try:
             from telethon.sessions import StringSession
@@ -591,12 +591,21 @@ class SubscriptionCleanupJob:
                     if not participants.users:
                         break
 
+                    # Build a map of user_id -> joined_date from participant metadata
+                    joined_dates: dict[int, str] = {}
+                    for p in participants.participants:
+                        uid = getattr(p, "user_id", None)
+                        jd = getattr(p, "joined_date", None)
+                        if uid and jd:
+                            joined_dates[uid] = jd.isoformat()
+
                     for user in participants.users:
                         members_list.append({
                             "user_telegram_id": user.id,
                             "username": getattr(user, 'username', ''),
                             "first_name": getattr(user, 'first_name', ''),
                             "is_bot": bool(getattr(user, 'bot', False)),
+                            "joined_date": joined_dates.get(user.id, ""),
                         })
 
                     offset += len(participants.users)
