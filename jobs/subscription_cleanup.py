@@ -278,7 +278,14 @@ class SubscriptionCleanupJob:
                         if kicked:
                             api.send_message(
                                 chat_id=user_id,
-                                text="🔮 *Tu suscripción ha expirado*\\n\\nPara seguir disfrutando del Grupo VIP, renová tu suscripción enviando un mensaje a @magic_peru 📲",
+                                text=(
+                                    "🔮 *Tu suscripción al Grupo VIP ha expirado*\n\n"
+                                    "Para seguir disfrutando de todos los pronósticos y beneficios, "
+                                    "*renueva tu suscripción* enviándonos un mensaje a @magic_peru 📲\n\n"
+                                    "💬 ¿Hubo algún problema con tu pago o crees que esto es un error? "
+                                    "Avísanos y lo revisamos de inmediato.\n\n"
+                                    "¡Gracias por tu preferencia! ✨"
+                                ),
                                 parse_mode="Markdown",
                                 log_errors=False,
                             )
@@ -791,9 +798,19 @@ class SubscriptionCleanupJob:
             try:
                 # 1. Enviar mensaje de suscripción vencida
                 try:
-
-                    # Usar el reminder_service si está disponible
-                    logger.info(f"Enviando mensaje de vencimiento a user={user_id}...")
+                    self.telegram_api.send_message(
+                        chat_id=int(user_id),
+                        text=(
+                            "🔮 *Tu suscripción al Grupo VIP ha expirado*\n\n"
+                            "Para seguir disfrutando de todos los pronósticos y beneficios, "
+                            "*renueva tu suscripción* enviándonos un mensaje a @magic_peru 📲\n\n"
+                            "💬 ¿Hubo algún problema con tu pago o crees que esto es un error? "
+                            "Avísanos y lo revisamos de inmediato.\n\n"
+                            "¡Gracias por tu preferencia! ✨"
+                        ),
+                        parse_mode="Markdown",
+                    )
+                    logger.info(f"Mensaje enviado a user={user_id}")
                 except Exception as e:
                     logger.warning(f"No se pudo enviar mensaje a {user_id}: {e}")
                     mensaje_eliminacion = f"Error mensaje: {e}"
