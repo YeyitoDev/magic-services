@@ -30,7 +30,7 @@ Uso:
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import pandas as pd
@@ -592,12 +592,18 @@ class SubscriptionCleanupJob:
                         break
 
                     # Build a map of user_id -> joined_date from participant metadata
+                    # Telegram API returns 'date' as Unix timestamp (int), not 'joined_date'
                     joined_dates: dict[int, str] = {}
                     for p in participants.participants:
                         uid = getattr(p, "user_id", None)
-                        jd = getattr(p, "joined_date", None)
+                        jd = getattr(p, "date", None)
                         if uid and jd:
-                            joined_dates[uid] = jd.isoformat()
+                            try:
+                                joined_dates[uid] = datetime.fromtimestamp(
+                                    int(jd), tz=timezone.utc
+                                ).isoformat()
+                            except (ValueError, TypeError):
+                                joined_dates[uid] = str(jd)
 
                     for user in participants.users:
                         members_list.append({
