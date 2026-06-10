@@ -211,10 +211,16 @@ def _build_excel(
 
 async def run_reconcile_report() -> dict:
     """Genera el reporte de reconciliación grupo ↔ BD (solo lectura)."""
+    from core.container import container
     from jobs.subscription_cleanup import SubscriptionCleanupJob
     from services.telegram_api import TelegramAPIService
 
     today = date.today()
+
+    # Inicializar container (igual que cleanup-scheduled.yml)
+    logger.info("Inicializando container...")
+    container.initialize_defaults()
+
     job = SubscriptionCleanupJob(
         telegram_api=TelegramAPIService(),
         subscription_service=None,
@@ -223,7 +229,15 @@ async def run_reconcile_report() -> dict:
 
     # ---- Carga BD ----
     logger.info("Cargando snapshot de BD (subs + compras)...")
-    db_info = _fetch_db_snapshot()
+    try:
+        db_info = _fetch_db_snapshot()
+    except Exception as e:
+        logger.error(f"No se pudo conectar a la BD: {e}")
+        raise RuntimeError(
+            f"Error de conexión a la base de datos. "
+            f"Revisa que DB_HOST/DB_USER/DB_PASSWORD/DB_NAME estén configurados correctamente. "
+            f"Error original: {e}"
+        ) from e
     latest = {uid: info.end_date for uid, info in db_info.items() if info.end_date}
     active_db = {uid for uid, ed in latest.items() if ed >= today}
     expired_db = {uid for uid, ed in latest.items() if ed < today}
