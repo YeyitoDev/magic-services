@@ -52,9 +52,13 @@ jobs:
           DB_PORT=3306
           TIMEZONE=America/Lima
           GOOGLE_CREDENTIALS_JSON=${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          TELETHON_API_ID=${{ secrets.TELETHON_API_ID }}
+          TELETHON_API_HASH=${{ secrets.TELETHON_API_HASH }}
+          TELETHON_SESSION=${{ secrets.TELETHON_SESSION }}
           EOF
 
       - name: Run cleanup (DB only)
+        if: env.DEFAULT_MODE == 'validar'
         run: |
           python -c "
           from core.container import container
@@ -67,7 +71,26 @@ jobs:
               subscription_service=container.resolve('subscription_service'),
               user_service=container.resolve('user_service'),
           )
-          job.run_db_only(mode='${{ env.DEFAULT_MODE }}')
+          job.run_db_only(mode='validar')
+          "
+
+      - name: Run cleanup (with Telethon group check)
+        if: env.DEFAULT_MODE == 'eliminar'
+        run: |
+          python -c "
+          import asyncio
+          from core.container import container
+          from services.telegram_api import TelegramAPIService
+          from jobs.subscription_cleanup import SubscriptionCleanupJob
+
+          container.initialize_defaults()
+          job = SubscriptionCleanupJob(
+              telegram_api=TelegramAPIService(),
+              subscription_service=container.resolve('subscription_service'),
+              user_service=container.resolve('user_service'),
+          )
+          result = asyncio.run(job.run(mode='eliminar', validate_special_clients=False))
+          print(result)
           "
 
       - name: Save logs as artifact
@@ -80,7 +103,7 @@ jobs:
             logs/
           retention-days: 30
 
-      - name: Notify Telegram with results
+      - name: Notify admin on Telegram
         if: always()
         run: |
           ENV="${{ github.event_name == 'schedule' && 'production' || github.event.inputs.environment || 'production' }}"
@@ -99,14 +122,14 @@ jobs:
             ICON="🚨"
           fi
 
-          MSG="${ICON} Limpieza [${ENV}] [${MODE}]
-          ├ 👥 Total: ${TOTAL}
-          ├ ✅ Activos: ${ACTIVE}
-          ├ ❌ Expirados: ${EXPIRED}
+          MSG="${ICON} Limpieza DB-Only [${ENV}] [${MODE}]
+          ├ 👥 Total BD: ${TOTAL}
+          ├ ✅ Activos BD: ${ACTIVE}
+          ├ ❌ Expirados BD: ${EXPIRED}
           └ 🚫 Eliminados: ${REMOVED}
-          🕐 $(date +'%Y-%m-%d %H:%M')"
+          🕐 $(date +'%Y-%m-%d %H:%M')
+
+          💡 Usa el workflow 🔎 Reporte de Reconciliación para ver stats del grupo."
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=1555885694" -d "text=${MSG}"
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=6475885611" -d "text=${MSG}"
+            -d "chat_id=7860625816" -d "text=${MSG}" -d "parse_mode=Markdown"

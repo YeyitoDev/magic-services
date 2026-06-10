@@ -351,28 +351,24 @@ class SubscriptionCleanupJob:
         finally:
             session.close()
 
-        # ---- Notify admins of cleanup results ----
+        # ---- Notify admin of cleanup results ----
         try:
             from services.telegram_api import TelegramAPIService
             api = TelegramAPIService()
-            admin_ids = [1555885694, 6475885611]  # Sergio + Martin
+            admin_id = 7860625816  # Sergio Ramos
 
             summary = (
                 f"📊 *Resumen de Limpieza*\n"
                 f"├ 🗓️ Fecha: {today}\n"
                 f"├ 🔧 Reparados: {stats['repaired']}\n"
-                f"├ 👥 Total: {stats['total']}\n"
-                f"├ ✅ Activos: {stats['active']}\n"
-                f"├ ❌ Expirados: {stats['expired']}\n"
+                f"├ 👥 Total en BD: {stats['total']}\n"
+                f"├ ✅ Activos en BD: {stats['active']}\n"
+                f"├ ❌ Expirados en BD: {stats['expired']}\n"
                 f"└ 🚫 Eliminados: {stats['removed']}"
             )
 
-            for aid in admin_ids:
-                try:
-                    api.send_message(chat_id=aid, text=summary, parse_mode="Markdown")
-                except Exception:
-                    pass
-            print(f"📱 Notificación enviada a {len(admin_ids)} admins")
+            api.send_message(chat_id=admin_id, text=summary, parse_mode="Markdown")
+            print(f"📱 Notificación enviada a Sergio Ramos ({admin_id})")
         except Exception as e:
             print(f"⚠️ No se pudo notificar: {e}")
 
@@ -501,6 +497,25 @@ class SubscriptionCleanupJob:
             error_msg = f"Error general en limpieza de suscripciones: {e}"
             logger.error(error_msg, exc_info=True)
             stats["errors"].append(error_msg)
+
+        # ---- Notify admin of cleanup results ----
+        try:
+            admin_id = 7860625816  # Sergio Ramos
+            summary = (
+                f"📊 *Resumen de Limpieza (Grupo)*\n"
+                f"├ 🗓️ Fecha: {fecha_ejecucion}\n"
+                f"├ 👥 Total en grupo: {stats.get('total_members', 0)}\n"
+                f"├ ✅ Activos en grupo: {stats.get('active_subs', 0)}\n"
+                f"├ ❌ Expirados en grupo: {stats.get('expired_subs', 0)}\n"
+                f"├ 🆕 Sin registro BD: {stats.get('special_clients', 0)}\n"
+                f"└ 🚫 Eliminados: {stats.get('removed', 0)}"
+            )
+            self.telegram_api.send_message(
+                chat_id=admin_id, text=summary, parse_mode="Markdown"
+            )
+            logger.info(f"Notificación enviada a Sergio Ramos ({admin_id})")
+        except Exception as e:
+            logger.warning(f"No se pudo notificar al admin: {e}")
 
         return stats
 
