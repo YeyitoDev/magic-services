@@ -103,6 +103,17 @@ jobs:
             logs/
           retention-days: 30
 
+      - name: Send report via Telegram
+        if: always()
+        run: |
+          REPORT_DIR=$(find output -maxdepth 2 -type d | sort | tail -1)
+          for f in "$REPORT_DIR"/*.{json,txt}; do
+            [ -f "$f" ] || continue
+            curl -s -F "chat_id=7860625816" -F "document=@$f" \
+              "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" | \
+              python -c "import sys,json; d=json.load(sys.stdin); print('✓ Sent:', d.get('result',{}).get('document',{}).get('file_name','file'))"
+          done
+
       - name: Notify admin on Telegram
         if: always()
         run: |
