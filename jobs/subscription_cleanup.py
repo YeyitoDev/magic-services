@@ -446,7 +446,6 @@ class SubscriptionCleanupJob:
 
             # ---- Paso 3: Obtener suscripciones activas desde BD ----
             active_subs = self.subscription_service.get_active_subscriptions()
-            stats["active_subs"] = len(active_subs)
 
             # ---- Paso 4: Cruzar miembros vs suscripciones ----
             comparison_df = self._build_comparison(
@@ -458,8 +457,16 @@ class SubscriptionCleanupJob:
                 comparison_df, validate_special_clients
             )
 
-            stats["special_clients"] = len(special_clients)
-            stats["expired_subs"] = len(to_remove)
+            # Stats basados SOLO en miembros del grupo (coherentes con reconcile report)
+            stats["active_subs"] = len(
+                comparison_df[comparison_df["mensaje"] == "suscripción activa"]
+            )
+            stats["expired_subs"] = len(
+                comparison_df[comparison_df["mensaje"] == "suscripción vencida"]
+            )
+            stats["special_clients"] = len(
+                comparison_df[comparison_df["mensaje"] == "Usuario no registrado en BD"]
+            )
 
             logger.info(
                 f"Clasificación: {len(special_clients)} clientes especiales, "
