@@ -467,16 +467,16 @@ class SubscriptionCleanupJob:
             )
 
             # ---- Paso 6: Guardar reportes ----
-            if special_clients:
+            if not special_clients.empty:
                 self._save_special_clients_report(
                     special_clients, output_dir, hora_archivo
                 )
 
-            if to_remove:
+            if not to_remove.empty:
                 self._save_prevalidation_report(to_remove, output_dir, hora_archivo)
 
             # ---- Paso 7: Ejecutar eliminación (solo en modo "eliminar") ----
-            if mode == "eliminar" and to_remove:
+            if mode == "eliminar" and not to_remove.empty:
                 removed_count = await self._execute_removal(
                     to_remove, comparison_df, output_dir, hora_archivo
                 )

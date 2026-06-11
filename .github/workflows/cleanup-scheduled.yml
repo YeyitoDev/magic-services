@@ -90,9 +90,17 @@ jobs:
           today = os.path.basename(report_dir)
           excel_path = os.path.join(report_dir, f'limpieza_{today}.xlsx')
 
+          json_files = sorted(glob.glob(f'{report_dir}/*.json'))
+          csv_files = sorted(glob.glob(f'{report_dir}/*.csv'))
+
+          if not json_files and not csv_files:
+              print('No JSON/CSV files to convert to Excel')
+              exit(0)
+
           with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
               # 1. Summary from JSON
-              for jf in sorted(glob.glob(f'{report_dir}/*.json')):
+              summary_written = False
+              for jf in json_files:
                   with open(jf) as f:
                       data = json.load(f)
                   stats = data.get('resumen_general') or data.get('stats', {})
@@ -102,22 +110,29 @@ jobs:
                           for k, v in stats.items()
                       ])
                       df.to_excel(writer, sheet_name='Resumen', index=False)
+                      summary_written = True
                       break
 
               # 2. CSV files as sheets
-              for cf in sorted(glob.glob(f'{report_dir}/*.csv')):
+              for cf in csv_files:
                   df = pd.read_csv(cf)
                   sheet_name = os.path.basename(cf).replace('.csv', '')[:31]
                   df.to_excel(writer, sheet_name=sheet_name, index=False)
 
               # 3. Expired users from JSON (DB-only mode)
-              for jf in sorted(glob.glob(f'{report_dir}/*.json')):
+              for jf in json_files:
                   with open(jf) as f:
                       data = json.load(f)
                   users = data.get('expired_users')
                   if users:
                       pd.DataFrame(users).to_excel(writer, sheet_name='Expirados', index=False)
                       break
+
+              # Ensure at least one sheet exists
+              if not writer.sheets:
+                  pd.DataFrame({'Nota': ['No hay datos disponibles']}).to_excel(
+                      writer, sheet_name='Vacio', index=False
+                  )
 
           # Auto-fit columns
           wb = load_workbook(excel_path)
