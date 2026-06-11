@@ -57,39 +57,22 @@ jobs:
           TELETHON_SESSION=${{ secrets.TELETHON_SESSION }}
           EOF
 
-      - name: Run cleanup (DB only)
-        if: env.DEFAULT_MODE == 'validar'
+      - name: Run cleanup with group stats
         run: |
           python -c "
+          import asyncio, os
           from core.container import container
           from services.telegram_api import TelegramAPIService
           from jobs.subscription_cleanup import SubscriptionCleanupJob
 
+          mode = os.environ['DEFAULT_MODE']
           container.initialize_defaults()
           job = SubscriptionCleanupJob(
               telegram_api=TelegramAPIService(),
               subscription_service=container.resolve('subscription_service'),
               user_service=container.resolve('user_service'),
           )
-          job.run_db_only(mode='validar')
-          "
-
-      - name: Run cleanup (with Telethon group check)
-        if: env.DEFAULT_MODE == 'eliminar'
-        run: |
-          python -c "
-          import asyncio
-          from core.container import container
-          from services.telegram_api import TelegramAPIService
-          from jobs.subscription_cleanup import SubscriptionCleanupJob
-
-          container.initialize_defaults()
-          job = SubscriptionCleanupJob(
-              telegram_api=TelegramAPIService(),
-              subscription_service=container.resolve('subscription_service'),
-              user_service=container.resolve('user_service'),
-          )
-          result = asyncio.run(job.run(mode='eliminar', validate_special_clients=False))
+          result = asyncio.run(job.run(mode=mode, validate_special_clients=False))
           print(result)
           "
 
@@ -180,27 +163,34 @@ jobs:
           ENV="${{ github.event_name == 'schedule' && 'production' || github.event.inputs.environment || 'production' }}"
           MODE="${{ github.event.inputs.mode || 'eliminar' }}"
 
-          # Parse output from DB-only cleanup
-          RAW=$(grep -E "Total|Active|Expired|Removed" output/*/resumen_*.txt 2>/dev/null || echo "")
-          TOTAL=$(echo "$RAW" | grep "Total" | awk -F': ' '{print $2}' || echo "?")
-          ACTIVE=$(echo "$RAW" | grep "Active" | awk -F': ' '{print $2}' || echo "?")
-          EXPIRED=$(echo "$RAW" | grep "Expirado\|Expired" | awk -F': ' '{print $2}' || echo "?")
-          REMOVED=$(echo "$RAW" | grep "Removed" | awk -F': ' '{print $2}' || echo "0")
+          # Parse stats from Telethon-generated JSON
+          JSON_FILE=$(find output -name 'log_ejecucion_*.json' -maxdepth 2 | sort | tail -1)
+          if [ -f "$JSON_FILE" ]; then
+            TOTAL=$(python -c "import json,sys; d=json.load(open('$JSON_FILE')); print(d.get('resumen_general',{}).get('total_members',0))")
+            ACTIVE=$(python -c "import json,sys; d=json.load(open('$JSON_FILE')); print(d.get('resumen_general',{}).get('active_subs',0))")
+            EXPIRED=$(python -c "import json,sys; d=json.load(open('$JSON_FILE')); print(d.get('resumen_general',{}).get('expired_subs',0))")
+            SPECIAL=$(python -c "import json,sys; d=json.load(open('$JSON_FILE')); print(d.get('resumen_general',{}).get('special_clients',0))")
+            REMOVED=$(python -c "import json,sys; d=json.load(open('$JSON_FILE')); print(d.get('resumen_general',{}).get('removed',0))")
+          else
+            TOTAL="?"; ACTIVE="?"; EXPIRED="?"; SPECIAL="?"; REMOVED="0"
+          fi
 
           if [ "$MODE" = "validar" ]; then
             ICON="🔍"
+            HEADER="📊 Reporte de Limpieza (Solo lectura)"
           else
             ICON="🚨"
+            HEADER="📊 Resumen de Limpieza (Eliminación)"
           fi
 
-          MSG="${ICON} Limpieza DB-Only [${ENV}] [${MODE}]
-          ├ 👥 Total BD: ${TOTAL}
-          ├ ✅ Activos BD: ${ACTIVE}
-          ├ ❌ Expirados BD: ${EXPIRED}
+          MSG="${HEADER}
+          ├ 🗓️ Fecha: $(date +'%Y-%m-%d')
+          ├ 👥 Total en grupo: ${TOTAL}
+          ├ ✅ Activos en grupo: ${ACTIVE}
+          ├ ❌ Expirados en grupo: ${EXPIRED}
+          ├ 🆕 Sin registro BD: ${SPECIAL}
           └ 🚫 Eliminados: ${REMOVED}
-          🕐 $(date +'%Y-%m-%d %H:%M')
-
-          💡 Usa el workflow 🔎 Reporte de Reconciliación para ver stats del grupo."
+          🕐 $(date +'%H:%M')"
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d "chat_id=7860625816" -d "text=${MSG}" -d "parse_mode=Markdown"
