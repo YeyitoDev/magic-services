@@ -76,81 +76,6 @@ jobs:
           print(result)
           "
 
-      - name: Generate Excel report
-        if: always()
-        run: |
-          python -c "
-          import glob, json, os, pandas as pd
-          from openpyxl import load_workbook
-
-          dirs = sorted([d for d in glob.glob('output/*') if os.path.isdir(d)])
-          if not dirs:
-              print('No output dir'); exit(0)
-          report_dir = dirs[-1]
-          today = os.path.basename(report_dir)
-          excel_path = os.path.join(report_dir, f'limpieza_{today}.xlsx')
-
-          json_files = sorted(glob.glob(f'{report_dir}/*.json'))
-          csv_files = sorted(glob.glob(f'{report_dir}/*.csv'))
-
-          if not json_files and not csv_files:
-              print('No JSON/CSV files to convert to Excel')
-              exit(0)
-
-          with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-              # 1. Summary from JSON
-              summary_written = False
-              for jf in json_files:
-                  with open(jf) as f:
-                      data = json.load(f)
-                  stats = data.get('resumen_general') or data.get('stats', {})
-                  if stats:
-                      df = pd.DataFrame([
-                          {'Metric': k, 'Value': v if not isinstance(v, list) else len(v)}
-                          for k, v in stats.items()
-                      ])
-                      df.to_excel(writer, sheet_name='Resumen', index=False)
-                      summary_written = True
-                      break
-
-              # 2. CSV files as sheets
-              for cf in csv_files:
-                  df = pd.read_csv(cf)
-                  sheet_name = os.path.basename(cf).replace('.csv', '')[:31]
-                  df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-              # 3. Expired users from JSON (DB-only mode)
-              for jf in json_files:
-                  with open(jf) as f:
-                      data = json.load(f)
-                  users = data.get('expired_users')
-                  if users:
-                      pd.DataFrame(users).to_excel(writer, sheet_name='Expirados', index=False)
-                      break
-
-              # Ensure at least one sheet exists
-              if not writer.sheets:
-                  pd.DataFrame({'Nota': ['No hay datos disponibles']}).to_excel(
-                      writer, sheet_name='Vacio', index=False
-                  )
-
-          # Auto-fit columns
-          wb = load_workbook(excel_path)
-          for ws in wb.worksheets:
-              for col in ws.columns:
-                  max_len = 0
-                  col_letter = col[0].column_letter
-                  for cell in col:
-                      try:
-                          if cell.value:
-                              max_len = max(max_len, len(str(cell.value)))
-                      except Exception:
-                          pass
-                  ws.column_dimensions[col_letter].width = min(max_len + 2, 50)
-          wb.save(excel_path)
-          print(f'Excel generado: {excel_path}')
-          "
-
       - name: Save logs as artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -161,16 +86,17 @@ jobs:
             logs/
           retention-days: 30
 
-      - name: Send report via Telegram
+      - name: Send Excel report via Telegram
         if: always()
         run: |
-          REPORT_DIR=$(find output -maxdepth 2 -type d | sort | tail -1)
-          for f in "$REPORT_DIR"/*.{json,txt,xlsx}; do
-            [ -f "$f" ] || continue
-            curl -s -F "chat_id=7860625816" -F "document=@$f" \
+          XLSX=$(find output -maxdepth 2 -name 'limpieza_*.xlsx' | sort | tail -1)
+          if [ -f "$XLSX" ]; then
+            curl -s -F "chat_id=7860625816" -F "document=@$XLSX" \
               "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" | \
-              python -c "import sys,json; d=json.load(sys.stdin); print('✓ Sent:', d.get('result',{}).get('document',{}).get('file_name','file'))"
-          done
+              python -c "import sys,json; d=json.load(sys.stdin); fn=d.get('result',{}).get('document',{}).get('file_name','file'); ok=d.get('ok'); print('✓ Sent:' if ok else '✗ Failed:', fn)"
+          else
+            echo 'No Excel file found'
+          fi
 
       - name: Notify admin on Telegram
         if: always()

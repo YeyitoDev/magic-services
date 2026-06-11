@@ -495,6 +495,42 @@ class SubscriptionCleanupJob:
                 fecha_ejecucion, hora_ejecucion
             )
 
+            # ---- Paso 8b: Generar Excel unificado de contabilidad ----
+            excel_path = os.path.join(output_dir, f"limpieza_{fecha_ejecucion}.xlsx")
+            with pd.ExcelWriter(excel_path, engine="openpyxl") as writer:
+                # 1. Resumen
+                resumen_df = pd.DataFrame({
+                    "Metric": ["Fecha", "Total en grupo", "Activos", "Expirados",
+                               "Sin registro BD", "Eliminados", "Admins protegidos"],
+                    "Value": [fecha_ejecucion, stats["total_members"],
+                              stats["active_subs"], stats["expired_subs"],
+                              stats["special_clients"], stats["removed"],
+                              stats["admins"]],
+                })
+                resumen_df.to_excel(writer, sheet_name="Resumen", index=False)
+
+                # 2. Activos (en grupo + suscripción vigente)
+                activos_df = comparison_df[
+                    comparison_df["mensaje"] == "suscripción activa"
+                ][["user_telegram_id", "username", "first_name",
+                   "end_date", "servicio", "fecha_final_suscripcion"]].copy()
+                activos_df.to_excel(writer, sheet_name="Activos", index=False)
+
+                # 3. Expirados (en grupo + vencida)
+                expirados_df = comparison_df[
+                    comparison_df["mensaje"] == "suscripción vencida"
+                ][["user_telegram_id", "username", "first_name",
+                   "end_date", "servicio"]].copy()
+                expirados_df.to_excel(writer, sheet_name="Expirados", index=False)
+
+                # 4. Sin registro
+                sin_reg_df = comparison_df[
+                    comparison_df["mensaje"] == "Usuario no registrado en BD"
+                ][["user_telegram_id", "username", "first_name"]].copy()
+                sin_reg_df.to_excel(writer, sheet_name="SinRegistro", index=False)
+
+            logger.info(f"Excel unificado generado: {excel_path}")
+
             logger.info(
                 f"Limpieza completada: modo={mode}, "
                 f"removed={stats['removed']}, errors={len(stats['errors'])}"
