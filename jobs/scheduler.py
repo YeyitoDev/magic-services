@@ -319,15 +319,15 @@ class JobScheduler:
         """
         logger.info("--- INICIO: Job de recordatorios ---")
         try:
-            from jobs.subscription_cleanup import process_reminders
+            from jobs.promotion_batch import run_reminder_job
 
-            stats = process_reminders(self._container)
+            stats = run_reminder_job(self._container)
             logger.info(
                 f"Job de recordatorios completado: "
-                f"fase1={stats.get('phase1_sent', 0)}, "
-                f"fase2={stats.get('phase2_sent', 0)}, "
-                f"deleted={stats.get('deleted', 0)}, "
-                f"errors={len(stats.get('errors', []))}"
+                f"fase1={stats.get('fase1_enviados', 0)}, "
+                f"fase2={stats.get('fase2_enviados', 0)}, "
+                f"deleted={stats.get('eliminados', 0)}, "
+                f"errors={stats.get('errores', 0)}"
             )
         except Exception as e:
             logger.error(
@@ -342,12 +342,14 @@ class JobScheduler:
         """
         logger.info("--- INICIO: Job de promociones ---")
         try:
-            from jobs.promotion_batch import process_promotion_pipeline
+            from jobs.promotion_batch import run_promotion_pipeline
 
-            results = process_promotion_pipeline(self._container)
+            stats = run_promotion_pipeline(self._container)
             logger.info(
                 f"Job de promociones completado: "
-                f"procesados={len(results)}"
+                f"procesados={stats.get('total_procesados', 0)}, "
+                f"enviadas={stats.get('promos_enviadas', 0)}, "
+                f"errores={stats.get('errores', 0)}"
             )
         except Exception as e:
             logger.error(
@@ -362,14 +364,26 @@ class JobScheduler:
         """
         logger.info("--- INICIO: Job de verificación de suscripciones ---")
         try:
-            from jobs.subscription_cleanup import check_expired_subscriptions
+            import asyncio
+            from jobs.subscription_cleanup import SubscriptionCleanupJob
+            from services.telegram_api import TelegramAPIService
 
-            stats = check_expired_subscriptions(self._container)
+            telegram_api = TelegramAPIService()
+            subscription_service = self._container.resolve("subscription_service")
+            user_service = self._container.resolve("user_service")
+
+            job = SubscriptionCleanupJob(
+                telegram_api=telegram_api,
+                subscription_service=subscription_service,
+                user_service=user_service,
+                container=self._container,
+            )
+            stats = asyncio.run(job.run_db_only(mode="validar"))
             logger.info(
                 f"Job de verificación de suscripciones completado: "
-                f"expired_found={stats.get('expired_found', 0)}, "
-                f"kicked={stats.get('kicked', 0)}, "
-                f"errors={len(stats.get('errors', []))}"
+                f"total={stats.get('total', 0)}, "
+                f"expired={stats.get('expired', 0)}, "
+                f"removed={stats.get('removed', 0)}"
             )
         except Exception as e:
             logger.error(
@@ -384,15 +398,28 @@ class JobScheduler:
         """
         logger.info("--- INICIO: Job de sincronización de miembros ---")
         try:
-            from jobs.subscription_cleanup import sync_members_telethon
+            import asyncio
+            from jobs.subscription_cleanup import SubscriptionCleanupJob
+            from services.telegram_api import TelegramAPIService
 
-            stats = sync_members_telethon(self._container)
+            telegram_api = TelegramAPIService()
+            subscription_service = self._container.resolve("subscription_service")
+            user_service = self._container.resolve("user_service")
+
+            job = SubscriptionCleanupJob(
+                telegram_api=telegram_api,
+                subscription_service=subscription_service,
+                user_service=user_service,
+                container=self._container,
+            )
+            stats = asyncio.run(job.run(mode="validar"))
             logger.info(
                 f"Job de sincronización de miembros completado: "
-                f"telegram_members={stats.get('telegram_members', 0)}, "
-                f"db_members={stats.get('db_members', 0)}, "
-                f"to_remove={stats.get('to_remove', 0)}, "
-                f"removed={stats.get('removed', 0)}"
+                f"telegram_members={stats.get('total_members', 0)}, "
+                f"db_members={stats.get('active_subs', 0)}, "
+                f"to_remove={stats.get('expired_subs', 0)}, "
+                f"removed={stats.get('removed', 0)}, "
+                f"errors={len(stats.get('errors', []))}"
             )
         except Exception as e:
             logger.error(

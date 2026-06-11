@@ -38,7 +38,11 @@ class Purchase(BaseModel):
 
     __tablename__ = "purchases"
 
-    purchase_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    purchase_id = Column(
+        BigInteger().with_variant(Integer(), "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     user_telegram_id = Column(
         BigInteger, ForeignKey("users.telegram_id"), nullable=False
     )
