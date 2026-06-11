@@ -106,8 +106,15 @@ class BaseRepository:
         Persiste definitivamente los cambios en la base de datos.
         Debe llamarse después de add(), delete(), o cualquier modificación
         a entidades trackeadas por la sesión.
+
+        Si el commit falla, la sesión se revierte automáticamente para
+        evitar que quede en un estado inconsistente (PendingRollbackError).
         """
-        self._session.commit()
+        try:
+            self._session.commit()
+        except Exception:
+            self._session.rollback()
+            raise
 
     def rollback(self) -> None:
         """

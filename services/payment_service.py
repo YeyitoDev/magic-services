@@ -30,6 +30,10 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# IDs de servicio (consistentes con la tabla services)
+STAKE_SERVICE_ID = 1
+VIP_SERVICE_ID = 2
+
 
 # ---------------------------------------------------------------------------
 # Value Objects
@@ -102,7 +106,7 @@ class PaymentService:
         user_repo: UserRepository para búsqueda de usuarios.
     """
 
-    def __init__(self, purchase_repo, subscription_service, user_repo):
+    def __init__(self, purchase_repo, subscription_service, user_repo, pricing_service=None):
         """
         Inicializa el servicio con sus dependencias.
 
@@ -110,10 +114,63 @@ class PaymentService:
             purchase_repo: Repositorio de compras.
             subscription_service: Servicio de suscripciones/compra.
             user_repo: Repositorio de usuarios.
+            pricing_service: Servicio de precios dinámico (opcional). Si se
+                provee, se usa para validar que el monto corresponda a un
+                precio definido en el catálogo.
         """
         self._purchase_repo = purchase_repo
         self._subscription_service = subscription_service
         self._user_repo = user_repo
+        self._pricing_service = pricing_service
+
+    # ------------------------------------------------------------------
+    # Validación de monto contra el catálogo de precios
+    # ------------------------------------------------------------------
+
+    def is_defined_price(self, amount: float) -> bool:
+        """
+        Indica si el monto corresponde a un precio definido en el catálogo.
+
+        Si no hay PricingService configurado, no se puede restringir y se
+        asume válido (comportamiento legacy). Ante un error del catálogo,
+        también se asume válido (fail-safe) para no bloquear ventas legítimas.
+
+        Args:
+            amount: Monto a verificar.
+
+        Returns:
+            True si el monto está definido (o no se puede validar), False si
+            el catálogo existe y el monto no coincide con ningún precio.
+        """
+        if self._pricing_service is None:
+            return True
+        try:
+            return self._pricing_service.match_price(amount) is not None
+        except Exception as e:
+            logger.warning(
+                f"No se pudo validar el monto S/ {amount:.2f} contra el "
+                f"catálogo de precios: {e}"
+            )
+            return True
+
+    def _resolve_service_id(self, amount: float) -> int | None:
+        """
+        Resuelve el ID de servicio correspondiente a un monto vía catalogo.
+
+        Returns:
+            service_id (1=Stake, 2=Grupo VIP) o None si no se puede resolver
+            (sin PricingService o monto no definido).
+        """
+        if self._pricing_service is None:
+            return None
+        try:
+            plan = self._pricing_service.match_price(amount)
+            return plan.service_id if plan else None
+        except Exception as e:
+            logger.warning(
+                f"No se pudo resolver el servicio para el monto S/ {amount:.2f}: {e}"
+            )
+            return None
 
     # ------------------------------------------------------------------
     # Validación de pago
@@ -162,16 +219,38 @@ class PaymentService:
                 errors=["user_not_found"],
             )
 
-        # Validación 3: Verificar duplicados
-        if self.check_duplicate_payment(telegram_id, amount):
+        # Validación 3: El monto debe corresponder a un precio definido
+        if not self.is_defined_price(amount):
             return ValidationResult(
                 success=False,
                 message=(
+                    f"El monto S/ {amount:.2f} no corresponde a ningún precio "
+                    f"definido. Ingrese el monto correcto."
+                ),
+                errors=["undefined_price"],
+            )
+
+        # Validación 4: Reglas de frecuencia de compra
+        #   - Stake: máximo 1 por día.
+        #   - VIP: ilimitado (cada compra renueva/extiende la suscripción).
+        if self.check_duplicate_payment(telegram_id, amount):
+            if self._resolve_service_id(amount) == STAKE_SERVICE_ID:
+                message = (
+                    "Solo se permite comprar 1 Stake por día. Este usuario ya "
+                    "registró una compra de Stake en las últimas 24 horas."
+                )
+                errors = ["stake_daily_limit"]
+            else:
+                message = (
                     f"Ya existe una compra registrada para el usuario {telegram_id} "
                     f"con monto S/ {amount:.2f} en las últimas 24 horas."
-                ),
+                )
+                errors = ["duplicate_payment"]
+            return ValidationResult(
+                success=False,
+                message=message,
                 is_duplicate=True,
-                errors=["duplicate_payment"],
+                errors=errors,
             )
 
         # Validación 4: Procesar la compra
@@ -231,8 +310,31 @@ class PaymentService:
             hours: Ventana de tiempo en horas (default: 24).
 
         Returns:
-            True si existe un duplicado, False si no.
+            True si existe un duplicado/límite alcanzado, False si no.
         """
+        service_id = self._resolve_service_id(amount)
+
+        # VIP: ilimitado. Cada compra renueva/extiende la suscripción,
+        # por lo que nunca se considera duplicado.
+        if service_id == VIP_SERVICE_ID:
+            return False
+
+        # Stake: máximo 1 por día (por service_id, sin importar el monto).
+        if service_id == STAKE_SERVICE_ID:
+            purchases = self._purchase_repo.get_recent_purchases_for_service(
+                user_id=telegram_id,
+                service_id=STAKE_SERVICE_ID,
+                hours=hours,
+            )
+            if purchases:
+                logger.info(
+                    f"Límite diario de Stake alcanzado: user={telegram_id}, "
+                    f"compras_encontradas={len(purchases)}"
+                )
+                return True
+            return False
+
+        # Sin catálogo / servicio desconocido: fallback legacy por monto exacto.
         purchases = self._purchase_repo.get_recent_purchases(
             user_id=telegram_id,
             amount=amount,
@@ -264,11 +366,22 @@ class PaymentService:
         Returns:
             Diccionario con info de la compra duplicada, o None si no existe.
         """
-        purchases = self._purchase_repo.get_recent_purchases(
-            user_id=telegram_id,
-            amount=amount,
-            hours=24,
-        )
+        service_id = self._resolve_service_id(amount)
+
+        # Para Stake usamos la búsqueda por servicio (consistente con el
+        # límite diario); en otros casos, por monto exacto.
+        if service_id == STAKE_SERVICE_ID:
+            purchases = self._purchase_repo.get_recent_purchases_for_service(
+                user_id=telegram_id,
+                service_id=STAKE_SERVICE_ID,
+                hours=24,
+            )
+        else:
+            purchases = self._purchase_repo.get_recent_purchases(
+                user_id=telegram_id,
+                amount=amount,
+                hours=24,
+            )
         if not purchases:
             return None
 

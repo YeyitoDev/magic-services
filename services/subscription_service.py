@@ -54,6 +54,8 @@ class PurchaseResult:
         is_subscription: True si es suscripción recurrente, False si es pago único.
         end_date: Fecha de vencimiento de la suscripción (None para Stake).
     """
+    
+    
     success: bool = False
     message: str = ""
     service_type: str = ""
@@ -61,6 +63,7 @@ class PurchaseResult:
     duration_months: int = 0
     is_subscription: bool = False
     end_date: datetime | None = None
+    price: float = 0.0
     errors: list = field(default_factory=list)
 
 
@@ -256,6 +259,7 @@ class SubscriptionService:
             duration_months=duration_months,
             is_subscription=is_subscription,
             end_date=end_date,
+            price=price,
         )
 
     # ------------------------------------------------------------------

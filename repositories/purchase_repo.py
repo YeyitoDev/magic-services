@@ -18,12 +18,13 @@ Uso:
     )
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from sqlalchemy import desc, func
 
 from models.purchase import Purchase
 from repositories.base import BaseRepository
+from utils.datetime_utils import get_lima_time
 
 
 class PurchaseRepository(BaseRepository):
@@ -43,7 +44,7 @@ class PurchaseRepository(BaseRepository):
         service_id: int,
         price: float,
         from_channel: str,
-        purchase_date: datetime | None = None,
+        purchase_date=None,
     ) -> Purchase:
         """
         Crea y persiste un nuevo registro de compra.
@@ -53,7 +54,7 @@ class PurchaseRepository(BaseRepository):
             service_id: ID del servicio adquirido.
             price: Precio pagado por el servicio en el momento de la compra.
             from_channel: Canal de origen (ej: "telegram", "whatsapp", "wsp").
-            purchase_date: Fecha de compra. Si es None, se usa datetime.now().
+            purchase_date: Fecha de compra. Si es None, se usa la hora actual de Lima.
 
         Returns:
             La instancia Purchase recién creada y persistida.
@@ -63,7 +64,7 @@ class PurchaseRepository(BaseRepository):
             service_id=service_id,
             price=price,
             from_channel=from_channel,
-            purchase_date=purchase_date or datetime.now(),
+            purchase_date=purchase_date or get_lima_time(),
         )
         self.add(purchase)
         self.commit()
@@ -94,12 +95,45 @@ class PurchaseRepository(BaseRepository):
         Returns:
             Lista de compras que coinciden (vacía si no hay duplicados).
         """
-        cutoff = datetime.now() - timedelta(hours=hours)
+        cutoff = get_lima_time() - timedelta(hours=hours)
         return (
             self._session.query(Purchase)
             .filter(
                 Purchase.user_telegram_id == user_id,
                 Purchase.price == amount,
+                Purchase.purchase_date >= cutoff,
+            )
+            .order_by(desc(Purchase.purchase_date))
+            .all()
+        )
+
+    def get_recent_purchases_for_service(
+        self,
+        user_id: int,
+        service_id: int,
+        hours: int = 24,
+    ) -> list[Purchase]:
+        """
+        Busca compras recientes de un usuario para un servicio específico.
+
+        A diferencia de `get_recent_purchases` (que filtra por monto exacto),
+        esta consulta filtra por `service_id`, independientemente del monto.
+        Se usa para aplicar el límite de 1 compra de Stake por día.
+
+        Args:
+            user_id: ID de Telegram del usuario.
+            service_id: ID del servicio a buscar (1=Stake, 2=Grupo VIP).
+            hours: Ventana de tiempo hacia atrás en horas (default 24).
+
+        Returns:
+            Lista de compras del servicio en la ventana (vacía si no hay).
+        """
+        cutoff = get_lima_time() - timedelta(hours=hours)
+        return (
+            self._session.query(Purchase)
+            .filter(
+                Purchase.user_telegram_id == user_id,
+                Purchase.service_id == service_id,
                 Purchase.purchase_date >= cutoff,
             )
             .order_by(desc(Purchase.purchase_date))
