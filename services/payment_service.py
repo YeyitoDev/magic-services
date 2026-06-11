@@ -145,7 +145,7 @@ class PaymentService:
         if self._pricing_service is None:
             return True
         try:
-            return self._pricing_service.match_price(amount) is not None
+            return self._pricing_service.match_price_exact(amount) is not None
         except Exception as e:
             logger.warning(
                 f"No se pudo validar el monto S/ {amount:.2f} contra el "

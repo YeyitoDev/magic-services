@@ -45,6 +45,7 @@ class PurchaseRepository(BaseRepository):
         price: float,
         from_channel: str,
         purchase_date=None,
+        commit: bool = True,
     ) -> Purchase:
         """
         Crea y persiste un nuevo registro de compra.
@@ -55,6 +56,9 @@ class PurchaseRepository(BaseRepository):
             price: Precio pagado por el servicio en el momento de la compra.
             from_channel: Canal de origen (ej: "telegram", "whatsapp", "wsp").
             purchase_date: Fecha de compra. Si es None, se usa la hora actual de Lima.
+            commit: Si True (default) confirma de inmediato. Si False, solo hace
+                flush (para participar en una transacción mayor controlada por
+                el caller, p.ej. compra + suscripción atómicas).
 
         Returns:
             La instancia Purchase recién creada y persistida.
@@ -67,7 +71,10 @@ class PurchaseRepository(BaseRepository):
             purchase_date=purchase_date or get_lima_time(),
         )
         self.add(purchase)
-        self.commit()
+        if commit:
+            self.commit()
+        else:
+            self.flush()
         return purchase
 
     # ------------------------------------------------------------------

@@ -199,6 +199,7 @@ class SubscriptionRepository(BaseRepository):
         self,
         subscription: Subscription,
         additional_days: int,
+        commit: bool = True,
     ) -> Subscription:
         """
         Extiende la fecha de fin de una suscripción por N días.
@@ -206,12 +207,15 @@ class SubscriptionRepository(BaseRepository):
         Args:
             subscription: Instancia de Subscription a extender.
             additional_days: Número de días a agregar a end_date.
+            commit: Si True (default) confirma de inmediato. Si False, deja la
+                operación pendiente para una transacción mayor del caller.
 
         Returns:
             La misma instancia ya actualizada y persistida.
         """
         subscription.extend(additional_days)
-        self.commit()
+        if commit:
+            self.commit()
         return subscription
 
     def create_from_purchase(self, purchase: Purchase, duration_days: int) -> Subscription:
