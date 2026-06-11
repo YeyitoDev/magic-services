@@ -853,24 +853,24 @@ class CommandHandlers:
                     member_limit=1,
                     name=f"Link para {tipo_servicio}",
                 )
-                invite_link = generacion_link.invite_link
+                invite_link = generacion_link.invite_link.strip()
                 logger.info(f"Link VIP generado: {invite_link}")
                 return invite_link
 
             except Exception as e:
                 logger.error(
-                    f"No se pudo generar link VIP, usando por defecto: {e}"
+                    f"No se pudo generar link VIP: {e}"
                 )
-                return link_defecto_vip
+                return None
         else:
             # Para Stake, obtener el ID del grupo desde Sheets
             if self._sheets_service:
                 chat_id = self._sheets_service.get_service_group_id(tipo_servicio)
                 if chat_id:
                     try:
-                        invite_link = await context.bot.export_chat_invite_link(
+                        invite_link = (await context.bot.export_chat_invite_link(
                             chat_id=int(chat_id)
-                        )
+                        )).strip()
                         logger.info(f"Link Stake exportado: {invite_link}")
                         return invite_link
                     except Exception as e:
@@ -881,4 +881,4 @@ class CommandHandlers:
                 f"No se pudo obtener link para {tipo_servicio}. "
                 f"Usando link por defecto."
             )
-            return link_defecto_vip
+            return link_defecto_vip.strip() if link_defecto_vip else None

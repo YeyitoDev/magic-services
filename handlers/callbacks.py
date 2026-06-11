@@ -897,10 +897,10 @@ class CallbackHandlers:
                     member_limit=1,
                     name=f"Link para {tipo_servicio}",
                 )
-                return invite.invite_link
+                return invite.invite_link.strip()
             except Exception as e:
                 logger.error(f"Error al crear invite link VIP: {e}")
-                return "https://t.me/+VllSzEZ2smk2MTk5"  # Link por defecto
+                return None  # No fallback link - must be generated fresh
         else:
             # Stake: obtener link del grupo desde Google Sheets
             if self.sheets_service:

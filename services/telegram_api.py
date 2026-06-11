@@ -478,11 +478,11 @@ class TelegramAPIService:
             result = self._request(
                 "POST", "createChatInviteLink", data=data
             )
-            invite_link = result.get("result", {}).get("invite_link")
+            invite_link = result.get("result", {}).get("invite_link", "").strip()
             logger.info(
                 f"Link de invitación creado para chat {chat_id}: {invite_link}"
             )
-            return invite_link
+            return invite_link if invite_link else None
         except TelegramAPIError as e:
             logger.error(
                 f"No se pudo crear link de invitación para chat {chat_id}: {e}"
@@ -507,9 +507,9 @@ class TelegramAPIService:
             result = self._request(
                 "POST", "exportChatInviteLink", data=data
             )
-            link = result.get("result")
-            logger.info(f"Link de invitación exportado para chat {chat_id}")
-            return link
+            link = result.get("result", "").strip()
+            logger.info(f"Link de invitación exportado para chat {chat_id}: {link}")
+            return link if link else None
         except TelegramAPIError as e:
             logger.error(
                 f"No se pudo exportar link de chat {chat_id}: {e}"
