@@ -283,7 +283,9 @@ class SubscriptionCleanupJob:
                             api.send_message(
                                 chat_id=user_id,
                                 text=(
-                                    "🔮 *Tu suscripción al Grupo VIP ha expirado*\n\n"
+                                    "¡Hola, mi gato! �\n\n"
+                                    "Soy *Don Gato*, el Bot Asistente Virtual de Magic Apuestas 🐱.\n\n"
+                                    "Me comunico contigo porque *tu suscripción al Grupo VIP ha expirado*.\n\n"
                                     "Para seguir disfrutando de todos los pronósticos y beneficios, "
                                     "*renueva tu suscripción* enviándonos un mensaje a @magic_peru 📲\n\n"
                                     "💬 ¿Hubo algún problema con tu pago o crees que esto es un error? "
@@ -872,7 +874,9 @@ class SubscriptionCleanupJob:
                     self.telegram_api.send_message(
                         chat_id=int(user_id),
                         text=(
-                            "🔮 *Tu suscripción al Grupo VIP ha expirado*\n\n"
+                            "¡Hola, mi gato! 🔥\n\n"
+                            "Soy *Don Gato*, el Bot Asistente Virtual de Magic Apuestas �.\n\n"
+                            "Me comunico contigo porque *tu suscripción al Grupo VIP ha expirado*.\n\n"
                             "Para seguir disfrutando de todos los pronósticos y beneficios, "
                             "*renueva tu suscripción* enviándonos un mensaje a @magic_peru 📲\n\n"
                             "💬 ¿Hubo algún problema con tu pago o crees que esto es un error? "
