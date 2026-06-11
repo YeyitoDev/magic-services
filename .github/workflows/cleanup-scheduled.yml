@@ -100,7 +100,7 @@ jobs:
           import glob, json, os, pandas as pd
           from openpyxl import load_workbook
 
-          dirs = sorted(glob.glob('output/*'))
+          dirs = sorted([d for d in glob.glob('output/*') if os.path.isdir(d)])
           if not dirs:
               print('No output dir'); exit(0)
           report_dir = dirs[-1]
