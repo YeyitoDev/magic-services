@@ -93,6 +93,66 @@ jobs:
           print(result)
           "
 
+      - name: Generate Excel report
+        if: always()
+        run: |
+          python -c "
+          import glob, json, os, pandas as pd
+          from openpyxl import load_workbook
+
+          dirs = sorted(glob.glob('output/*'))
+          if not dirs:
+              print('No output dir'); exit(0)
+          report_dir = dirs[-1]
+          today = os.path.basename(report_dir)
+          excel_path = os.path.join(report_dir, f'limpieza_{today}.xlsx')
+
+          with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+              # 1. Summary from JSON
+              for jf in sorted(glob.glob(f'{report_dir}/*.json')):
+                  with open(jf) as f:
+                      data = json.load(f)
+                  stats = data.get('resumen_general') or data.get('stats', {})
+                  if stats:
+                      df = pd.DataFrame([
+                          {'Metric': k, 'Value': v if not isinstance(v, list) else len(v)}
+                          for k, v in stats.items()
+                      ])
+                      df.to_excel(writer, sheet_name='Resumen', index=False)
+                      break
+
+              # 2. CSV files as sheets
+              for cf in sorted(glob.glob(f'{report_dir}/*.csv')):
+                  df = pd.read_csv(cf)
+                  sheet_name = os.path.basename(cf).replace('.csv', '')[:31]
+                  df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+              # 3. Expired users from JSON (DB-only mode)
+              for jf in sorted(glob.glob(f'{report_dir}/*.json')):
+                  with open(jf) as f:
+                      data = json.load(f)
+                  users = data.get('expired_users')
+                  if users:
+                      pd.DataFrame(users).to_excel(writer, sheet_name='Expirados', index=False)
+                      break
+
+          # Auto-fit columns
+          wb = load_workbook(excel_path)
+          for ws in wb.worksheets:
+              for col in ws.columns:
+                  max_len = 0
+                  col_letter = col[0].column_letter
+                  for cell in col:
+                      try:
+                          if cell.value:
+                              max_len = max(max_len, len(str(cell.value)))
+                      except Exception:
+                          pass
+                  ws.column_dimensions[col_letter].width = min(max_len + 2, 50)
+          wb.save(excel_path)
+          print(f'Excel generado: {excel_path}')
+          "
+
       - name: Save logs as artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -107,7 +167,7 @@ jobs:
         if: always()
         run: |
           REPORT_DIR=$(find output -maxdepth 2 -type d | sort | tail -1)
-          for f in "$REPORT_DIR"/*.{json,txt}; do
+          for f in "$REPORT_DIR"/*.{json,txt,xlsx}; do
             [ -f "$f" ] || continue
             curl -s -F "chat_id=7860625816" -F "document=@$f" \
               "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" | \
