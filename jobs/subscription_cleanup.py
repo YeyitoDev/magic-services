@@ -363,13 +363,18 @@ class SubscriptionCleanupJob:
             admin_id = 7860625816  # Sergio Ramos
 
             summary = (
-                f"📊 *Resumen de Limpieza*\n"
-                f"├ 🗓️ Fecha: {today}\n"
+                f"─────────────────\n"
+                f"� *PROCESO DE ELIMINACIÓN* 🚨\n"
+                f"─────────────────\n\n"
+                f"� Fecha: {today}\n"
+                f"🕐 Hora: {datetime.now().strftime('%H:%M')}\n\n"
+                f"📊 *Estadísticas de la BD*\n"
                 f"├ 🔧 Reparados: {stats['repaired']}\n"
                 f"├ 👥 Total en BD: {stats['total']}\n"
                 f"├ ✅ Activos en BD: {stats['active']}\n"
                 f"├ ❌ Expirados en BD: {stats['expired']}\n"
-                f"└ 🚫 Eliminados: {stats['removed']}"
+                f"└ 🚫 Eliminados: {stats['removed']}\n\n"
+                f"─────────────────"
             )
 
             api.send_message(chat_id=admin_id, text=summary, parse_mode="Markdown")
@@ -559,13 +564,18 @@ class SubscriptionCleanupJob:
         try:
             admin_id = 7860625816  # Sergio Ramos
             summary = (
-                f"📊 *Resumen de Limpieza (Grupo)*\n"
-                f"├ 🗓️ Fecha: {fecha_ejecucion}\n"
+                f"─────────────────\n"
+                f"� *PROCESO DE ELIMINACIÓN* 🚨\n"
+                f"─────────────────\n\n"
+                f"� Fecha: {fecha_ejecucion}\n"
+                f"🕐 Hora: {hora_ejecucion}\n\n"
+                f"📊 *Estadísticas del Grupo*\n"
                 f"├ 👥 Total en grupo: {stats.get('total_members', 0)}\n"
                 f"├ ✅ Activos en grupo: {stats.get('active_subs', 0)}\n"
                 f"├ ❌ Expirados en grupo: {stats.get('expired_subs', 0)}\n"
                 f"├ 🆕 Sin registro BD: {stats.get('special_clients', 0)}\n"
-                f"└ 🚫 Eliminados: {stats.get('removed', 0)}"
+                f"└ 🚫 Eliminados: {stats.get('removed', 0)}\n\n"
+                f"─────────────────"
             )
             self.telegram_api.send_message(
                 chat_id=admin_id, text=summary, parse_mode="Markdown"

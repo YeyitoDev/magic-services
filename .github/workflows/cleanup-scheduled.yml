@@ -117,21 +117,28 @@ jobs:
           fi
 
           if [ "$MODE" = "validar" ]; then
-            ICON="🔍"
             HEADER="📊 Reporte de Limpieza (Solo lectura)"
+            SEP="───────────────"
           else
-            ICON="🚨"
-            HEADER="📊 Resumen de Limpieza (Eliminación)"
+            HEADER="� PROCESO DE ELIMINACIÓN 🚨"
+            SEP="─────────────────"
           fi
 
-          MSG="${HEADER}
-          ├ 🗓️ Fecha: $(date +'%Y-%m-%d')
+          MSG="${SEP}
+          ${HEADER}
+          ${SEP}
+
+          � Fecha: $(date +'%Y-%m-%d')
+          🕐 Hora: $(date +'%H:%M')
+
+          📊 Estadísticas del Grupo
           ├ 👥 Total en grupo: ${TOTAL}
           ├ ✅ Activos en grupo: ${ACTIVE}
           ├ ❌ Expirados en grupo: ${EXPIRED}
           ├ 🆕 Sin registro BD: ${SPECIAL}
           └ 🚫 Eliminados: ${REMOVED}
-          🕐 $(date +'%H:%M')"
+
+          ${SEP}"
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d "chat_id=7860625816" -d "text=${MSG}" -d "parse_mode=Markdown"
