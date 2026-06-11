@@ -163,13 +163,17 @@ class SubscriptionCleanupJob:
             # ---- PROTECT ADMINS - Never kick admins ----
             from config.settings import settings
             admin_ids = set(int(uid) for uid in settings.TELEGRAM_VALIDATOR_IDS)
-            # Admins + bots - NEVER removed
+            # Admins reales del grupo + bots protegidos - NEVER removed
             admin_ids.update([
-                1555885694, 6475885611,  # Sergio + Martin
-                7754941523,  # @elmagopagos_bot
-                5624304267,  # @PremiumPay_realbot
-                7639865090,  # @Premiumpay_real2bot
-                734284134,   # @deljoinbot
+                1555885694,   # EL MAGO (creator)
+                6475885611,   # Martin (validator)
+                7754941523,   # @elmagopagos_bot
+                7860625816,   # Sergio Ramos
+                5849492872,   # Veronica Manrique
+                1707092473,   # @magic_peru2 (EL MAGO ADM)
+                5624304267,   # @PremiumPay_realbot
+                7639865090,   # @Premiumpay_real2bot
+                734284134,    # @deljoinbot
             ])
 
             # Remove admins from expired list
@@ -431,6 +435,15 @@ class SubscriptionCleanupJob:
             # ---- Paso 1: Obtener administradores del grupo ----
             admins = await self._get_group_admins()
             admin_ids = [str(a["user_id"]) for a in admins]
+            # Merge with hardcoded protected IDs (bots, validators, etc.)
+            from config.settings import settings
+            extra_ids = set(str(uid) for uid in settings.TELEGRAM_VALIDATOR_IDS)
+            extra_ids.update([
+                str(uid) for uid in (
+                    5624304267, 7639865090, 734284134  # bots protegidos
+                )
+            ])
+            admin_ids = list(set(admin_ids) | extra_ids)
             stats["admins"] = len(admin_ids)
             logger.info(f"Administradores obtenidos: {len(admin_ids)}")
 
