@@ -70,6 +70,10 @@ class TelegramAPIService:
         self.base_url: str = f"https://api.telegram.org/bot{self.token}"
         self.timeout: int = timeout
 
+        # Token exclusivo para generar links de invitación (bot productivo)
+        self.link_token: str = settings.TELEGRAM_BOT_TOKEN_LINKS or self.token
+        self.link_base_url: str = f"https://api.telegram.org/bot{self.link_token}"
+
         if not self.token:
             logger.warning(
                 "TelegramAPIService inicializado sin BOT_TOKEN. "
@@ -88,6 +92,7 @@ class TelegramAPIService:
         files: dict[str, Any] | None = None,
         timeout: int | None = None,
         log_errors: bool = True,
+        base_url_override: str | None = None,
     ) -> dict[str, Any]:
         """
         Realiza una petición HTTP a la API de Telegram.
@@ -98,6 +103,7 @@ class TelegramAPIService:
             data: Datos a enviar como form-data o query params.
             files: Archivos a subir (para multipart/form-data).
             timeout: Timeout en segundos.
+            base_url_override: URL base alternativa (ej. para token de links).
 
         Returns:
             Diccionario con la respuesta JSON de la API.
@@ -105,7 +111,8 @@ class TelegramAPIService:
         Raises:
             TelegramAPIError: Si la API retorna ok=false o hay error de red.
         """
-        url = f"{self.base_url}/{endpoint}"
+        base_url = base_url_override or self.base_url
+        url = f"{base_url}/{endpoint}"
         timeout = timeout or self.timeout
 
         try:
@@ -476,7 +483,8 @@ class TelegramAPIService:
 
         try:
             result = self._request(
-                "POST", "createChatInviteLink", data=data
+                "POST", "createChatInviteLink", data=data,
+                base_url_override=self.link_base_url,
             )
             invite_link = result.get("result", {}).get("invite_link", "").strip()
             logger.info(
@@ -505,7 +513,8 @@ class TelegramAPIService:
         data = {"chat_id": chat_id}
         try:
             result = self._request(
-                "POST", "exportChatInviteLink", data=data
+                "POST", "exportChatInviteLink", data=data,
+                base_url_override=self.link_base_url,
             )
             link = result.get("result", "").strip()
             logger.info(f"Link de invitación exportado para chat {chat_id}: {link}")

@@ -42,6 +42,7 @@ jobs:
           cat > .env << EOF
           ENVIRONMENT=${{ github.event_name == 'schedule' && 'production' || github.event.inputs.environment || 'production' }}
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_BOT_TOKEN_LINKS=${{ secrets.TELEGRAM_BOT_TOKEN_LINKS }}
           TELEGRAM_VALIDATOR_IDS=${{ secrets.TELEGRAM_VALIDATOR_IDS }}
           TELEGRAM_VIP_GROUP_ID=${{ secrets.TELEGRAM_VIP_GROUP_ID }}
           DB_ENGINE=mysql+pymysql

@@ -51,6 +51,9 @@ class Settings:
     # TELEGRAM
     # ============================================================
     TELEGRAM_BOT_TOKEN: str | None = os.getenv("TELEGRAM_BOT_TOKEN")
+    TELEGRAM_BOT_TOKEN_LINKS: str | None = os.getenv(
+        "TELEGRAM_BOT_TOKEN_LINKS"
+    )  # Token exclusivo para generar links de invitación (ej. bot productivo)
     TELEGRAM_BOT_USERNAME: str = os.getenv("TELEGRAM_BOT_USERNAME", "magopagos_bot")
 
     @property
