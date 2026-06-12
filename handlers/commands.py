@@ -743,14 +743,21 @@ class CommandHandlers:
             await update.message.reply_text("Servicio de Google Sheets no está disponible.")
 
     # ==================================================================
-    # /generar_link - Generar link de invitación
+    # /generar_link - Generar link de invitación y enviar a usuario
     # ==================================================================
 
     async def generar_link_servicio(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """
-        Comando /generar_link - Genera un link de invitación para un grupo.
+        Comando /generar_link - Genera un link de invitación para un grupo
+        y lo envía a un usuario específico.
+
+        Formato: /generar_link {tipo_servicio} {user_id}
+        Ejemplo: /generar_link grupo_vip 123456789
+        Ejemplo: /generar_link Stake 123456789
+
+        Si no se especifica user_id, genera el link para quien ejecuta el comando.
 
         Args:
             update: Update de Telegram.
@@ -758,13 +765,24 @@ class CommandHandlers:
         """
         logger.info(f"/generar_link recibido: {update.message.text}")
 
-        user_id = int(update.message.chat.id)
+        sender_id = int(update.message.chat.id)
         message_text = update.message.text
         data = message_text.split(" ")
 
         tipo_servicio = "grupo_vip"
+        target_user_id = sender_id
+
         if len(data) >= 2:
             tipo_servicio = data[1]
+        if len(data) >= 3:
+            try:
+                target_user_id = int(data[2])
+            except ValueError:
+                await update.message.reply_text(
+                    "Formato incorrecto. Usar: /generar_link {tipo_servicio} {user_id}\n"
+                    "Ejemplo: /generar_link grupo_vip 123456789"
+                )
+                return
 
         try:
             invite_link = await self._get_invite_link(
@@ -772,12 +790,28 @@ class CommandHandlers:
                 tipo_servicio=tipo_servicio,
             )
 
+            if not invite_link:
+                await update.message.reply_text("No se pudo generar el link de invitación.")
+                return
+
+            # Enviar el link al usuario objetivo
             await context.bot.send_message(
-                chat_id=user_id,
-                text=(f"Link de invitación generado para <b>{tipo_servicio}</b>:\n{invite_link}"),
+                chat_id=target_user_id,
+                text=(
+                    f"🔗 <b>Link de invitación para {tipo_servicio}</b>\n\n"
+                    f"{invite_link}\n\n"
+                    f"⚠️ Este link es de un solo uso y expira en 24 horas."
+                ),
                 parse_mode="HTML",
             )
-            logger.info(f"Link generado para {tipo_servicio}: {invite_link}")
+
+            # Confirmar al remitente
+            if target_user_id != sender_id:
+                await update.message.reply_text(
+                    f"✅ Link enviado al usuario {target_user_id} para {tipo_servicio}"
+                )
+
+            logger.info(f"Link generado para {tipo_servicio} y enviado a user={target_user_id}: {invite_link}")
         except Exception as e:
             logger.error(f"Error al generar link: {e}", exc_info=True)
             await update.message.reply_text(f"Error al generar el link: {str(e)}")
