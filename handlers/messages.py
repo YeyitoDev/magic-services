@@ -266,6 +266,7 @@ class MessageHandlers:
             )
             return
 
+        from utils.datetime_utils import get_lima_time_formatted
         fecha_actual = get_lima_time_formatted()["fecha_completa"]
 
         logger.info(
