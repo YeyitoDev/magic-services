@@ -219,6 +219,14 @@ class Container:
         from services.subscription_service import SubscriptionService
         from services.user_service import UserService
 
+        # ---- Vision Services ----
+        from services.openai_vision import GeminiVisionService
+
+        self.register_factory(
+            "gemini_vision_service",
+            lambda: GeminiVisionService(),
+        )
+
         self.register_factory(
             "user_service",
             lambda: UserService(self.resolve("user_repository")),

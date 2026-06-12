@@ -123,6 +123,11 @@ class Settings:
     AWS_DYNAMODB_TABLE: str = os.getenv("AWS_DYNAMODB_TABLE", "MAGIC-USER-SESSIONS-LOG")
 
     # ============================================================
+    # GOOGLE GEMINI
+    # ============================================================
+    GEMINI_API_KEY: str | None = os.getenv("GEMINI_API_KEY")
+
+    # ============================================================
     # BETSAFE - LINKS PROMOCIONALES
     # ============================================================
     BETSAFE_PROMO_LINK: str = os.getenv(

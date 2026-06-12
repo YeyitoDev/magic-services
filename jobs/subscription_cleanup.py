@@ -362,11 +362,16 @@ class SubscriptionCleanupJob:
             api = TelegramAPIService()
             admin_id = 7860625816  # Sergio Ramos
 
+            header = (
+                "📊 *Reporte de Limpieza (Solo lectura)*"
+                if mode == "validar"
+                else "🚨 *PROCESO DE ELIMINACIÓN* 🚨"
+            )
             summary = (
                 f"─────────────────\n"
-                f"� *PROCESO DE ELIMINACIÓN* 🚨\n"
+                f"{header}\n"
                 f"─────────────────\n\n"
-                f"� Fecha: {today}\n"
+                f"📅 Fecha: {today}\n"
                 f"🕐 Hora: {datetime.now().strftime('%H:%M')}\n\n"
                 f"📊 *Estadísticas de la BD*\n"
                 f"├ 🔧 Reparados: {stats['repaired']}\n"
@@ -563,11 +568,16 @@ class SubscriptionCleanupJob:
         # ---- Notify admin of cleanup results ----
         try:
             admin_id = 7860625816  # Sergio Ramos
+            header = (
+                "📊 *Reporte de Limpieza (Solo lectura)*"
+                if mode == "validar"
+                else "🚨 *PROCESO DE ELIMINACIÓN* 🚨"
+            )
             summary = (
                 f"─────────────────\n"
-                f"� *PROCESO DE ELIMINACIÓN* 🚨\n"
+                f"{header}\n"
                 f"─────────────────\n\n"
-                f"� Fecha: {fecha_ejecucion}\n"
+                f"📅 Fecha: {fecha_ejecucion}\n"
                 f"🕐 Hora: {hora_ejecucion}\n\n"
                 f"📊 *Estadísticas del Grupo*\n"
                 f"├ 👥 Total en grupo: {stats.get('total_members', 0)}\n"
@@ -1079,7 +1089,7 @@ class SubscriptionCleanupJob:
             f.write("=" * 60 + "\n")
             f.write("RESUMEN DE EJECUCIÓN - LIMPIEZA DE SUSCRIPCIONES\n")
             f.write("=" * 60 + "\n\n")
-            f.write(f"Fecha: {fecha_ejecucion}\n")
+            f.write(f"📅 Fecha: {fecha_ejecucion}\n")
             f.write(f"Hora: {hora_ejecucion}\n\n")
             f.write("ESTADÍSTICAS GENERALES:\n")
             f.write("-" * 60 + "\n")

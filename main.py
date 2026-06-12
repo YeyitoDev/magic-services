@@ -245,6 +245,7 @@ def build_telegram_app(container):
         user_service=user_service,
         payment_service=payment_service,
         vision_service=vision_service,
+        gemini_vision_service=container.resolve("gemini_vision_service"),
         promotion_service=promotion_service,
         container=container,
     )

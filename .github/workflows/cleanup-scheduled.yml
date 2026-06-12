@@ -103,7 +103,7 @@ jobs:
         if: always()
         run: |
           ENV="${{ github.event_name == 'schedule' && 'production' || github.event.inputs.environment || 'production' }}"
-          MODE="${{ github.event.inputs.mode || 'eliminar' }}"
+          MODE="${{ github.event.inputs.mode || 'validar' }}"
 
           # Parse stats from Telethon-generated JSON
           JSON_FILE=$(find output -name 'log_ejecucion_*.json' -maxdepth 2 | sort | tail -1)

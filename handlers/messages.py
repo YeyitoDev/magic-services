@@ -53,6 +53,7 @@ class MessageHandlers:
         user_service: UserService para registro de usuarios.
         payment_service: PaymentService para validación de pagos.
         vision_service: GoogleVisionService para OCR de imágenes.
+        gemini_vision_service: GeminiVisionService para extracción de precios con IA.
         promotion_service: PromotionService para registro en DynamoDB.
         container: Contenedor de dependencias para resolver otros servicios.
     """
@@ -62,8 +63,9 @@ class MessageHandlers:
         user_service,
         payment_service,
         vision_service,
-        promotion_service,
-        container,
+        gemini_vision_service=None,
+        promotion_service=None,
+        container=None,
     ) -> None:
         """
         Inicializa los handlers de mensajes con sus dependencias.
@@ -72,12 +74,14 @@ class MessageHandlers:
             user_service: Servicio de gestión de usuarios.
             payment_service: Servicio de validación de pagos.
             vision_service: Servicio de Google Vision para OCR.
+            gemini_vision_service: Servicio de Gemini Vision para extracción de precios (opcional).
             promotion_service: Servicio de pipeline de promociones.
             container: Contenedor IoC para resolver servicios bajo demanda.
         """
         self._user_service = user_service
         self._payment_service = payment_service
         self._vision_service = vision_service
+        self._gemini_vision_service = gemini_vision_service
         self._promotion_service = promotion_service
         self._container = container
 
@@ -207,24 +211,51 @@ class MessageHandlers:
         # Guardar file_id en contexto para uso posterior (evita re-descarga)
         context.user_data["pending_file_id"] = file_id
 
-        # --- Paso 2: OCR con Google Vision (desde bytes, sin archivo local) ---
-        try:
-            detected_text = self._vision_service.detect_text_from_bytes(bytes(image_bytes))
-            logger.debug(f"Texto detectado: {detected_text[:200]}...")
-        except Exception as e:
-            logger.error(f"Error en OCR para user={user_id}: {e}")
-            await update.message.reply_text(
-                "❌ No pude leer tu comprobante. "
-                "Por favor envía una imagen más clara o contacta a @magic_peru."
-            )
-            return
+        # --- Paso 2: Extraer precio con Gemini Vision (IA) ---
+        monto_extraido = None
+        fecha_extraida = None
+        used_gemini = False
 
-        # --- Paso 3: Extraer monto y fecha del texto ---
-        from utils.datetime_utils import get_lima_time_formatted
-        from utils.text_parser import extract_amount, extract_date
+        if self._gemini_vision_service:
+            try:
+                # Guardar imagen temporalmente para Gemini Vision
+                import tempfile
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+                    tmp.write(image_bytes)
+                    tmp_path = tmp.name
 
-        monto_extraido = extract_amount(detected_text)
-        fecha_extraida = extract_date(detected_text)
+                result = await self._gemini_vision_service.extract_price_from_image(tmp_path)
+                
+                if result["success"] and result["price"]:
+                    monto_extraido = result["price"]
+                    used_gemini = True
+                    logger.info(
+                        f"Gemini Vision detectó monto=S/ {monto_extraido:.2f} "
+                        f"(confidence={result['confidence']}) para user={user_id}"
+                    )
+                else:
+                    logger.warning(
+                        f"Gemini Vision no detectó precio: {result.get('error')}, "
+                        f"usando fallback OCR para user={user_id}"
+                    )
+            except Exception as e:
+                logger.error(f"Error en Gemini Vision para user={user_id}: {e}")
+            finally:
+                import os
+                if 'tmp_path' in locals() and os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+
+        # --- Paso 3: Fallback a Google Vision OCR si Gemini falló ---
+        if monto_extraido is None:
+            try:
+                detected_text = self._vision_service.detect_text_from_bytes(bytes(image_bytes))
+                logger.debug(f"Texto detectado por OCR: {detected_text[:200]}...")
+                
+                from utils.text_parser import extract_amount, extract_date
+                monto_extraido = extract_amount(detected_text)
+                fecha_extraida = extract_date(detected_text)
+            except Exception as e:
+                logger.error(f"Error en OCR fallback para user={user_id}: {e}")
 
         if monto_extraido is None:
             logger.warning(f"No se pudo extraer monto del comprobante de user={user_id}")
