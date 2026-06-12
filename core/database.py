@@ -36,9 +36,12 @@ engine = create_engine(
     pool_size=settings.DB_POOL_SIZE,
     max_overflow=settings.DB_MAX_OVERFLOW,
     pool_timeout=settings.DB_POOL_TIMEOUT,
-    pool_pre_ping=True,           # Verifica que la conexión siga viva
-    pool_recycle=3600,            # Recicla conexiones cada hora
+    pool_pre_ping=True,           # Verifica que la conexión siga viva antes de usarla
+    pool_recycle=280,             # Recicla conexiones cada ~5 min (antes del wait_timeout de RDS)
     echo=False,                   # SQL queries never printed
+    connect_args={
+        "connect_timeout": 10,    # Timeout al abrir conexión (segundos)
+    },
 )
 
 # ---------------------------------------------------------------------------
@@ -74,6 +77,13 @@ def get_db() -> Generator[Session, None, None]:
     try:
         yield db
     finally:
+        # Rollback si hay una transacción activa para evitar
+        # PendingRollbackError en futuras operaciones
+        try:
+            if db.is_active:
+                db.rollback()
+        except Exception:
+            pass
         db.close()
 
 

@@ -326,6 +326,10 @@ class MessageHandlers:
         Envía la imagen del comprobante y los datos extraídos a todos
         los validadores autorizados para su revisión.
 
+        Si el monto no corresponde a un precio definido en la BD,
+        oculta el botón de aprobación y obliga al validador a ingresar
+        el monto manualmente.
+
         Args:
             update: Update de Telegram.
             context: Contexto de la conversación.
@@ -337,6 +341,21 @@ class MessageHandlers:
         """
         from utils.keyboards import payment_validation_keyboard
 
+        # Verificar si el monto corresponde a un precio válido
+        is_valid_price = False
+        try:
+            if self._container.is_registered("pricing_service"):
+                pricing = self._container.resolve("pricing_service")
+                plan = pricing.match_price_exact(amount)
+                is_valid_price = plan is not None
+                if not is_valid_price:
+                    logger.warning(
+                        f"Monto S/ {amount:.2f} no corresponde a un precio definido. "
+                        f"Validador deberá ingresar monto manualmente."
+                    )
+        except Exception as e:
+            logger.warning(f"No se pudo verificar precio: {e}")
+
         # Construir mensaje para el validador
         validation_message = self._payment_service.build_validation_message(
             telegram_id=user_id,
@@ -345,34 +364,103 @@ class MessageHandlers:
             extracted_date=extracted_date,
         )
 
-        # Construir teclado de validación
+        # Si el monto no es válido, agregar advertencia al mensaje
+        if not is_valid_price:
+            validation_message += (
+                "\n\n⚠️ <b>MONTO NO RECONOCIDO</b>\n"
+                "El monto detectado no coincide con ningún precio definido. "
+                "Debe ingresar el monto manualmente."
+            )
+
+        # Construir teclado de validación (ocultar aprobar si monto inválido)
         reply_markup = payment_validation_keyboard(
             user_id=user_id,
             amount=amount,
             source="telegram",
             extra_data=extracted_date,
+            is_valid_price=is_valid_price,
         )
 
-        # Obtener lista de validadores (excluir al remitente)
+        # Obtener lista de validadores
+        # En testing: permitir auto-validación para que el validador (Sergio) reciba sus propios comprobantes
         validator_ids = self._payment_service.get_validator_ids()
 
         user_id_str = str(user_id)
         for validator_id in validator_ids:
             if validator_id == user_id_str:
-                logger.warning(f"Validador {validator_id} es el propio remitente, saltando auto-validación")
-                continue
+                from config.settings import settings
+                if settings.ENVIRONMENT != "testing":
+                    logger.warning(f"Validador {validator_id} es el propio remitente, saltando auto-validación")
+                    continue
+                else:
+                    logger.info(f"TEST: Enviando comprobante al propio remitente/validador {validator_id}")
 
+            # Borrar validación anterior del mismo usuario (si existe) para
+            # que solo se muestre la foto más reciente en el chat del validador
+            pending_key = f"pending_validation:{user_id}:{validator_id}"
             try:
-                await context.bot.send_photo(
-                    chat_id=int(validator_id),
-                    photo=file_id,
-                    caption=validation_message,
-                    reply_markup=reply_markup,
-                    parse_mode="HTML",
+                old_msg = context.bot_data.get(pending_key)
+                if old_msg:
+                    old_validator_id, old_message_id = old_msg
+                    await context.bot.delete_message(
+                        chat_id=int(old_validator_id), message_id=old_message_id
+                    )
+                    logger.info(f"Validación anterior de user={user_id} borrada del chat {old_validator_id}")
+            except Exception:
+                pass  # Si falla el borrado, seguimos igual
+            finally:
+                context.bot_data.pop(pending_key, None)
+
+            # Telegram limita captions de foto a 1024 caracteres.
+            # Si el mensaje excede el límite, enviamos la foto sin caption
+            # y el mensaje completo como texto separado para evitar
+            # truncar tags HTML a medio abrir.
+            caption = validation_message
+            sent_message_id = None
+            if len(caption) > 1024:
+                logger.warning(
+                    f"Caption de {len(caption)} chars excede límite de 1024. "
+                    f"Enviando foto y mensaje por separado."
                 )
-                logger.info(f"Comprobante enviado al validador {validator_id} para user={user_id}")
-            except Exception as e:
-                logger.error(f"Error al enviar comprobante al validador {validator_id}: {e}")
+                try:
+                    photo_msg = await context.bot.send_photo(
+                        chat_id=int(validator_id),
+                        photo=file_id,
+                    )
+                    text_msg = await context.bot.send_message(
+                        chat_id=int(validator_id),
+                        text=validation_message,
+                        reply_markup=reply_markup,
+                        parse_mode="HTML",
+                    )
+                    sent_message_id = text_msg.message_id
+                    if is_valid_price:
+                        logger.info(f"Comprobante enviado al validador {validator_id} para user={user_id}")
+                    else:
+                        logger.info(f"Comprobante con monto inválido enviado al validador {validator_id} para user={user_id}")
+                except Exception as e:
+                    logger.error(f"Error al enviar comprobante al validador {validator_id}: {e}")
+                continue
+            else:
+                try:
+                    msg = await context.bot.send_photo(
+                        chat_id=int(validator_id),
+                        photo=file_id,
+                        caption=caption,
+                        reply_markup=reply_markup,
+                        parse_mode="HTML",
+                    )
+                    sent_message_id = msg.message_id
+                    if is_valid_price:
+                        logger.info(f"Comprobante enviado al validador {validator_id} para user={user_id}")
+                    else:
+                        logger.info(f"Comprobante con monto inválido enviado al validador {validator_id} para user={user_id}")
+                except Exception as e:
+                    logger.error(f"Error al enviar comprobante al validador {validator_id}: {e}")
+
+            # Guardar referencia para poder borrarla si el usuario envía otra foto
+            if sent_message_id:
+                context.bot_data[pending_key] = (validator_id, sent_message_id)
 
     async def _handle_duplicate_payment(
         self,

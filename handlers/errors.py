@@ -98,6 +98,10 @@ class ErrorHandler:
             f"Traceback:\n{tb_string}"
         )
 
+        # Rollback de sesión de BD si es un error de SQLAlchemy para evitar
+        # que la conexión quede en estado inválido (PendingRollbackError)
+        self._rollback_db_session_if_needed(error)
+
         # Notificar al usuario afectado (si el update lo permite)
         await self._notify_user(update, context)
 
@@ -288,6 +292,65 @@ class ErrorHandler:
 
         error_name = type(error).__name__
         return any(err_type in error_name for err_type in user_error_types)
+
+    def _rollback_db_session_if_needed(self, error: Exception) -> None:
+        """
+        Hace rollback de la sesión de BD y fuerza reconexión si es necesario.
+
+        Cuando ocurre un error durante una transacción, SQLAlchemy deja
+        la sesión en estado inválido. Sin rollback, todas las operaciones
+        posteriores fallan con PendingRollbackError.
+
+        Args:
+            error: La excepción ocurrida.
+        """
+        error_name = type(error).__name__
+        error_str = str(error)
+
+        # Solo actuar ante errores de base de datos
+        sqlalchemy_errors = (
+            "PendingRollbackError",
+            "OperationalError",
+            "IntegrityError",
+            "ProgrammingError",
+            "DatabaseError",
+            "InterfaceError",
+            "SQLAlchemyError",
+        )
+        is_connection_lost = (
+            "Lost connection" in error_str
+            or "MySQL server has gone away" in error_str
+        )
+        is_db_error = (
+            is_connection_lost
+            or any(err in error_name for err in sqlalchemy_errors)
+        )
+        if not is_db_error:
+            return
+
+        # PASO 1: Rollback de la sesión compartida SIEMPRE.
+        # Esto es lo que limpia la transacción inválida y evita que la
+        # siguiente petición falle con PendingRollbackError.
+        try:
+            from core.container import container
+            if container.is_registered("db_session"):
+                session = container.resolve("db_session")
+                if hasattr(session, "rollback"):
+                    session.rollback()
+                    logger.info("Rollback de sesión de BD ejecutado tras error de BD.")
+        except Exception as e:
+            logger.warning(f"No se pudo hacer rollback de la sesión: {e}")
+
+        # PASO 2: Si la conexión se perdió, además reciclar el pool para
+        # que la próxima query obtenga una conexión fresca.
+        if is_connection_lost:
+            logger.warning("Conexión a MySQL perdida. Reciclando pool de conexiones...")
+            try:
+                from core.database import engine
+                engine.dispose()
+                logger.info("Pool de conexiones SQLAlchemy dispose() ejecutado.")
+            except Exception as e:
+                logger.error(f"No se pudo reciclar el pool de conexiones: {e}")
 
     def _truncate_traceback(
         self, tb_string: str, max_lines: int = 10

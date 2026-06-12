@@ -90,11 +90,22 @@ class CallbackHandlers:
 
     async def _safe_edit_message(self, query, text: str, reply_markup=None):
         """Edits a message safely, handling both text and photo messages."""
+        logger.info(f"[_safe_edit_message] Editing message. Has reply_markup: {reply_markup is not None}")
         try:
             if query.message.photo:
-                await query.edit_message_caption(caption=text, reply_markup=reply_markup)
+                await query.edit_message_caption(
+                    caption=text,
+                    reply_markup=reply_markup,
+                    parse_mode="HTML",
+                )
+                logger.info("[_safe_edit_message] Caption edited successfully")
             else:
-                await query.edit_message_text(text=text, reply_markup=reply_markup)
+                await query.edit_message_text(
+                    text=text,
+                    reply_markup=reply_markup,
+                    parse_mode="HTML",
+                )
+                logger.info("[_safe_edit_message] Text edited successfully")
         except Exception as e:
             error_msg = str(e)
             if (
@@ -554,6 +565,7 @@ class CallbackHandlers:
         monto incorrecto).
         """
         query = update.callback_query
+        await query.answer()  # Responder al callback para evitar "Loading..."
         validator_id = query.from_user.id
         message_id = query.message.message_id
 
@@ -575,11 +587,15 @@ class CallbackHandlers:
 
         # Obtener file_id del mensaje de foto (sin archivo local)
 
-        # Prevenir auto-validación del propio pago
+        # Prevenir auto-validación del propio pago (excepto en testing)
         if validator_id == target_user_id:
-            await query.answer("No puedes validar tu propio pago.", show_alert=True)
-            logger.warning(f"Auto-validación bloqueada: validator={validator_id} intentó validar su propio pago")
-            return
+            from config.settings import settings
+            if settings.ENVIRONMENT != "testing":
+                await query.answer("No puedes validar tu propio pago.", show_alert=True)
+                logger.warning(f"Auto-validación bloqueada: validator={validator_id} intentó validar su propio pago")
+                return
+            else:
+                logger.info(f"TEST: Permitida auto-validación para validator={validator_id}")
 
         logger.info(
             f"Validación: action={action}, validator={validator_id}, "
@@ -672,53 +688,97 @@ class CallbackHandlers:
             )
             return
 
+        # Determinar tipo de servicio
+        tipo_servicio = (
+            result.service_type if result.service_type else ("grupo_vip" if monto > 50 else "stake")
+        )
+        service_display = "Grupo VIP" if tipo_servicio in ("grupo_vip", "Grupo VIP") else "Stake"
+
         # Registro exitoso: ahora sí marcar la venta como validada.
-        await self._safe_edit_message(query, text="✅ ¡Venta validada con éxito!")
+        success_text = (
+            f"✅ <b>PAGO VALIDADO CON ÉXITO</b>\n\n"
+            f"👤 Usuario: <code>{user_id}</code>\n"
+            f"💵 Monto: S/ {monto:.2f}\n"
+            f"📦 Servicio: {service_display}\n\n"
+            f"<i>El usuario ha sido notificado y recibirá su acceso.</i>"
+        )
+        await self._safe_edit_message(query, text=success_text)
 
         # Actualizar WSP si corresponde
         if source == "wsp" and self.sheets_service:
             self.sheets_service.update_wsp_payment_review_status(telegram_id=user_id)
 
-        # Determinar tipo de servicio
-        tipo_servicio = (
-            result.service_type if result.service_type else ("grupo_vip" if monto > 50 else "stake")
-        )
-
         # Obtener link de invitación
         invite_link = await self._get_invite_link(context, tipo_servicio)
 
-        # Betsafe registration
+        # 1) Confirmación de pago al comprador
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=(
+                f"✅ <b>¡PAGO CONFIRMADO!</b>\n\n"
+                f"💵 <b>Monto:</b> S/ {monto:.2f}\n"
+                f"📦 <b>Servicio:</b> {service_display}\n\n"
+                f"<i>Gracias por tu compra. A continuación recibirás "
+                f"tu acceso al grupo y información importante.</i>"
+            ),
+            parse_mode="HTML",
+        )
+
+        # 2) Betsafe registration
         await media_service.send_photo(
             context,
             user_id,
             "betsafe_logo",
             caption=(
-                "<b>INFORMACIÓN ULTRA IMPORTANTE 🆘</b>\n\n"
+                "<b>🔗 LINK EXCLUSIVO BETSAFE</b>\n\n"
                 "Todas nuestras apuestas estadísticas son realizadas en Betsafe, "
-                "la única casa en el mundo que nos da las mejores opciones "
-                "estadísticas en todas las ligas de fútbol.\n\n"
-                "Regístrate con el link de abajo para que tu cuenta "
-                "jamás sea bloqueada o limitada.\n\n"
-                f"<b>LINK EXCLUSIVO DE BETSAFE ⤵️</b>\n{self.settings.BETSAFE_PROMO_LINK}"
+                "la casa que nos da las mejores opciones en todas las ligas.\n\n"
+                "<b>Regístrate aquí para evitar bloqueos en tu cuenta:</b>\n"
+                f"👉 {self.settings.BETSAFE_PROMO_LINK}"
             ),
             parse_mode="HTML",
         )
         await context.bot.send_message(
             chat_id=user_id,
             text=(
-                "<b>¡TE REGALO 70 LUCAS MI KING!</b>\n\n"
+                "<b>🎁 BONO DE BIENVENIDA</b>\n\n"
                 "Regístrate con el link exclusivo, haz tu primer depósito "
-                "de mínimo S/. 40 y listo tendrás 70 soles gratis.\n\n"
+                "de mínimo S/ 40 y recibe <b>70 soles gratis</b>.\n\n"
                 f"<a href='{self.settings.BETSAFE_PROMO_LINK}'>"
-                "👉 OBTÉN TUS 70 SOLES GRATIS 👈</a>"
+                "� OBTENER MIS 70 SOLES GRATIS</a>"
             ),
             parse_mode="HTML",
         )
-        # Invite link
+
+        # 3) Invite link
         if invite_link:
             await context.bot.send_message(
                 chat_id=user_id,
-                text=f"🚀 Aquí tienes tu enlace de invitación mi gato, válido para un solo uso y expira en 24 horas:\n{invite_link}",
+                text=(
+                    f"🚀 <b>TU ACCESO A {service_display.upper()}</b>\n\n"
+                    f"<a href='{invite_link}'>👉 UNIRME AL GRUPO AHORA</a>\n\n"
+                    f"<b>⚠️ Importante:</b>\n"
+                    f"• El link es de <b>un solo uso</b>\n"
+                    f"• Expira en <b>24 horas</b>\n"
+                    f"• No lo compartas con nadie"
+                ),
+                parse_mode="HTML",
+                disable_web_page_preview=True,
+            )
+
+            # 4) Instrucciones post-link
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=(
+                    f"<b>📌 INSTRUCCIONES PARA INGRESAR</b>\n\n"
+                    f"1️⃣ Toca el link de arriba\n"
+                    f"2️⃣ Presiona <b>«Unirse al grupo»</b>\n"
+                    f"3️⃣ Lee las reglas del grupo\n"
+                    f"4️⃣ ¡Listo, empieza a ganar! 🏆\n\n"
+                    f"<i>Si el link no funciona o expiró, contacta a "
+                    f"@magic_peru2 para que te envíe uno nuevo.</i>"
+                ),
+                parse_mode="HTML",
             )
 
         # Confirmar al validador
@@ -728,11 +788,14 @@ class CallbackHandlers:
         await context.bot.send_message(
             chat_id=query.from_user.id,
             text=(
-                f"✅ Pago validado:\n"
-                f"Usuario: {user_name} ({user_id})\n"
-                f"Monto: S/ {monto:.2f}\n"
-                f"Servicio: {tipo_servicio}"
+                f"✅ <b>PAGO REGISTRADO CORRECTAMENTE</b>\n\n"
+                f"👤 <b>Usuario:</b> {user_name}\n"
+                f"🆔 <b>ID:</b> <code>{user_id}</code>\n"
+                f"💵 <b>Monto:</b> S/ {monto:.2f}\n"
+                f"📦 <b>Servicio:</b> {tipo_servicio.title()}\n\n"
+                f"<i>El usuario recibirá su acceso automáticamente.</i>"
             ),
+            parse_mode="HTML",
         )
 
         # Limpiar
@@ -765,6 +828,7 @@ class CallbackHandlers:
         await context.bot.send_message(
             chat_id=user_id,
             text=self.payment_service.build_rejection_message(user_id),
+            parse_mode="HTML",
         )
 
         # Sin archivo local que eliminar: las imágenes fluyen por file_id de Telegram
@@ -790,6 +854,8 @@ class CallbackHandlers:
                 else None
             )
 
+            logger.info(f"[_process_incorrect_amount] pricing available: {pricing is not None}")
+
             fecha_correcta = get_lima_time_formatted()["ddmmyyyy"]
 
             mensaje = (
@@ -804,12 +870,14 @@ class CallbackHandlers:
             # Use dynamic pricing keyboard if available
             if pricing:
                 reply_markup = pricing.generate_confirmation_keyboard(user_id=user_id, amount=monto)
+                logger.info(f"[_process_incorrect_amount] Dynamic keyboard generated: {reply_markup is not None}")
             else:
                 from utils.keyboards import service_confirmation_keyboard
 
                 reply_markup = service_confirmation_keyboard(
                     user_id=user_id, monto=monto, message_id=message_id, source=source
                 )
+                logger.info(f"[_process_incorrect_amount] Fallback keyboard generated: {reply_markup is not None}")
 
             # Editar el caption del mensaje de foto existente (sin reenviar desde disco)
             await self._safe_edit_message(query, mensaje, reply_markup)
@@ -838,37 +906,120 @@ class CallbackHandlers:
         """
         Procesa la confirmación manual del servicio cuando el validador
         selecciona directamente el tipo de servicio (Stake o plan VIP).
+
+        Flujo de dos pasos:
+        1. select: El validador selecciona un precio → se muestra confirmación.
+        2. valid: El validador confirma → se procesa el pago.
         """
         query = update.callback_query
+        await query.answer()
         action = data[1] if len(data) > 1 else ""
         target_user_id = int(data[2]) if len(data) > 2 else 0
         monto = float(data[3]) if len(data) > 3 else 0.0
         validator_id = query.from_user.id
 
-        if action == "valid":
-            # Procesar como pago validado
+        if action == "select":
+            # Paso 1: Mostrar confirmación del precio seleccionado
+            service_name = self._get_service_name_for_price(monto)
+
+            confirm_text = (
+                f"🔍 <b>PASO 2: CONFIRMA TU SELECCIÓN</b>\n\n"
+                f"👤 <b>Usuario:</b> <code>{target_user_id}</code>\n"
+                f"💵 <b>Monto seleccionado:</b> S/ {monto:.2f}\n"
+                f"📦 <b>Servicio:</b> {service_name}\n\n"
+                f"<i>Revisa que todo esté correcto antes de confirmar.</i>"
+            )
+
+            from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+            confirm_keyboard = InlineKeyboardMarkup([
+                [
+                    InlineKeyboardButton(
+                        "✅ CONFIRMAR PAGO",
+                        callback_data=f"buttom_validar_monto:valid:{target_user_id}:{int(monto)}",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        "🔄 CAMBIAR MONTO",
+                        callback_data=f"buttom_validar_monto:change:{target_user_id}:{int(monto)}",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        "❌ CANCELAR VALIDACIÓN",
+                        callback_data=f"buttom_validar_monto:cancel:{target_user_id}",
+                    )
+                ],
+            ])
+
+            await self._safe_edit_message(query, confirm_text, confirm_keyboard)
+            return
+
+        elif action == "valid":
+            # Paso 2: Procesar como pago validado
             await self._process_valid_payment(
                 update, context, query, target_user_id, monto, "telegram", ""
             )
+
+        elif action == "change":
+            # Volver a mostrar la lista de precios
+            container = getattr(context, "container", None)
+            if container is None:
+                from core.container import container
+            pricing = (
+                container.resolve("pricing_service")
+                if container.is_registered("pricing_service")
+                else None
+            )
+
+            from utils.keyboards import service_confirmation_keyboard
+            if pricing:
+                reply_markup = pricing.generate_confirmation_keyboard(
+                    user_id=target_user_id, amount=monto
+                )
+            else:
+                reply_markup = service_confirmation_keyboard(
+                    user_id=target_user_id, monto=monto, source="telegram"
+                )
+
+            change_text = (
+                f"🔍 <b>PASO 1: SELECCIONA EL SERVICIO</b>\n\n"
+                f"👤 <b>Usuario:</b> <code>{target_user_id}</code>\n"
+                f"💵 <b>Monto detectado:</b> S/ {monto:.2f}\n\n"
+                f"<i>Elige el servicio que corresponde a este pago:</i>"
+            )
+            await self._safe_edit_message(query, change_text, reply_markup)
+            return
 
         elif action == "cancel":
             # Cancelar validación
             user = self.user_service.get_user(target_user_id)
             user_name = user.telegram_name if user else str(target_user_id)
 
-            await self._safe_edit_message(query, text="❌ Validación cancelada.")
+            await self._safe_edit_message(
+                query,
+                text=(
+                    f"❌ <b>VALIDACIÓN CANCELADA</b>\n\n"
+                    f"👤 Usuario: <code>{target_user_id}</code>\n"
+                    f"💵 Monto: S/ {monto:.2f}\n\n"
+                    f"<i>El validador canceló esta validación.</i>"
+                ),
+            )
 
             await context.bot.send_message(
                 chat_id=validator_id,
                 text=(
-                    f"❌ No se validó el pago de {user_name} ({target_user_id}) "
-                    f"con monto desconocido"
+                    f"❌ Validación cancelada\n"
+                    f"Usuario: {user_name}\n"
+                    f"Monto: S/ {monto:.2f}"
                 ),
             )
 
             await context.bot.send_message(
                 chat_id=target_user_id,
                 text=self.payment_service.build_rejection_message(target_user_id),
+                parse_mode="HTML",
             )
 
             # Sin archivo local que eliminar: las imágenes fluyen por file_id de Telegram
@@ -938,6 +1089,24 @@ class CallbackHandlers:
         except Exception as e:
             logger.error(f"Error al registrar interacción de {user_id}: {e}")
 
+    def _get_service_name_for_price(self, price: float) -> str:
+        """Obtiene el nombre del servicio a partir del precio."""
+        try:
+            from core.container import container
+            if container.is_registered("pricing_service"):
+                pricing = container.resolve("pricing_service")
+                plan = pricing.match_price_exact(price)
+                if plan and plan.service:
+                    return plan.service.name
+        except Exception:
+            pass
+        # Fallback por precio conocido
+        if price == 50:
+            return "Stake"
+        if price in (125, 175, 225):
+            return "Grupo VIP"
+        return "Servicio desconocido"
+
     async def _get_invite_link(
         self, context: ContextTypes.DEFAULT_TYPE, tipo_servicio: str
     ) -> str | None:
@@ -946,8 +1115,31 @@ class CallbackHandlers:
         Usa python-telegram-bot para crear un link de un solo uso.
         """
         if tipo_servicio in ("grupo_vip", "Grupo VIP"):
+            chat_id = self.settings.TELEGRAM_VIP_GROUP_ID
+
+            # 1) Intentar con el bot productivo de links (admin en el grupo VIP)
             try:
-                chat_id = self.settings.TELEGRAM_VIP_GROUP_ID
+                import asyncio
+
+                from services.telegram_api import TelegramAPIService
+
+                api = TelegramAPIService()
+                invite_link = await asyncio.to_thread(
+                    api.create_invite_link,
+                    chat_id=int(chat_id),
+                    member_limit=1,
+                    name=f"Link para {tipo_servicio}",
+                )
+                if invite_link:
+                    return invite_link.strip()
+                logger.warning(
+                    "Bot de links no devolvió invite link VIP; intentando con bot principal."
+                )
+            except Exception as e:
+                logger.error(f"Error al crear invite link VIP con bot de links: {e}")
+
+            # 2) Fallback: intentar con el bot principal (context.bot)
+            try:
                 invite = await context.bot.create_chat_invite_link(
                     chat_id=chat_id,
                     expire_date=datetime.now() + __import__("datetime").timedelta(hours=24),
@@ -956,17 +1148,21 @@ class CallbackHandlers:
                 )
                 return invite.invite_link.strip()
             except Exception as e:
-                logger.error(f"Error al crear invite link VIP: {e}")
+                logger.error(f"Error al crear invite link VIP con bot principal: {e}")
                 return None  # No fallback link - must be generated fresh
         else:
-            # Stake: obtener el ID del grupo desde Google Sheets y exportar
-            # el enlace real de invitación (no devolver el chat_id crudo).
+            # Stake: obtener el ID/link del grupo desde Google Sheets
             if self.sheets_service:
-                chat_id = self.sheets_service.get_service_group_id(tipo_servicio)
-                if chat_id:
+                group_value = self.sheets_service.get_service_group_id(tipo_servicio)
+                if group_value:
+                    group_value = group_value.strip()
+                    # Si el valor ya es un link de invitación (t.me o https), devolverlo tal cual
+                    if group_value.startswith(("https://", "http://", "t.me/")):
+                        return group_value
+                    # Si es un chat_id numérico, exportar el link
                     try:
                         return await context.bot.export_chat_invite_link(
-                            chat_id=int(chat_id)
+                            chat_id=int(group_value)
                         )
                     except Exception as e:
                         logger.error(

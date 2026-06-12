@@ -341,7 +341,7 @@ class PricingService:
                 [
                     InlineKeyboardButton(
                         f"🎯 STAKE (S/ {int(p.price)})",
-                        callback_data=f"buttom_validar_monto:valid:{user_id}:{int(p.price)}",
+                        callback_data=f"buttom_validar_monto:select:{user_id}:{int(p.price)}",
                     )
                 ]
             )
@@ -350,12 +350,12 @@ class PricingService:
         vip_prices = sorted(self.get_prices_for_service(2), key=lambda p: p.duration_months)
         for p in vip_prices:
             months = p.duration_months
-            vip_price = int(p.price)  # Show original price, not discounted
+            vip_price = int(p.price)
             keyboard.append(
                 [
                     InlineKeyboardButton(
                         f"💎 VIP {months} {'Mes' if months == 1 else 'Meses'} (S/ {vip_price})",
-                        callback_data=f"buttom_validar_monto:valid:{user_id}:{vip_price}",
+                        callback_data=f"buttom_validar_monto:select:{user_id}:{vip_price}",
                     )
                 ]
             )

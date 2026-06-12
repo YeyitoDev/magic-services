@@ -283,18 +283,24 @@ def payment_validation_keyboard(
     amount: float,
     source: str = "telegram",
     extra_data: str | None = None,
+    is_valid_price: bool = True,
 ) -> InlineKeyboardMarkup:
     """
     Teclado de validación de pago para el usuario validador (admin).
 
-    Presenta tres opciones para que el validador apruebe, rechace
+    Presenta opciones para que el validador apruebe, rechace
     o indique que el monto es incorrecto.
+
+    Si el monto no corresponde a un precio definido, oculta el botón
+    de aprobación y obliga al validador a ingresar el monto manualmente.
 
     Args:
         user_id: ID de Telegram del usuario que envió el comprobante.
         amount: Monto detectado en el comprobante.
         source: Canal de procedencia ("telegram" o "wsp").
         extra_data: Datos adicionales (fecha extraída, etc.).
+        is_valid_price: Si True, muestra botón de aprobación. Si False,
+            solo permite rechazar o ingresar monto manual.
 
     Returns:
         InlineKeyboardMarkup con botones de acción de validación.
@@ -322,26 +328,43 @@ def payment_validation_keyboard(
         cb_not_valid = f"validar_monto:not_valid:{user_id}:{amount_int}"
         cb_monto = f"validar_monto:monto_no_reconocido:{user_id}:{amount_int}"
 
-    buttons = [
-        [
-            {
-                "text": "✅ PAGO VALIDADO",
-                "callback_data": cb_valid,
-            }
-        ],
-        [
-            {
-                "text": "❌ PAGO NO VALIDADO",
-                "callback_data": cb_not_valid,
-            }
-        ],
-        [
-            {
-                "text": "🔵 VALIDAR MONTO DE PAGO",
-                "callback_data": cb_monto,
-            }
-        ],
-    ]
+    if is_valid_price:
+        buttons = [
+            [
+                {
+                    "text": "✅ PAGO VALIDADO",
+                    "callback_data": cb_valid,
+                }
+            ],
+            [
+                {
+                    "text": "❌ PAGO NO VALIDADO",
+                    "callback_data": cb_not_valid,
+                }
+            ],
+            [
+                {
+                    "text": "🔵 VALIDAR MONTO DE PAGO",
+                    "callback_data": cb_monto,
+                }
+            ],
+        ]
+    else:
+        # Monto no reconocido: obligar al validador a ingresar monto manual
+        buttons = [
+            [
+                {
+                    "text": "❌ PAGO NO VALIDADO",
+                    "callback_data": cb_not_valid,
+                }
+            ],
+            [
+                {
+                    "text": "✏️ INGRESAR MONTO MANUAL",
+                    "callback_data": cb_monto,
+                }
+            ],
+        ]
     return _build_keyboard(buttons)
 
 
@@ -417,25 +440,25 @@ def service_confirmation_keyboard(
         [
             {
                 "text": "🎯 STAKE (S/ 50)",
-                "callback_data": f"buttom_validar_monto:valid:{user_id}:{50}",
+                "callback_data": f"buttom_validar_monto:select:{user_id}:{50}",
             }
         ],
         [
             {
                 "text": "💎 VIP 1 Mes (S/ 125)",
-                "callback_data": f"buttom_validar_monto:valid:{user_id}:{125}",
+                "callback_data": f"buttom_validar_monto:select:{user_id}:{125}",
             },
         ],
         [
             {
                 "text": "💎 VIP 2 Meses (S/ 175)",
-                "callback_data": f"buttom_validar_monto:valid:{user_id}:{175}",
+                "callback_data": f"buttom_validar_monto:select:{user_id}:{175}",
             },
         ],
         [
             {
                 "text": "💎 VIP 3 Meses (S/ 225)",
-                "callback_data": f"buttom_validar_monto:valid:{user_id}:{225}",
+                "callback_data": f"buttom_validar_monto:select:{user_id}:{225}",
             },
         ],
         [

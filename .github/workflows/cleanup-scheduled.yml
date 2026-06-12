@@ -25,7 +25,7 @@ jobs:
       contents: read
     environment: ${{ github.event_name == 'schedule' && 'production' || github.event.inputs.environment || 'production' }}
     env:
-      DEFAULT_MODE: ${{ github.event.inputs.mode || 'eliminar' }}
+      DEFAULT_MODE: ${{ github.event.inputs.mode || 'validar' }}
 
     steps:
       - uses: actions/checkout@v4

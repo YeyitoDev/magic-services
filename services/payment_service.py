@@ -503,10 +503,12 @@ class PaymentService:
 
         message = (
             f"<b>💰 NUEVO PAGO RECIBIDO</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
             f"👤 <b>Usuario:</b> <a href=\"tg://user?id={telegram_id}\">{telegram_name}</a>\n"
             f"🆔 <b>ID:</b> <code>{telegram_id}</code>\n"
             f"💵 <b>Monto:</b> S/ {amount:.2f}\n"
-            f"📅 <b>Fecha:</b> {extracted_date or 'No detectada'}"
+            f"📅 <b>Fecha:</b> {extracted_date or 'No detectada'}\n"
+            f"━━━━━━━━━━━━━━━━━━━━"
         )
         return message
 
@@ -522,10 +524,16 @@ class PaymentService:
             Mensaje de rechazo.
         """
         return (
-            "Tu pago ha sido rechazado ❌❌❌\n"
-            "Verifica si realmente has hecho la transferencia a alguna de nuestras "
-            "cuentas y envíalo de nuevo a este chat.\n\n"
-            "Si tienes otro problema comunícate con @magic_peru2 📲"
+            "❌ <b>PAGO RECHAZADO</b>\n\n"
+            "Lo sentimos, tu pago no pudo ser validado.\n\n"
+            "<b>Posibles razones:</b>\n"
+            "• El comprobante no es legible\n"
+            "• El monto no coincide con nuestros planes\n"
+            "• El pago ya fue registrado anteriormente\n\n"
+            "<b>¿Qué hacer?</b>\n"
+            "Verifica que hayas transferido a una de nuestras cuentas y envía "
+            "el comprobante de nuevo a este chat.\n\n"
+            "¿Necesitas ayuda? Contacta a @magic_peru2 📲"
         )
 
     def build_incorrect_amount_prompt(
