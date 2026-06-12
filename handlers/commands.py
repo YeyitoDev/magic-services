@@ -862,6 +862,10 @@ class CommandHandlers:
 
             except Exception as e:
                 logger.error(f"No se pudo generar link VIP: {e}")
+                # Fallback al link por defecto
+                if link_defecto_vip:
+                    logger.info(f"Usando link por defecto VIP: {link_defecto_vip}")
+                    return link_defecto_vip
                 return None
         else:
             # Para Stake, obtener el ID del grupo desde Sheets
