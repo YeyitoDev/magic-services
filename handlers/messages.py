@@ -204,9 +204,10 @@ class MessageHandlers:
 
         # --- Paso 1: Obtener file_id y bytes de la imagen (sin guardar en disco) ---
         file_id = update.message.photo[-1].file_id
+        logger.info(f"File ID de imagen: {file_id}")
         photo_file = await update.message.photo[-1].get_file()
         image_bytes = await photo_file.download_as_bytearray()
-        logger.info(f"Imagen recibida: file_id={file_id}")
+        logger.info(f"Imagen descargada: {len(image_bytes)} bytes")
 
         # Guardar file_id en contexto para uso posterior (evita re-descarga)
         context.user_data["pending_file_id"] = file_id
@@ -285,6 +286,7 @@ class MessageHandlers:
             return
 
         # --- Paso 5: Enviar al validador ---
+        logger.info(f"Enviando comprobante al validador: user_id={user_id}, monto=S/ {monto_extraido:.2f}")
         await self._send_to_validator(
             update=update,
             context=context,
@@ -294,6 +296,7 @@ class MessageHandlers:
             extracted_date=fecha_extraida or fecha_actual,
             file_id=file_id,
         )
+        logger.info(f"Comprobante enviado al validador exitosamente")
 
         # --- Paso 6: Confirmar al usuario ---
         await update.message.reply_text(
@@ -416,9 +419,11 @@ class MessageHandlers:
         # Obtener lista de validadores
         # En testing: permitir auto-validación para que el validador (Sergio) reciba sus propios comprobantes
         validator_ids = self._payment_service.get_validator_ids()
+        logger.info(f"Validadores configurados: {validator_ids}")
 
         user_id_str = str(user_id)
         for validator_id in validator_ids:
+            logger.info(f"Procesando envío a validador: {validator_id}, user_id={user_id_str}")
             if validator_id == user_id_str:
                 from config.settings import settings
                 if settings.ENVIRONMENT != "testing":
