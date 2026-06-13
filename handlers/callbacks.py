@@ -372,6 +372,12 @@ class CallbackHandlers:
             if os.path.exists(info["video"]):
                 from utils.keyboards import faq_video_keyboard
 
+                # Enviar mensaje inmediato antes del video
+                await context.bot.send_message(
+                    chat_id=query.from_user.id,
+                    text="⏳ Enviando información del servicio seleccionado...",
+                )
+
                 await context.bot.send_video(
                     chat_id=query.from_user.id,
                     video=open(info["video"], "rb"),
