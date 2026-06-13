@@ -114,7 +114,7 @@ def main_menu_don_gato_keyboard() -> InlineKeyboardMarkup:
     """
     Versión alternativa del menú principal (estilo Don Gato).
 
-    Incluye opciones más detalladas y un tono más personal.
+    Incluye solo 3 opciones: Comprar VIP, Comprar Stake, Preguntas Frecuentes.
 
     Returns:
         InlineKeyboardMarkup con el menú estilo Don Gato.
@@ -125,9 +125,6 @@ def main_menu_don_gato_keyboard() -> InlineKeyboardMarkup:
         ],
         [
             {"text": "🎲 COMPRAR STAKE", "callback_data": "comprar_servicio:si:Stake"},
-        ],
-        [
-            {"text": "ℹ️ INFO SERVICIOS", "callback_data": "informacion_servicio:general"},
         ],
         [
             {"text": "❓ PREGUNTAS FRECUENTES", "callback_data": "preguntas_frecuentes:general"},
@@ -228,7 +225,7 @@ def service_info_keyboard(service_type: str) -> InlineKeyboardMarkup:
 
 def faq_keyboard() -> InlineKeyboardMarkup:
     """
-    Teclado de preguntas frecuentes con opciones categorizadas.
+    Teclado de preguntas frecuentes con opciones simplificadas.
 
     Returns:
         InlineKeyboardMarkup con opciones de FAQ.
@@ -239,12 +236,6 @@ def faq_keyboard() -> InlineKeyboardMarkup:
         ],
         [
             {"text": "🎲 ¿Qué es el Stake?", "callback_data": "preguntas_frecuentes:stake"},
-        ],
-        [
-            {"text": "💳 ¿Cómo pagar?", "callback_data": "preguntas_frecuentes:como_pagar"},
-        ],
-        [
-            {"text": "📲 ¿Cómo recibo el link?", "callback_data": "preguntas_frecuentes:link"},
         ],
         [
             {"text": "🔙 Regresar al Menú", "callback_data": "regresar_menu_principal:si"},
